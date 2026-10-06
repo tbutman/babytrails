@@ -1,7 +1,7 @@
 # BabyTrails: specification
 
 Status: **approved by Thomas**, 6 October 2026, with changes for the shared core, hosting names and
-colour contrast folded in. Nothing here is built yet.
+colour contrast folded in. **Built** the same day, except where section 16 says otherwise.
 
 This file records what the first version does, how it's built and why. Anything not yet verified is
 marked **(unverified)**. Facts from outside sources link to the source and the date it was checked.
@@ -511,3 +511,30 @@ CI runs lint, typecheck, tests and build on every push and pull request.
 added or extracted a real measurement and seen it on a WHO chart; the demo works without a key; the
 tests pass in CI; the README explains the privacy model in plain language; the case study is ready
 for his site.
+
+## 16. What was built differently, and what's left (6 October 2026)
+
+Differences from the plan above, and why:
+- **Extraction sends only the document**, not the child's sex and age range as section 10 planned:
+  the model doesn't need them to copy printed values, so leaving them out sends less.
+- **Trusted Types aren't enabled.** pdf.js starts a worker and the service worker is registered
+  from a script URL; both need a Trusted Types policy written for them. React escapes text, there's
+  no `innerHTML`, and the CSP blocks inline and third-party scripts, so this is hardening left for
+  later rather than a gap in the current defences.
+- **Visits** exist as a type, but there's no screen for them yet; documents are attached to a date.
+- **A child's photo** isn't supported yet, so the report has no photo to leave out.
+- **Backup reminders** count changes: each measurement counts as one and each document as five, so a
+  reminder appears after every new document, after five measurements, or two weeks after the last
+  backup with any change.
+- **Component styles** moved into the core (`src/core/ui/components.css`) at LabTrails' request.
+
+Left to do:
+- **Hosting:** staged, not yet run. Thomas runs the setup script and adds the Cloudflare zone and
+  tunnel route (deploy/README.md).
+- **Real-world checks:** Thomas unlocking his own vault on his phone, entering or extracting a real
+  measurement and seeing it on a chart; tests on iPhone Safari and Android Chrome.
+- **Unverified:** whether a granted `persist()` protects an ordinary Safari tab from the 7-day
+  deletion; how well extraction reads real Portuguese health booklets (only the made-up sample and
+  mocked answers were tested).
+- **Later (from section 3):** corrected age on the charts, CDC charts from 2 years, visits, photos,
+  vaccinations and milestones, sync between devices, a Portuguese UI, Trusted Types.

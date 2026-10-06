@@ -105,8 +105,9 @@ or when the user clears site data.
 ### Cross-site scripting
 
 - **Mitigation:** React escapes text by default; no `innerHTML`; the strict CSP blocks inline and
-  third-party scripts; Trusted Types where the libraries allow it; a test checks that AI output with
-  HTML in it is shown as text.
+  third-party scripts; tests check that AI output with HTML in it is shown as text.
+- **Limit:** Trusted Types aren't enabled yet (pdf.js's worker and the service worker need a policy
+  written for them); planned as extra hardening.
 
 ### The API key in the browser
 

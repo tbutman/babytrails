@@ -10,7 +10,7 @@ test('demo: a prepared summary, labelled as AI output', async ({ page }) => {
   await page.getByRole('button', { name: 'Show it' }).click()
   const card = page.getByRole('region', { name: 'What changed' })
   await expect(card).toContainText('90 g a week')
-  await expect(card).toContainText("isn't medical advice")
+  await expect(card).toContainText('No AI was called')
 })
 
 test.describe('with a mocked Anthropic API', () => {

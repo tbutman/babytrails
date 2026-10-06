@@ -24,7 +24,10 @@ export function SummaryCard({ child, kind }: { child: Child; kind: 'after-data' 
   const { summary, stale } = useLatestSummary(child, kind)
   if (!summary) return null
   return (
-    <AiOutput label={SUMMARY_LABELS[kind]}>
+    <AiOutput
+      label={SUMMARY_LABELS[kind]}
+      note={summary.model === 'prepared in advance' ? 'Demo: written in advance for this made-up baby, in the style of the AI summaries. No AI was called.' : undefined}
+    >
       <Markdown text={summary.text} />
       <p className="hint">
         {formatDate(summary.createdAt.slice(0, 10))}
