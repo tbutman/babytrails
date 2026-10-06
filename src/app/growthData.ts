@@ -43,13 +43,14 @@ export function chartPoints(tables: Tables, child: Child, measurements: Measurem
   const indicator: Indicator = choice === 'wfl' && ageNow >= HEIGHT_FROM_DAY ? 'wfh' : choice
   const points = measurements.flatMap((m) => {
     const g = growthFor(tables, child, m)
-    const label = `${formatDate(m.date)}, ${formatAge(child.dateOfBirth, m.date)}`
+    const label = `${formatDate(m.date)}, ${formatAge(child.dateOfBirth, m.date)}${m.place === 'home' ? ', at home' : ''}`
+    const hollow = m.place === 'home'
     if (choice === 'wfl') {
       const r = g[indicator]
-      return r && g.statureCm !== undefined ? [{ x: g.statureCm, y: r.value, label }] : []
+      return r && g.statureCm !== undefined ? [{ x: g.statureCm, y: r.value, label, hollow }] : []
     }
     const r = g[choice]
-    return r ? [{ x: ageInDays(child.dateOfBirth, m.date), y: r.value, label }] : []
+    return r ? [{ x: ageInDays(child.dateOfBirth, m.date), y: r.value, label, hollow }] : []
   })
   return { indicator, points }
 }

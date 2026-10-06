@@ -12,7 +12,9 @@ import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { DEMO_DOCUMENT_TITLE, DEMO_PROPOSALS, SAMPLE_IMPORT_TITLE } from '../demo'
 import { formatDate } from '../format'
 import { EXTRACTION_PROMPT, EXTRACTION_SCHEMA, EXTRACTION_SYSTEM, toProposedRows } from '../prompts/extraction'
-import { nowIso, type Child, type DocumentKind, type Measurement } from '../types'
+import { counted, nowIso, type Child, type DocumentKind, type Measurement } from '../types'
+import { measurementChecks } from '../checks'
+import type { Tables } from '../../growth/tables'
 import { measurementColumns } from './columns'
 import { alreadySavedRows } from './duplicates'
 
@@ -48,16 +50,20 @@ export function babyAdapter(deps: {
   apiKey?: string
   model: string
   demo: boolean
+  /** WHO's tables, for second looks on the review screen (src/app/checks.ts). */
+  tables?: Tables | null
   onSaved: (count: number) => Promise<void> | void
 }): ImportAdapter<BabyMeta> {
   const { store, child } = deps
   const mine = async () => (await store.list<Measurement>('measurements')).filter((m) => m.childId === child.id)
+  // The measurements saved so far, loaded at each document's check, for the review's second looks.
+  let known: Measurement[] = []
 
   return {
     appName: 'BabyTrails',
     documentKind: 'growth-report',
     noun: { one: 'document', many: 'documents' },
-    columns: measurementColumns(child),
+    columns: measurementColumns(child, (c) => (deps.tables ? measurementChecks(deps.tables, child, known, c) : [])),
     canRead: deps.demo || !!deps.apiKey,
     kinds: IMPORT_KINDS,
     kindFor: (file: IntakeFile) => kindFromName(file.zip ? `${file.zip}/${file.name}` : file.name),
@@ -104,7 +110,9 @@ export function babyAdapter(deps: {
     // new rows added, so a page that's mostly saved already is the normal case, and skipping it would
     // drop the new rows.
     async check(result) {
-      return { alreadySaved: alreadySavedRows(result.rows, await mine()) }
+      const saved = await mine()
+      known = counted(saved)
+      return { alreadySaved: alreadySavedRows(result.rows, saved) }
     },
 
     async save(doc: StoredDoc, rows: ConfirmedRow[]) {
@@ -124,6 +132,7 @@ export function babyAdapter(deps: {
           heightCm: stature !== undefined && standing ? stature : undefined,
           headCm: r.headCm as number | undefined,
           source: 'extracted',
+          place: 'clinic',
           documentId: doc.id,
           createdAt: now,
           updatedAt: now,

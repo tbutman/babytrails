@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { deleteDocument, type RecordStore } from '../core'
 import { useSession } from './sessionContext'
-import type { BabyDocument, Child, Measurement } from './types'
+import { counted, type BabyDocument, type Child, type Measurement } from './types'
 
 export function useCollection<T extends { id: string }>(collection: string): T[] | null {
   const { store, version } = useSession()
@@ -51,4 +51,10 @@ export async function deleteChild(store: RecordStore, child: Child) {
 export function useDocuments(childId: string | undefined): BabyDocument[] | null {
   const all = useCollection<BabyDocument>('documents')
   return useMemo(() => (all ? all.filter((d) => d.profileId === childId).sort((a, b) => b.date.localeCompare(a.date)) : null), [all, childId])
+}
+
+/** The measurements that count (not left out), for anything computed from them. */
+export function useCountedMeasurements(childId: string | undefined): Measurement[] | null {
+  const all = useMeasurements(childId)
+  return useMemo(() => (all ? counted(all) : null), [all])
 }

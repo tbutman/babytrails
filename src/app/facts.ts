@@ -18,6 +18,7 @@ export type Snapshot = {
   lengthOrHeightCm?: number
   measuredStanding?: boolean
   headCm?: number
+  measuredAt?: 'clinic' | 'home' | 'other'
   scores: Partial<Record<Indicator, Score>>
 }
 
@@ -100,6 +101,7 @@ function snapshot(tables: Tables, child: Child, m: Measurement): Snapshot {
     lengthOrHeightCm: m.lengthCm ?? m.heightCm,
     measuredStanding: m.lengthCm === undefined && m.heightCm !== undefined ? true : m.lengthCm !== undefined ? false : undefined,
     headCm: m.headCm,
+    measuredAt: m.place,
     scores,
   }
 }

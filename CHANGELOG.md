@@ -47,3 +47,10 @@ with real records.
 - Charts for babies under 14 weeks are drawn in weeks.
 - Summaries flag a measurement outside the 3rd–97th percentile band when it gets there; while it
   stays there, they mention it as continuing instead of flagging it again at every visit.
+- Where each measurement was taken (clinic, home or other; the form remembers the last choice, and
+  values read from documents are from the clinic). Home measurements are open circles on the charts.
+- Second looks before saving, on the form and on the review screen: a value far off the chart for
+  the age, a length or head smaller than last time, or a big change in a short time. Values beyond
+  WHO's implausible limits need a second tap.
+- Leave a measurement out of charts, gains, summaries and reports without deleting it; it stays in
+  the list, marked "Left out", with an optional reason.

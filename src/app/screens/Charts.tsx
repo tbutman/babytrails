@@ -6,7 +6,7 @@ import { GrowthChart, type ChartPoint } from '../../growth/GrowthChart'
 import type { Indicator } from '../../growth/tables'
 import { EmptyState, PageHeader, Segmented } from '../../core/ui/components'
 import { Disclaimer } from '../components'
-import { useChild, useMeasurements } from '../data'
+import { useChild, useCountedMeasurements } from '../data'
 import { chartPoints, useTables, type ChartChoice } from '../growthData'
 import { useSession } from '../sessionContext'
 import { today } from '../types'
@@ -16,7 +16,7 @@ type Choice = ChartChoice
 export function Charts() {
   const { id = '' } = useParams()
   const child = useChild(id)
-  const measurements = useMeasurements(id)
+  const measurements = useCountedMeasurements(id)
   const tables = useTables()
   const { app } = useSession()
   const [chart, setChart] = useState<Choice>('wfa')

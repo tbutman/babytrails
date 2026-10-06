@@ -9,6 +9,7 @@ import { ImportWizard } from '../../core/import/ImportWizard'
 import { PageHeader } from '../../core/ui/components'
 import { childPath } from '../brand'
 import { useChild } from '../data'
+import { useTables } from '../growthData'
 import { babyAdapter } from '../import/babyAdapter'
 import { useSession, useStore } from '../sessionContext'
 
@@ -22,6 +23,8 @@ export function ImportDocuments() {
   const [initial, setInitial] = useState<StoredDoc[] | null>(null)
   // Only on arrival: the wizard keeps its own state from here.
   const [ids] = useState(() => (params.get('documents') ?? '').split(',').filter(Boolean))
+  // WHO's tables, for the review's second looks (far off the chart, smaller than last time).
+  const tables = useTables()
 
   useEffect(() => {
     let live = true
@@ -40,13 +43,14 @@ export function ImportDocuments() {
             apiKey: core.ai.apiKey,
             model: core.ai.model,
             demo: mode === 'demo',
+            tables,
             onSaved: async (count) => {
               if (mode === 'unlocked') await saveCore({ ...core, changesSinceBackup: core.changesSinceBackup + count })
               changed()
             },
           })
         : null,
-    [store, child, core, mode, saveCore, changed],
+    [store, child, core, mode, saveCore, changed, tables],
   )
 
   if (!child || !adapter || initial === null) return <div className="skeleton loading-card" />

@@ -6,7 +6,8 @@ import { valueAtZ } from './lms'
 import { lmsAt, tableRange, type Indicator, type Sex, type Tables } from './tables'
 import { cmToIn, KG_PER_LB, type Units } from './units'
 
-export type ChartPoint = { x: number; y: number; label: string }
+// hollow: measured at home, drawn as an open circle.
+export type ChartPoint = { x: number; y: number; label: string; hollow?: boolean }
 
 const Z_BANDS = { p3: -1.881, p15: -1.036, p50: 0, p85: 1.036, p97: 1.881 }
 const DAYS_PER_MONTH = 30.4375
@@ -159,7 +160,7 @@ export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow 
           <path className="chart-child-line" d={shown.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)} ${sy(p.y).toFixed(1)}`).join(' ')} />
         )}
         {shown.map((p) => (
-          <circle key={`${p.x}-${p.label}`} className="chart-child-point" cx={sx(p.x)} cy={sy(p.y)} r={4}>
+          <circle key={`${p.x}-${p.label}`} className={p.hollow ? 'chart-child-point hollow' : 'chart-child-point'} cx={sx(p.x)} cy={sy(p.y)} r={4}>
             <title>{p.label}</title>
           </circle>
         ))}

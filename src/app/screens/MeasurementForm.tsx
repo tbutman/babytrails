@@ -4,14 +4,15 @@ import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { formatPercentile } from '../../growth/lms'
 import { cmToIn, inToCm, kgToLbOz, lbOzToKg, parseDecimal, type Units } from '../../growth/units'
 import { Trash2 } from 'lucide-react'
-import { Checkbox, PageHeader, TextField } from '../../core/ui/components'
+import { Checkbox, PageHeader, Segmented, TextField } from '../../core/ui/components'
+import { measurementChecks, type Check, type Field } from '../checks'
 import { childPath } from '../brand'
 import { useChild, useMeasurements } from '../data'
 import { formatAge, formatDate } from '../format'
 import { birthMeasurement } from '../newborn'
 import { growthFor, useTables } from '../growthData'
 import { useSession, useStore } from '../sessionContext'
-import { nowIso, today, type Child, type Measurement } from '../types'
+import { counted, nowIso, PLACES, today, type Child, type Measurement, type Place } from '../types'
 
 // Plausible ranges for typing mistakes, not for judging a child: values outside are almost
 // certainly a slip (a missing decimal point, the wrong unit).
@@ -28,16 +29,16 @@ export function MeasurementForm() {
   const forBirth = params.get('birth') === '1'
   const existing = mid ? measurements.find((m) => m.id === mid) : forBirth ? birthMeasurement(child, measurements) : undefined
   if (mid && !existing) return <p>This measurement isn't in your records.</p>
-  return <Form key={mid ?? (forBirth ? 'birth' : 'new')} child={child} existing={existing} birth={forBirth || !!existing?.birth} />
+  return <Form key={mid ?? (forBirth ? 'birth' : 'new')} child={child} existing={existing} birth={forBirth || !!existing?.birth} others={counted(measurements)} />
 }
 
 function toText(n: number | undefined, digits = 2) {
   return n === undefined ? '' : String(Math.round(n * 10 ** digits) / 10 ** digits)
 }
 
-function Form({ child, existing, birth }: { child: Child; existing?: Measurement; birth: boolean }) {
+function Form({ child, existing, birth, others }: { child: Child; existing?: Measurement; birth: boolean; others: Measurement[] }) {
   const store = useStore()
-  const { app, changed, core, saveCore, mode } = useSession()
+  const { app, changed, core, saveCore, mode, saveApp } = useSession()
   const tables = useTables()
   const navigate = useNavigate()
   const units: Units = app.units
@@ -53,6 +54,10 @@ function Form({ child, existing, birth }: { child: Child; existing?: Measurement
   const [standing, setStanding] = useState(existing ? existing.heightCm !== undefined : ageDays >= HEIGHT_FROM_DAY)
   const [headText, setHeadText] = useState(units === 'metric' ? toText(existing?.headCm, 1) : toText(existing?.headCm && cmToIn(existing.headCm), 1))
   const [note, setNote] = useState(existing?.note ?? '')
+  const [place, setPlace] = useState<Place>(existing?.place ?? (birth ? 'clinic' : (app.lastPlace ?? 'clinic')))
+  const [excluded, setExcluded] = useState(!!existing?.excluded)
+  const [excludedReason, setExcludedReason] = useState(existing?.excludedReason ?? '')
+  const [confirmUnlikely, setConfirmUnlikely] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // What the form currently holds, in metric. Fields left empty are undefined.
@@ -81,6 +86,30 @@ function Form({ child, existing, birth }: { child: Child; existing?: Measurement
       })
     : {}
 
+  // Second looks: far off the chart, smaller than last time, a big jump (src/app/checks.ts).
+  const checks: Check[] =
+    tables && date && ageDays >= 0
+      ? measurementChecks(tables, child, others, {
+          id: existing?.id,
+          date,
+          weightKg: Number.isFinite(parsed.weightKg) ? parsed.weightKg : undefined,
+          lengthCm: !standing && Number.isFinite(parsed.statureCm) ? parsed.statureCm : undefined,
+          heightCm: standing && Number.isFinite(parsed.statureCm) ? parsed.statureCm : undefined,
+          headCm: Number.isFinite(parsed.headCm) ? parsed.headCm : undefined,
+        })
+      : []
+  const warning = (f: Field) => {
+    const c = checks.find((x) => x.field === f)
+    return c && <p className={c.level === 'unlikely' ? 'field-warning unlikely' : 'field-warning'}>{c.text}</p>
+  }
+  // A very unlikely value needs a second tap, unless it's being left out or was already saved as it is.
+  const unchanged =
+    !!existing &&
+    existing.weightKg === parsed.weightKg &&
+    (existing.lengthCm ?? existing.heightCm) === parsed.statureCm &&
+    existing.headCm === parsed.headCm
+  const unlikely = checks.some((c) => c.level === 'unlikely') && !excluded && !unchanged
+
   function check(): Record<string, string> {
     const next: Record<string, string> = {}
     if (!date) next.date = 'Enter the date.'
@@ -107,6 +136,10 @@ function Form({ child, existing, birth }: { child: Child; existing?: Measurement
   async function submit(e: FormEvent) {
     e.preventDefault()
     const next = check()
+    if (!Object.keys(next).length && unlikely && !confirmUnlikely) {
+      next.form = 'One of these values is very unlikely. Check it, then tap "Save anyway" if it\'s right.'
+      setConfirmUnlikely(true)
+    }
     setErrors(next)
     if (Object.keys(next).length) return
     const now = nowIso()
@@ -123,10 +156,13 @@ function Form({ child, existing, birth }: { child: Child; existing?: Measurement
       visitId: existing?.visitId,
       note: note.trim() || undefined,
       ...(birth ? { birth: true as const } : {}),
+      place,
+      ...(excluded ? { excluded: true, excludedReason: excludedReason.trim() || undefined } : {}),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     }
     await store.put('measurements', m)
+    if (!birth && place !== app.lastPlace) await saveApp({ ...app, lastPlace: place })
     if (mode === 'unlocked') await saveCore({ ...core, changesSinceBackup: core.changesSinceBackup + 1 })
     changed()
     navigate(childPath(child.id))
@@ -177,6 +213,7 @@ function Form({ child, existing, birth }: { child: Child; existing?: Measurement
             )}
           </fieldset>
         )}
+        {!errors.weight && warning('weight')}
 
         <TextField
           label={`${standing ? 'Height, standing' : 'Length, lying down'} (${lenUnit})`}
@@ -187,12 +224,24 @@ function Form({ child, existing, birth }: { child: Child; existing?: Measurement
           error={errors.stature}
           hint={pct('lhfa')}
         />
+        {!errors.stature && warning('stature')}
         <Checkbox checked={standing} onChange={setStanding}>
           Measured standing up <span className="muted">(WHO uses lying length under 2 years and standing height from 2; the charts adjust by 0.7 cm if needed)</span>
         </Checkbox>
 
         <TextField label={`Head circumference (${lenUnit})`} inputMode="decimal" autoComplete="off" value={headText} onChange={(e) => setHeadText(e.target.value)} error={errors.head} hint={pct('hcfa')} />
+        {!errors.head && warning('head')}
+
+        <Segmented legend="Where was it measured?" name="place" options={PLACES} value={place} onChange={setPlace} hint={place === 'home' ? 'Home measurements are drawn as open circles on the charts.' : undefined} />
         <TextField label="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+        {existing && (
+          <>
+            <Checkbox checked={excluded} onChange={setExcluded}>
+              Leave this out of charts, gains, summaries and reports <span className="muted">(it stays in the list; useful for a measurement you doubt)</span>
+            </Checkbox>
+            {excluded && <TextField label="Why (optional)" placeholder="e.g. measured at home, he was wriggling" value={excludedReason} onChange={(e) => setExcludedReason(e.target.value)} />}
+          </>
+        )}
 
         {errors.form && (
           <p className="error form-error" role="alert">
@@ -201,7 +250,7 @@ function Form({ child, existing, birth }: { child: Child; existing?: Measurement
         )}
         <div className="row">
           <button className="button primary" type="submit">
-            Save
+            {confirmUnlikely && unlikely ? 'Save anyway' : 'Save'}
           </button>
           {existing && (
             <button className="button ghost danger" type="button" onClick={() => void remove()}>

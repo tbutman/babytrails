@@ -50,6 +50,12 @@
   stroke: var(--chart-outline);
   stroke-width: 1.5;
 }
+/* Measured at home: an open circle. */
+.chart-child-point.hollow {
+  fill: var(--surface);
+  stroke: var(--accent-text);
+  stroke-width: 2;
+}
 .segmented + .chart-card,
 fieldset + .chart-card {
   margin-top: var(--space-4);
@@ -184,4 +190,10 @@ fieldset + .chart-card {
   margin: 0;
   font-size: var(--text-lg);
   font-weight: 650;
+}
+
+/* A measurement left out of charts and summaries: still listed, struck through. */
+.list-row.excluded .list-row-sub {
+  text-decoration: line-through;
+  color: var(--text-faint);
 }

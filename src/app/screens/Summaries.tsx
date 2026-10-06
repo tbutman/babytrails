@@ -11,7 +11,7 @@ import { redactNames } from '../../core/ai/redact'
 import { AiOutput, SendSheet } from '../../core/ai/SendSheet'
 import { PageHeader } from '../../core/ui/components'
 import { APP, childPath } from '../brand'
-import { useChild, useDocuments, useMeasurements } from '../data'
+import { useChild, useDocuments, useCountedMeasurements } from '../data'
 import { SUMMARY_LABELS, useLatestSummary, useSummaries } from '../summaries'
 import { buildFacts, factsDigest, type Facts } from '../facts'
 import { formatDate } from '../format'
@@ -43,7 +43,7 @@ export function GrowthSummary() {
   const [params] = useSearchParams()
   const kind = params.get('kind') === 'questions' ? 'questions' : 'after-data'
   const child = useChild(id)
-  const measurements = useMeasurements(id)
+  const measurements = useCountedMeasurements(id)
   const tables = useTables()
   const store = useStore()
   const { core, mode, changed } = useSession()

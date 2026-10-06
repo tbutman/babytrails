@@ -33,9 +33,24 @@ export type Measurement = {
   note?: string
   /** Measured at birth (entered from the child's page). */
   birth?: true
+  /** Where it was measured. Read from a document: clinic. */
+  place?: Place
+  /** Left out of charts, gains, summaries and reports, but kept. */
+  excluded?: boolean
+  excludedReason?: string
   createdAt: string
   updatedAt: string
 }
+
+/** The measurements that count for charts, gains, summaries and reports: everything not left out. */
+export const counted = (ms: Measurement[]) => ms.filter((m) => !m.excluded)
+
+export type Place = 'clinic' | 'home' | 'other'
+export const PLACES: { value: Place; label: string }[] = [
+  { value: 'clinic', label: 'Clinic' },
+  { value: 'home', label: 'Home' },
+  { value: 'other', label: 'Other' },
+]
 
 export type Visit = { id: string; childId: string; date: string; place?: string; clinician?: string; note?: string }
 
@@ -64,7 +79,7 @@ export const DOCUMENT_KINDS: { value: DocumentKind; label: string }[] = [
 // Kinds the AI can read measurements from. Ultrasound images are stored and shown, never sent.
 export const EXTRACTABLE: ReadonlySet<DocumentKind> = new Set(['growth-report', 'booklet'])
 
-export type AppSettings = { units: Units }
+export type AppSettings = { units: Units; lastPlace?: Place }
 export const DEFAULT_APP_SETTINGS: AppSettings = { units: 'metric' }
 
 // Today's date where the user is, as YYYY-MM-DD.

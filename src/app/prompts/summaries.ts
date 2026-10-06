@@ -16,7 +16,7 @@ Cover, in under 150 words: what was measured and when (age in months and days, f
 
 "gains" lists recent intervals, oldest first. If there are three or more weight intervals, you may describe the trend in one sentence (for example, that weekly gain has been smaller at each of the last three visits), using the numbers given. "sameLinePerWeekGrams" (or "sameLinePerMonthCm") is the gain that would have kept the same WHO percentile over the same days, and "comparedWithSameLine" says how the actual gain compared; describe that neutrally ("a little more than the gain that keeps the same percentile"). It is a reference, not a target. Skip intervals marked "tooShortToCompare".
 
-"stillOutside" lists measurements that were already outside the 3rd–97th percentile band last time and still are. Mention them briefly as continuing, without calling them worth mentioning again. If "newborn" is present, you may say how weight compared with birth weight (lowestPercentFromBirth, at lowestAtAgeDays) and when it was back to birth weight (backToBirthWeightByAgeDays), using only those numbers.
+"stillOutside" lists measurements that were already outside the 3rd–97th percentile band last time and still are. Mention them briefly as continuing, without calling them worth mentioning again. If "measuredAt" is "home" for the latest or previous measurement, say so once, neutrally (home measurements can differ from the clinic's). If "newborn" is present, you may say how weight compared with birth weight (lowestPercentFromBirth, at lowestAtAgeDays) and when it was back to birth weight (backToBirthWeightByAgeDays), using only those numbers.
 
 ${SHARED_RULES}`
 
