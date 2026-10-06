@@ -25,7 +25,8 @@ with your own key.
 - **Quick entry at the doctor's.** Type the numbers on your phone; you see the percentile as you
   type. Metric or imperial, and "7,25" works as well as "7.25".
 - **Documents in one place.** Add PDFs and photos of growth reports, health booklet pages, doctor's
-  notes and ultrasound images. They're stored encrypted and open in the app.
+  notes and ultrasound images, several at once or in a zip. Files you've already added are spotted.
+  They're stored encrypted and open in the app.
 - **Read a growth report for you (optional, AI).** BabyTrails can ask the AI to find the
   measurements in a report or booklet page, including Portuguese ones. You check every value next
   to the page before anything is saved.

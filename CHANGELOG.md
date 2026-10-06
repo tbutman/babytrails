@@ -20,6 +20,11 @@ with real records.
 - A demo with a made-up baby, no passphrase or key needed.
 - Installable, and works offline once opened. Light and dark themes.
 - When a new version has downloaded, a banner offers to reload into it; it never reloads by itself.
+- Adding documents: several at once or in a zip, with files already in the vault set aside, a type
+  for each file (ultrasound images and doctor's notes are kept, not read), one agreement to send the
+  growth reports, and each one checked in turn. Measurements already saved for the same date aren't
+  saved again. Documents not read yet are listed so they can be read later. Each document's title,
+  date and type can be edited.
 - Trails UI v2, shared with LabTrails: Inter throughout, a refined honey-and-ink palette, a tab bar
   on phones, metric cards with sparklines, and a landing page at babytrails.app with the app at
   /app (old addresses redirect).

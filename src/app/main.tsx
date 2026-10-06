@@ -6,17 +6,17 @@ import './app.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
-import { ChildLayout, LegacyChild, Root } from './Layout'
+import { ChildLayout, LegacyChild, ReadLegacy, Root } from './Layout'
 import { SessionProvider } from './session'
 import { Charts } from './screens/Charts'
 import { ChildForm } from './screens/ChildForm'
-import { AddDocument, DocumentPage, Documents } from './screens/Documents'
+import { DocumentPage, Documents } from './screens/Documents'
 import { Home } from './screens/Home'
 import { Landing } from './screens/Landing'
 import { MeasurementForm } from './screens/MeasurementForm'
 import { Measurements } from './screens/Measurements'
 import { Overview } from './screens/Overview'
-import { ReadDocument } from './screens/ReadDocument'
+import { ImportDocuments } from './screens/ImportDocuments'
 import { Report } from './screens/Report'
 import { About, Settings } from './screens/Settings'
 import { DocumentSummary, GrowthSummary } from './screens/Summaries'
@@ -41,9 +41,11 @@ const router = createBrowserRouter([
           { path: 'measurements/new', element: <MeasurementForm /> },
           { path: 'measurements/:mid', element: <MeasurementForm /> },
           { path: 'documents', element: <Documents /> },
-          { path: 'documents/new', element: <AddDocument /> },
+          { path: 'documents/import', element: <ImportDocuments /> },
+          // The single-document screens before the shared import; their addresses still work.
+          { path: 'documents/new', element: <Navigate to="../import" relative="path" replace /> },
           { path: 'documents/:docId', element: <DocumentPage /> },
-          { path: 'documents/:docId/read', element: <ReadDocument /> },
+          { path: 'documents/:docId/read', element: <ReadLegacy /> },
           { path: 'documents/:docId/summary', element: <DocumentSummary /> },
           { path: 'summary', element: <GrowthSummary /> },
           { path: 'share', element: <Report /> },

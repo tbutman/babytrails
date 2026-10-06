@@ -13,6 +13,8 @@
   prompts, the demo and the report. `accent.css` holds the honey accent; `app.css` only what the
   kit doesn't cover (the growth chart, the report preview).
 - **`src/core/ui/`** is Trails UI v2, the design system shared with LabTrails; see its README.
+- **`src/core/import/`** is the shared import (several documents or zips, duplicates, a review
+  queue); BabyTrails plugs in with `src/app/import/babyAdapter.ts`.
 - **WHO data** isn't committed. `scripts/who-data.mjs` downloads WHO's expanded tables, checks them
   against pinned SHA-256 checksums and writes JSON to `src/growth/data/` (git-ignored). See
   [DATA-NOTICE.md](../DATA-NOTICE.md).
@@ -58,12 +60,15 @@ npm run test:e2e   # browser tests (Playwright) against the production build
 - **Backup:** round trips with documents and unknown collections; a wrong passphrase or a damaged
   file changes nothing.
 - **Review:** only accepted, valid rows are saved; decimal commas; day/month ambiguity.
+- **Import:** zips and their limits, fingerprints, the queue's rules and document kinds; BabyTrails'
+  adapter (kinds from file names, the demo's sample, saving, measurements already saved).
 - **AI:** the request goes only to Anthropic with the browser header; errors never contain the key;
   structured output is validated; AI text is never rendered as HTML.
 - **Browser tests** (every one fails if the app requests any origin other than its own; AI tests
   allow Anthropic and answer with a mock, so nothing real is sent): the CSP is in the build; the
   demo; a full vault flow; extraction sends nothing before the user agrees, sends no name or date of
-  birth, and saves only confirmed rows; summaries send no name, nickname, date of birth or notes;
+  birth, and saves only confirmed rows; the import in the demo catches a duplicate, keeps an ultrasound
+  image unread and doesn't save measurements twice; summaries send no name, nickname, date of birth or notes;
   report exports; offline reload; and an update: the test serves a copy of the build, changes
   `sw.js` on disk like a deploy, and checks that the banner appears, nothing reloads by itself, and
   Reload switches to the new version.

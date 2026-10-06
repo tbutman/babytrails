@@ -525,6 +525,11 @@ Differences from the plan above, and why:
   reminder appears after every new document, after five measurements, or two weeks after the last
   backup with any change.
 - **Component styles** moved into the core (`src/core/ui/components.css`) at LabTrails' request.
+- **Documents are added with the shared import** (`src/core/import/`, written in LabTrails, agreed
+  by Thomas for both apps): several files or zips at once, duplicates set aside by fingerprint, a type
+  per file, one send sheet for the batch, then each growth report or booklet page checked in turn.
+  This replaced the single-document upload and reading screens. Doctor's notes are kept and
+  summarised from their own page; ultrasound images are kept and never read.
 
 Left to do:
 - **Hosting:** staged, not yet run. Thomas runs the setup script and adds the Cloudflare zone and

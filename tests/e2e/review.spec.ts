@@ -4,20 +4,24 @@ import { test, expect, ANTHROPIC, startDemo, createVault, addChild, saveApiKey, 
 // A made-up key for the mock; it never reaches Anthropic.
 const TEST_KEY = 'sk-ant-test-' + 'x'.repeat(40)
 
-test('demo: only values the user confirms are saved', async ({ page }) => {
+test('demo: reading a document not read yet saves only the values the user confirms', async ({ page }) => {
   await startDemo(page)
   await tab(page, 'Documents').click()
-  await page.getByRole('link', { name: /growth page \(sample\)/ }).click()
+  await expect(page.getByRole('heading', { name: /Not read yet · 1/ })).toBeVisible()
+  await page.getByRole('link', { name: 'Read', exact: true }).click()
+  await page.getByRole('button', { name: 'Read 1 document' }).click()
+  await expect(page.getByRole('heading', { name: 'Check document 1 of 1' })).toBeVisible()
   await expect(page.getByRole('img', { name: /page 1 of 1/ })).toBeVisible()
-  await page.getByRole('link', { name: 'Read measurements with AI' }).click()
-  await page.getByRole('button', { name: 'Show the review step' }).click()
 
-  const save = page.getByRole('button', { name: /Save \d+ confirmed/ })
+  const save = page.getByRole('button', { name: /^Save \d+ row/ })
   await expect(save).toBeDisabled()
   await page.getByLabel('This matches the document').first().check()
-  await expect(save).toHaveText('Save 1 confirmed measurement')
+  await expect(save).toHaveText('Save 1 row')
   await save.click()
-  // 9 demo measurements plus the one confirmed; the two unconfirmed rows were not saved.
+  await expect(page.getByRole('heading', { name: 'Import finished' })).toBeVisible()
+  await page.getByRole('button', { name: 'Done' }).click()
+  // Nothing left to read; 9 demo measurements plus the one confirmed.
+  await expect(page.getByRole('heading', { name: /Not read yet/ })).toHaveCount(0)
   await tab(page, 'Measurements').click()
   await expect(page.getByText('10 recorded')).toBeVisible()
 })
@@ -25,7 +29,7 @@ test('demo: only values the user confirms are saved', async ({ page }) => {
 test.describe('with a mocked Anthropic API', () => {
   test.use({ allowAnthropic: true })
 
-  test('extraction sends the document only after the user agrees, and saves only confirmed rows', async ({ page }) => {
+  test('the import sends documents only after the user agrees, and saves only confirmed rows', async ({ page }) => {
     const bodies: string[] = []
     await page.route(`${ANTHROPIC}/**`, async (route) => {
       const req = route.request()
@@ -51,19 +55,18 @@ test.describe('with a mocked Anthropic API', () => {
     await addChild(page, { name: 'Sam Example', dob: '2026-03-15', sex: 'Girl' })
     await saveApiKey(page, TEST_KEY)
 
-    // Upload the fictional PDF.
+    // Add the fictional PDF with the import.
     await tab(page, 'Documents').click()
-    await page.getByRole('link', { name: 'Add a document' }).first().click()
-    await page.getByLabel('Choose a PDF or a photo').setInputFiles({ name: 'report.pdf', mimeType: 'application/pdf', buffer: readFileSync('tests/fixtures/sample-growth-report.pdf') })
-    await page.getByLabel('Title (optional)').fill('September check-up')
-    await page.getByRole('button', { name: 'Save' }).click()
-    await page.getByRole('link', { name: 'Read measurements with AI' }).click()
+    await page.getByRole('link', { name: 'Add documents' }).first().click()
+    await page.getByLabel('Add PDFs, photos or zip files').setInputFiles({ name: 'september-checkup.pdf', mimeType: 'application/pdf', buffer: readFileSync('tests/fixtures/sample-growth-report.pdf') })
+    await expect(page.getByLabel('What is september-checkup.pdf?')).toHaveValue('growth-report')
+    await page.getByRole('button', { name: 'Read 1 document' }).click()
 
     // Nothing is sent before the user agrees.
     await expect(page.getByRole('heading', { name: 'Send to Anthropic?' })).toBeVisible()
     expect(bodies).toHaveLength(0)
     await page.getByRole('button', { name: 'Send' }).click()
-    await expect(page.getByRole('heading', { name: 'Check the values' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Check document 1 of 1' })).toBeVisible()
     expect(bodies).toHaveLength(1)
     expect(bodies[0]).not.toContain('Sam Example')
     expect(bodies[0]).not.toContain('2026-03-15')
@@ -73,8 +76,10 @@ test.describe('with a mocked Anthropic API', () => {
     const ticks = page.getByLabel('This matches the document')
     await ticks.nth(0).check()
     await ticks.nth(2).check()
-    await expect(page.getByRole('button', { name: /^Save/ })).toHaveText('Save 1 confirmed measurement')
+    await expect(page.getByRole('button', { name: /^Save/ })).toHaveText('Save 1 row')
     await page.getByRole('button', { name: /^Save/ }).click()
+    await expect(page.getByRole('heading', { name: 'Import finished' })).toBeVisible()
+    await page.getByRole('button', { name: 'Done' }).click()
 
     await tab(page, 'Measurements').click()
     await expect(page.getByText('1 recorded')).toBeVisible()

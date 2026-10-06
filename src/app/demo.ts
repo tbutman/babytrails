@@ -3,6 +3,7 @@
 
 import { MemoryStore } from '../core'
 import { addDocument } from '../core'
+import type { ProposedRow } from '../core/review/model'
 import type { BabyDocument, Child, Measurement } from './types'
 import { today } from './types'
 
@@ -64,7 +65,7 @@ export async function loadDemo(): Promise<MemoryStore> {
       profileId: child.id,
       date: daysBefore(now, DEMO_AGE_DAYS - 183),
       kind: 'growth-report',
-      title: 'Health booklet: growth page (sample)',
+      title: DEMO_DOCUMENT_TITLE,
       meta: {},
     })
   } catch {
@@ -88,3 +89,14 @@ All three are in much the same place on the WHO charts as last time.`,
 - Weight gain was about 90 g a week this month. Is that what you expected at this age?
 - Which measurements will you take at the 9-month check-up?`,
 }
+
+// The demo's stored sample document, and the title the import gives the sample when it's added again.
+export const DEMO_DOCUMENT_TITLE = 'Health booklet: growth page (sample)'
+export const SAMPLE_IMPORT_TITLE = 'Sample growth report (fictional).pdf'
+
+// The demo's "AI answer" for the sample growth report, prepared in advance. No request is made.
+export const DEMO_PROPOSALS: ProposedRow[] = [
+  { values: { date: '15/07/2026', weightKg: 6.05, statureCm: 60.3, standing: 'no', headCm: 39.7 }, confidence: 'high', sourceText: '15/07/2026 6,05 kg 60,3 cm 39,7 cm', page: 1 },
+  { values: { date: '14/08/2026', weightKg: 6.6, statureCm: 62.5, standing: 'no', headCm: 40.8 }, confidence: 'high', sourceText: '14/08/2026 6,60 kg 62,5 cm 40,8 cm', page: 1 },
+  { values: { date: '15/09/2026', weightKg: 7.1, statureCm: 64.3, standing: 'no', headCm: 41.6 }, confidence: 'medium', sourceText: '15/09/2026 7,10 kg 64,3 cm 41,6 cm', page: 1 },
+]
