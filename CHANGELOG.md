@@ -69,3 +69,6 @@ with real records.
   advance.
 - Deleting a child now also deletes their summaries and conversations.
 - A full name typed in a question becomes one "your baby", not one per word.
+- Weight gains compared with WHO's own weight velocity standards when the two measurements match
+  one of WHO's 1- or 2-month intervals (within 3 days): "about the 50th percentile of WHO's weight
+  gains for 5–6 months", on the overview, the report card and in summaries and answers.

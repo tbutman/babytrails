@@ -638,15 +638,15 @@ following his own curve:
 
 (Illustrative wording and numbers, not from a real child.)
 
-**Part two (step 8): WHO's growth velocity standards.** WHO publishes increment standards for
-weight (1- and 2-month intervals), length (2-, 3-, 4- and 6-month) and head circumference (2-, 3-,
-4- and 6-month), birth to 24 months. When two measurements are close to one of those intervals, the
-code can place the increment on WHO's increment percentiles. **To verify before building:** the
-exact tables and their parameters (WHO describes them as LMS-type with a shift for negative
-increments), WHO's tolerance for how far an interval may differ from the nominal one, and the
-licence, which should match the tables BabyTrails already downloads (and the permission request to
-WHO should mention them). Intervals that don't fit are not scaled; the app says "WHO's reference
-covers 1- and 2-month intervals" and shows part one only.
+**Part two (step 8, built): WHO's weight velocity standards.** WHO publishes weight increments over
+1-month intervals (birth to 12 months) and 2-month intervals (birth to 24 months), as L, M, S and a
+Delta added before the transformation (the 2009 growth velocity report). `scripts/who-data.mjs`
+downloads the z-score tables with pinned checksums, like the other tables. A weight gain is placed
+among them only when both measurements were within **3 days** of an interval's start and end ages,
+the tolerance reported for how the standards were built (WHO's report itself sits behind a
+JavaScript-only repository page; worth confirming against it). Intervals that don't fit aren't
+scaled: part one still applies. Length and head increments (2- to 6-month intervals) are left for
+later. Tests reproduce WHO's published SD values from the parameters.
 
 ### 17.6 Doubtful measurements
 

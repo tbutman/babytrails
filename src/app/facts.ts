@@ -6,6 +6,7 @@ import { ageInDays, computeGrowth, type GrowthResult } from '../growth/growth'
 import { percentile } from '../growth/lms'
 import type { Indicator, Tables } from '../growth/tables'
 import { allIntervals, versusSameLine, type Interval, type Measure } from './gains'
+import { incrementLabel } from '../growth/velocity'
 import { LOSS_THRESHOLD_PERCENT, newborn } from './newborn'
 import type { Child, Measurement } from './types'
 
@@ -36,6 +37,9 @@ export type GainFact = {
   sameLinePerMonthCm?: number
   comparedWithSameLine?: 'about the same' | 'more' | 'less'
   tooShortToCompare?: true
+  // Weight only, when the ages match an interval of WHO's weight velocity standards.
+  whoGainInterval?: string
+  whoGainPercentile?: number
 }
 
 export type Facts = {
@@ -197,6 +201,10 @@ function gainFacts(series: Record<Measure, Interval[]>, child: Child): Facts['ga
       }
       if (weight) f.perWeekGrams = Math.round(i.rate * 1000)
       else f.perMonthCm = round(i.rate, 1)
+      if (i.who) {
+        f.whoGainInterval = incrementLabel(i.who)
+        f.whoGainPercentile = round(percentile(i.who.z))
+      }
       if (i.short) f.tooShortToCompare = true
       else if (i.sameLine !== undefined) {
         if (weight) f.sameLinePerWeekGrams = Math.round(i.sameLine * 1000)

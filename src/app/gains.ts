@@ -5,6 +5,8 @@
 import { ageInDays, computeGrowth } from '../growth/growth'
 import { valueAtAdjustedZ, valueAtZ } from '../growth/lms'
 import { lmsAt, type Indicator, type Tables } from '../growth/tables'
+import { incrementLabel, weightIncrement, type Increment } from '../growth/velocity'
+import { formatPercentile } from '../growth/lms'
 import { formatMonthlyGain, formatWeeklyGain, type Units } from '../growth/units'
 import type { Child, Measurement } from './types'
 
@@ -25,6 +27,8 @@ export type Interval = {
   toZ?: number
   /** Too few days apart for the change to say much: scales and measurers differ by more. */
   short: boolean
+  /** Weight only: the gain against WHO's weight velocity standards, when the ages match an interval. */
+  who?: Increment
 }
 
 export const DAYS_PER_MONTH = 30.4375
@@ -67,7 +71,8 @@ export function intervals(tables: Tables, child: Child, measurements: Measuremen
       const target = valueAt(tables, child, measure, b.ageDays, a.z)
       if (target !== undefined) sameLine = ((target - a.value) / days) * per
     }
-    out.push({ measure, from: a.m, to: b.m, days, change, rate: (change / days) * per, sameLine, fromZ: a.z, toZ: b.z, short: days < MIN_DAYS[measure] })
+    const who = measure === 'weight' && tables.velocity ? weightIncrement(tables.velocity, child.sex, a.ageDays, b.ageDays, change * 1000) : undefined
+    out.push({ measure, from: a.m, to: b.m, days, change, rate: (change / days) * per, sameLine, fromZ: a.z, toZ: b.z, short: days < MIN_DAYS[measure], ...(who ? { who } : {}) })
   }
   return out
 }
@@ -99,4 +104,10 @@ export function sameLineSentence(i: Interval, units: Units): string | undefined 
   if (!v || i.sameLine === undefined) return undefined
   const line = `Staying on the same percentile line would have meant about ${formatRate(i, i.sameLine, units)}`
   return v === 'about the same' ? `${line}: about the same.` : `${line}, so this was ${v}.`
+}
+
+/** "Against WHO's weight gains for 5–6 months: about the 48th percentile." */
+export function whoSentence(i: Interval): string | undefined {
+  if (!i.who) return undefined
+  return `Against WHO's standards for weight gain from ${incrementLabel(i.who)}, that's about the ${formatPercentile(i.who.z)} percentile.`
 }
