@@ -99,16 +99,12 @@ export function babyAdapter(deps: {
       return { rows, meta: {}, dropped }
     },
 
+    // Measurements already saved are left out, and the rest go to review. There's deliberately no
+    // "similar document" warning: a health booklet page is photographed again at every check-up with
+    // new rows added, so a page that's mostly saved already is the normal case, and skipping it would
+    // drop the new rows.
     async check(result) {
-      const saved = alreadySavedRows(result.rows, await mine())
-      const compared = result.rows.length
-      return {
-        alreadySaved: saved,
-        // Most of it is already saved, but not all: probably another copy of a report you've added.
-        ...(saved.length > 0 && saved.length < compared && saved.length * 2 >= compared
-          ? { similar: { label: 'a report you already added', detail: `${saved.length} of ${compared} measurements are already saved for the same dates.` } }
-          : {}),
-      }
+      return { alreadySaved: alreadySavedRows(result.rows, await mine()) }
     },
 
     async save(doc: StoredDoc, rows: ConfirmedRow[]) {

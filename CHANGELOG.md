@@ -28,3 +28,6 @@ with real records.
 - Trails UI v2, shared with LabTrails: Inter throughout, a refined honey-and-ink palette, a tab bar
   on phones, metric cards with sparklines, and a landing page at babytrails.app with the app at
   /app (old addresses redirect).
+- A health booklet page photographed again with new rows is no longer called "a report you already
+  added" with an offer to skip it, which would have dropped the new rows. Rows already saved are
+  left out as before; the new ones go to review.

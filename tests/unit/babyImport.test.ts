@@ -50,6 +50,19 @@ describe('already saved', () => {
     expect(alreadySavedRows(DEMO_PROPOSALS, [m('2026-07-15', 6.1, 60.3, 39.7)])).toEqual([])
   })
 
+  it('takes a booklet page photographed again with new rows: old rows left out, new rows kept, no skipping', async () => {
+    // Made-up values. The page was imported at an earlier check-up with three rows; now it has five.
+    const store = new MemoryStore()
+    for (const saved of [m('2026-03-20', 3.4), m('2026-04-15', 4.6, 55, 37.5), m('2026-05-15', 5.7, 59, 39.5)]) await store.put('measurements', saved)
+    const page = (date: string, weightKg: number, statureCm?: number, headCm?: number) => ({ values: { date, weightKg, statureCm, headCm }, confidence: 'high' as const })
+    const rows = [page('20/03/2026', 3.4), page('15/04/2026', 4.6, 55, 37.5), page('15/05/2026', 5.7, 59, 39.5), page('15/06/2026', 6.5, 62, 41), page('15/07/2026', 7.1, 64.5, 42)]
+    const adapter = babyAdapter({ store, child, model: 'm', demo: false, apiKey: 'k', onSaved: () => {} })
+    const check = await adapter.check!({ rows, meta: {}, dropped: 0 })
+    expect(check.alreadySaved.map((r) => r.values.date)).toEqual(['20/03/2026', '15/04/2026', '15/05/2026'])
+    // Mostly saved is the normal case for a booklet page, not a sign of a duplicate document.
+    expect(check.similar).toBeUndefined()
+  })
+
   it("can't match rows whose dates could be read either way", () => {
     const rows = [{ values: { date: '03/04/2026', weightKg: 5 }, confidence: 'high' as const }]
     expect(alreadySavedRows(rows, [m('2026-04-03', 5), m('2026-03-04', 5)])).toEqual([])
@@ -104,6 +117,6 @@ describe('the BabyTrails adapter', () => {
 
     const check = await adapter.check!({ rows: DEMO_PROPOSALS, meta: {}, dropped: 0 })
     expect(check.alreadySaved.map((r) => r.values.date)).toEqual(['15/07/2026', '14/08/2026'])
-    expect(check.similar?.detail).toBe('2 of 3 measurements are already saved for the same dates.')
+    expect(check.similar).toBeUndefined()
   })
 })
