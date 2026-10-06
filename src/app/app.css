@@ -162,3 +162,26 @@ fieldset + .chart-card {
   color: var(--text-muted);
   font-weight: 600;
 }
+
+/* The first weeks (src/app/FirstWeeks.tsx) */
+.first-weeks {
+  margin-top: var(--space-4);
+}
+.first-weeks .section-title {
+  margin-top: 0;
+}
+.first-weeks-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+}
+.first-weeks-list dt {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.first-weeks-list dd {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 650;
+}

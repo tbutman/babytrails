@@ -41,13 +41,20 @@ export async function createVault(page: Page) {
   await page.getByRole('button', { name: 'Create the vault' }).click()
 }
 
-export async function addChild(page: Page, { name, dob, sex, nickname }: { name: string; dob: string; sex: 'Girl' | 'Boy'; nickname?: string }) {
+export async function addChild(page: Page, { name, dob, sex, nickname, birthKg }: { name: string; dob: string; sex: 'Girl' | 'Boy'; nickname?: string; birthKg?: string }) {
   await page.getByRole('link', { name: 'Add a child' }).first().click()
   await page.getByLabel('Name', { exact: true }).fill(name)
   if (nickname) await page.getByLabel('Nickname (optional)').fill(nickname)
   await page.getByLabel('Date of birth').fill(dob)
   await page.getByLabel(sex, { exact: true }).check()
+  // Saving goes on to the measurements at birth unless that's unticked.
+  if (!birthKg) await page.getByLabel(/Add the measurements at birth next/).uncheck()
   await page.getByRole('button', { name: 'Save' }).click()
+  if (birthKg) {
+    await expect(page.getByRole('heading', { name: 'Measurements at birth' })).toBeVisible()
+    await page.getByLabel('Weight (kg)').fill(birthKg)
+    await page.getByRole('button', { name: 'Save' }).click()
+  }
   await expect(page.getByRole('heading', { name: nickname ?? name })).toBeVisible()
 }
 

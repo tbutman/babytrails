@@ -6,6 +6,7 @@ import { ageInDays, computeGrowth, type GrowthResult } from '../growth/growth'
 import { percentile } from '../growth/lms'
 import type { Indicator, Tables } from '../growth/tables'
 import { allIntervals, versusSameLine, type Interval, type Measure } from './gains'
+import { LOSS_THRESHOLD_PERCENT, newborn } from './newborn'
 import type { Child, Measurement } from './types'
 
 type Score = { z: number; percentile: number }
@@ -50,8 +51,13 @@ export type Facts = {
   // The last few intervals per kind, oldest first, with the gain that would have kept the same
   // percentile line.
   gains: Partial<Record<Measure, GainFact[]>>
-  // Set by the code, never the AI: things worth mentioning to the paediatrician.
+  // The first weeks, while the latest measurement is under 3 months: weight change from birth weight.
+  newborn?: { birthWeightKg: number; lowestPercentFromBirth?: number; lowestAtAgeDays?: number; backToBirthWeightByAgeDays?: number }
+  // Set by the code, never the AI: things worth mentioning to the paediatrician. A measurement
+  // outside the 3rd–97th band is flagged when it gets there; while it stays there, it's listed in
+  // stillOutside instead, as context.
   worthMentioning: Flag[]
+  stillOutside: { indicator: Indicator; side: 'above the 97th' | 'below the 3rd' }[]
   indicatorNames: Partial<Record<Indicator, string>>
 }
 
@@ -113,13 +119,18 @@ export function buildFacts(tables: Tables, child: Child, measurements: Measureme
     previous,
     gains: gainFacts(allIntervals(tables, child, sorted), child),
     worthMentioning: [],
+    stillOutside: [],
     indicatorNames: {},
   }
 
   for (const [key, s] of Object.entries(latest.scores) as [Indicator, Score][]) {
     facts.indicatorNames[key] = NAMES[key]
     if (Math.abs(s.z) > OUTER_Z) {
-      facts.worthMentioning.push({ indicator: key, reason: `${NAMES[key]} is ${s.z < 0 ? 'below the 3rd' : 'above the 97th'} percentile` })
+      const side = s.z < 0 ? 'below the 3rd' : 'above the 97th'
+      const before = previous?.scores[key]
+      const wasOutsideSameSide = !!before && Math.abs(before.z) > OUTER_Z && Math.sign(before.z) === Math.sign(s.z)
+      if (wasOutsideSameSide) facts.stillOutside.push({ indicator: key, side })
+      else facts.worthMentioning.push({ indicator: key, reason: `${NAMES[key]} is ${side} percentile` })
     }
   }
 
@@ -144,9 +155,25 @@ export function buildFacts(tables: Tables, child: Child, measurements: Measureme
       headCmChange: round(diff(latest.headCm, previous.headCm) ?? NaN) || undefined,
       percentileMoves: moves,
     }
-    // Losing weight after the first two weeks is worth a mention.
+    // Losing weight after the first two weeks is worth a mention (the first days are covered below).
     if (weightDiff !== undefined && weightDiff < 0 && latest.ageDays > 14) {
       facts.worthMentioning.push({ indicator: 'wfa', reason: 'weight went down since the previous measurement' })
+    }
+  }
+  // The first weeks (NICE NG75, see newborn.ts).
+  const nb = newborn(child, sorted)
+  if (nb && latest.ageDays <= 90) {
+    facts.newborn = {
+      birthWeightKg: nb.birthWeightKg,
+      lowestPercentFromBirth: nb.lowest ? round(nb.lowest.percentFromBirth) : undefined,
+      lowestAtAgeDays: nb.lowest?.ageDays,
+      backToBirthWeightByAgeDays: nb.regainedByDay,
+    }
+    if (latest.ageDays <= 42) {
+      if (nb.lostMoreThan10) {
+        facts.worthMentioning.push({ indicator: 'wfa', reason: `weight was more than ${LOSS_THRESHOLD_PERCENT}% below birth weight in the first two weeks` })
+      }
+      if (nb.notRegainedBy3Weeks) facts.worthMentioning.push({ indicator: 'wfa', reason: 'weight was not back to birth weight by 3 weeks of age' })
     }
   }
   return facts

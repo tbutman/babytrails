@@ -12,6 +12,7 @@ import { Disclaimer } from '../components'
 import { useChild, useMeasurements } from '../data'
 import { formatAge, formatDate } from '../format'
 import { allIntervals } from '../gains'
+import { FirstWeeks } from '../FirstWeeks'
 import { GainCard } from '../GainCard'
 import { growthFor, useTables } from '../growthData'
 import { useSession } from '../sessionContext'
@@ -115,6 +116,7 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
             })}
           </div>
 
+          <FirstWeeks child={child} measurements={measurements} units={units} />
           {series && <GainCard series={series} units={units} />}
 
           <h2 className="section-title">

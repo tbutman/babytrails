@@ -30,6 +30,12 @@ function niceStep(span: number, target: number): number {
   return [1, 2, 2.5, 5, 10].map((m) => m * pow).find((s) => s >= raw) ?? raw
 }
 
+const WEEKS_UNTIL = 98 // 14 weeks
+
+function weekLabel(days: number): string {
+  return days === 0 ? 'Birth' : `${days / 7} wk`
+}
+
 function ageLabel(days: number): string {
   const months = Math.round(days / DAYS_PER_MONTH)
   if (months === 0) return 'Birth'
@@ -66,7 +72,8 @@ export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow 
     const latest = Math.max(ageDaysNow, ...points.map((p) => p.x), 0)
     const months = Math.min(60, Math.max(6, Math.ceil((latest * 1.15) / DAYS_PER_MONTH)))
     x0 = 0
-    x1 = Math.min(tMax, Math.round(months * DAYS_PER_MONTH))
+    // The first 14 weeks in weeks, so the early days aren't squeezed into a corner.
+    x1 = latest < WEEKS_UNTIL ? WEEKS_UNTIL : Math.min(tMax, Math.round(months * DAYS_PER_MONTH))
   } else {
     const xs = points.map((p) => p.x)
     x0 = Math.max(tMin, Math.floor((xs.length ? Math.min(...xs) : 50) - 5))
@@ -102,7 +109,9 @@ export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow 
       .join(' ')} Z`
 
   const xTicks: number[] = []
-  if (byAge) {
+  if (byAge && x1 === WEEKS_UNTIL) {
+    for (let d = 0; d < WEEKS_UNTIL; d += 14) xTicks.push(d)
+  } else if (byAge) {
     const months = Math.round(x1 / DAYS_PER_MONTH)
     const every = months <= 12 ? (months <= 6 ? 1 : 2) : months <= 24 ? 3 : 6
     for (let m = 0; m <= months; m += every) xTicks.push(m * DAYS_PER_MONTH)
@@ -132,7 +141,7 @@ export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow 
         ))}
         {xTicks.map((x) => (
           <text key={`x${x}`} className="chart-tick" x={sx(x)} y={H - M.bottom + 16} textAnchor="middle">
-            {byAge ? ageLabel(x) : (units === 'metric' ? x : cmToIn(x)).toFixed(0)}
+            {byAge ? (x1 === WEEKS_UNTIL ? weekLabel(x) : ageLabel(x)) : (units === 'metric' ? x : cmToIn(x)).toFixed(0)}
           </text>
         ))}
         <text className="chart-tick" x={M.left} y={12} textAnchor="start">
