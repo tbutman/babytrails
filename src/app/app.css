@@ -85,3 +85,77 @@ fieldset + .chart-card {
 .summary-actions {
   margin-bottom: var(--space-2);
 }
+
+/* Gain over time (src/app/GainCard.tsx) */
+.gain-card {
+  margin-top: var(--space-4);
+}
+.gain-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.gain-head .section-title {
+  margin: 0;
+}
+.gain-head fieldset {
+  margin: 0;
+}
+.gain-latest {
+  margin: var(--space-3) 0 var(--space-1);
+}
+.gain-value {
+  font-size: var(--text-2xl);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+}
+.gain-bars {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: var(--space-3) 0;
+}
+.gain-bars .gain-axis {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+.gain-bars .gain-bar rect {
+  fill: var(--accent);
+}
+.gain-bars .gain-bar.short rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-dasharray: 3 2;
+}
+.gain-bars .gain-tick {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.gain-bars text {
+  fill: var(--text-muted);
+  font-size: 10px;
+  font-family: var(--font);
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.gain-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.gain-table th,
+.gain-table td {
+  text-align: left;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.gain-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+}

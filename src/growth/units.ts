@@ -36,6 +36,12 @@ export function formatWeeklyGain(kgPerWeek: number, units: Units): string {
     : `${sign}${(Math.abs(kgPerWeek) / KG_PER_LB * 16).toFixed(1)} oz a week`
 }
 
+// Centimetres (or inches) per month between two lengths or head circumferences.
+export function formatMonthlyGain(cmPerMonth: number, units: Units): string {
+  const sign = cmPerMonth < 0 ? '−' : ''
+  return units === 'metric' ? `${sign}${Math.abs(cmPerMonth).toFixed(1)} cm a month` : `${sign}${cmToIn(Math.abs(cmPerMonth)).toFixed(2)} in a month`
+}
+
 // Parses what people type on a phone: "7,9" and "7.9" both mean 7.9.
 export function parseDecimal(text: string): number | undefined {
   const cleaned = text.trim().replace(',', '.')

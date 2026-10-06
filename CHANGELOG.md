@@ -31,3 +31,7 @@ with real records.
 - A health booklet page photographed again with new rows is no longer called "a report you already
   added" with an offer to skip it, which would have dropped the new rows. Rows already saved are
   left out as before; the new ones go to review.
+- Gain over time: weight gain per week, and length and head gain per month, between every pair of
+  measurements, on the overview (a bar for each interval) and in the measurements list. Each gain
+  sits next to the gain that would have kept the same WHO percentile over the same days, worked out
+  by the code. Summaries can now describe the trend from these numbers.

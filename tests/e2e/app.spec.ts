@@ -28,6 +28,12 @@ test('the demo works without a passphrase or key', async ({ page }) => {
   await startDemo(page)
   await expect(page.getByText('A made-up baby with made-up measurements')).toBeVisible()
   await expect(page.getByText(/percentile/).first()).toBeVisible()
+  // Gain over time: the latest gain, the same-line reference, and a bar per interval.
+  await expect(page.getByRole('heading', { name: 'Gain over time' })).toBeVisible()
+  await expect(page.getByText(/Staying on the same percentile line would have meant about \d+ g a week/)).toBeVisible()
+  await expect(page.getByRole('img', { name: /Gain per interval, oldest first/ })).toBeVisible()
+  await tab(page, 'Measurements').click()
+  await expect(page.getByText(/weight \+\d+ g a week since/).first()).toBeVisible()
   await tab(page, 'Charts').click()
   await expect(page.getByRole('img', { name: /Weight for age, WHO percentile bands. 9 measurements/ })).toBeVisible()
   await page.getByRole('button', { name: 'Leave demo' }).click()

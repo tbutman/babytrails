@@ -22,6 +22,8 @@ with your own key.
 - **WHO growth charts.** Weight, length or height, head circumference, weight for length and BMI,
   from birth to 5 years, with the percentile bands paediatricians use. BabyTrails works out the
   percentiles itself, with the WHO's own method.
+- **Gain over time.** Grams a week (or ounces) between every pair of weighings, and centimetres a
+  month for length and head, each next to the gain that would have kept the same percentile.
 - **Quick entry at the doctor's.** Type the numbers on your phone; you see the percentile as you
   type. Metric or imperial, and "7,25" works as well as "7.25".
 - **Documents in one place.** Add PDFs and photos of growth reports, health booklet pages, doctor's

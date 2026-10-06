@@ -25,3 +25,8 @@ export function formatAge(dateOfBirth: string, on: string): string {
 export function formatDate(date: string): string {
   return new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
+
+// "15 Aug": for chart labels and compact tables.
+export function formatShortDate(date: string): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}

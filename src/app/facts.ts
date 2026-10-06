@@ -5,6 +5,7 @@
 import { ageInDays, computeGrowth, type GrowthResult } from '../growth/growth'
 import { percentile } from '../growth/lms'
 import type { Indicator, Tables } from '../growth/tables'
+import { allIntervals, versusSameLine, type Interval, type Measure } from './gains'
 import type { Child, Measurement } from './types'
 
 type Score = { z: number; percentile: number }
@@ -21,6 +22,20 @@ export type Snapshot = {
 
 export type Flag = { indicator: Indicator; reason: string }
 
+// One interval between consecutive measurements of a kind, as the AI sees it: ages, not dates of
+// birth. Weight in grams per week, length and head in cm per month.
+export type GainFact = {
+  fromAgeDays: number
+  toAgeDays: number
+  days: number
+  perWeekGrams?: number
+  perMonthCm?: number
+  sameLinePerWeekGrams?: number
+  sameLinePerMonthCm?: number
+  comparedWithSameLine?: 'about the same' | 'more' | 'less'
+  tooShortToCompare?: true
+}
+
 export type Facts = {
   baby: { sex: 'girl' | 'boy'; ageDaysToday: number; bornAtWeeks?: number }
   latest: Snapshot
@@ -32,6 +47,9 @@ export type Facts = {
     headCmChange?: number
     percentileMoves: { indicator: Indicator; fromPercentile: number; toPercentile: number; zChange: number }[]
   }
+  // The last few intervals per kind, oldest first, with the gain that would have kept the same
+  // percentile line.
+  gains: Partial<Record<Measure, GainFact[]>>
   // Set by the code, never the AI: things worth mentioning to the paediatrician.
   worthMentioning: Flag[]
   indicatorNames: Partial<Record<Indicator, string>>
@@ -93,6 +111,7 @@ export function buildFacts(tables: Tables, child: Child, measurements: Measureme
     },
     latest,
     previous,
+    gains: gainFacts(allIntervals(tables, child, sorted), child),
     worthMentioning: [],
     indicatorNames: {},
   }
@@ -131,6 +150,34 @@ export function buildFacts(tables: Tables, child: Child, measurements: Measureme
     }
   }
   return facts
+}
+
+const GAINS_SENT = 6
+
+function gainFacts(series: Record<Measure, Interval[]>, child: Child): Facts['gains'] {
+  const out: Facts['gains'] = {}
+  for (const measure of ['weight', 'length', 'head'] as Measure[]) {
+    const list = series[measure].slice(-GAINS_SENT)
+    if (!list.length) continue
+    out[measure] = list.map((i) => {
+      const weight = measure === 'weight'
+      const f: GainFact = {
+        fromAgeDays: ageInDays(child.dateOfBirth, i.from.date),
+        toAgeDays: ageInDays(child.dateOfBirth, i.to.date),
+        days: i.days,
+      }
+      if (weight) f.perWeekGrams = Math.round(i.rate * 1000)
+      else f.perMonthCm = round(i.rate, 1)
+      if (i.short) f.tooShortToCompare = true
+      else if (i.sameLine !== undefined) {
+        if (weight) f.sameLinePerWeekGrams = Math.round(i.sameLine * 1000)
+        else f.sameLinePerMonthCm = round(i.sameLine, 1)
+        f.comparedWithSameLine = versusSameLine(i)
+      }
+      return f
+    })
+  }
+  return out
 }
 
 // A digest of the facts, so the app can tell when a saved summary is out of date.
