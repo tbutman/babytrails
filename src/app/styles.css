@@ -162,6 +162,12 @@ a {
 }
 
 /* forms */
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
 .field {
   display: flex;
   flex-direction: column;
@@ -512,4 +518,23 @@ select {
 }
 .ai-text p {
   margin-bottom: var(--space-2);
+}
+
+/* report */
+.report-preview {
+  margin: var(--space-4) 0;
+}
+.report-preview img {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.offscreen {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 360px;
 }

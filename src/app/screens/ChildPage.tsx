@@ -106,6 +106,11 @@ export function ChildPage() {
         <Link to={`/child/${child.id}/documents`} className="button">
           Documents
         </Link>
+        {measurements.length > 0 && (
+          <Link to={`/child/${child.id}/report`} className="button">
+            Share a report
+          </Link>
+        )}
       </div>
 
       {measurements.length > 0 && (
