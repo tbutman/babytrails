@@ -1,0 +1,7 @@
+/* BabyTrails' accent: honey. Everything else comes from the shared tokens in src/core/ui/. */
+:root {
+  --accent-fill-light: #e0a21e; /* fills only; ink text on it is 6.9:1 */
+  --accent-text-light: #9a6400; /* 4.8:1 on warm white, 5.0:1 on white */
+  --accent-fill-dark: #f2c45a; /* ink text on it is 9.4:1 */
+  --accent-text-dark: #f2c45a; /* 10.9:1 on deep ink */
+}

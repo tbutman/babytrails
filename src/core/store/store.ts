@@ -5,13 +5,12 @@
 import { openJson, open, seal, sealJson } from '../vault/crypto'
 import type { Vault } from '../vault/vault'
 import type { BlobRow, Db } from './db'
+import type { RecordStore, StoredRecord } from './types'
 
 export const BLOB_CHUNK_BYTES = 1024 * 1024
 
 // Collections the core itself uses. Apps add their own.
 export const CORE_COLLECTIONS = ['documents', 'settings'] as const
-
-export type StoredRecord = { id: string }
 
 export class UnknownCollectionError extends Error {
   constructor(collection: string) {
@@ -20,7 +19,8 @@ export class UnknownCollectionError extends Error {
   }
 }
 
-export class EncryptedStore {
+export class EncryptedStore implements RecordStore {
+  readonly kind = 'encrypted'
   readonly #vault: Vault
   readonly #db: Db
   readonly collections: ReadonlySet<string>

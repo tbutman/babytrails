@@ -36,7 +36,7 @@ are described neutrally, with "worth mentioning to your paediatrician" where app
 | Units | Metric and imperial; metric is the default. Values are stored in metric. |
 | After-visit summary | Change since the last visit (gain per week), neutral percentile movement, comparison with the previous visit, and questions for the next check-up. To be tuned after the first version. |
 | Babies born early | Gestational age at birth is recorded now; corrected-age charts come later. |
-| Visual identity | "Honey and ink" as the family base, LabTrails in teal (section 11), **provisional** until the colours are agreed with LabTrails. |
+| Visual identity | "Honey and ink" as the family base, LabTrails in teal (section 11). Agreed 6 October 2026. |
 
 ## 3. Features and the cut line
 
@@ -368,11 +368,11 @@ Ultrasound images are stored and shown, never sent for interpretation; the app d
 - Reading a two-page growth report: about 7,000 tokens in (a PDF page is typically 1,500–3,000
   tokens) and 500 out, so about **2 US cents**.
 
-## 11. Visual identity (provisional)
+## 11. Visual identity (agreed 6 October 2026)
 
-BabyTrails and LabTrails share one design system with a different accent each. Thomas leans
-towards "Honey and ink" as the family base, with LabTrails in teal; final colours are agreed with
-LabTrails in the coordination file.
+BabyTrails and LabTrails share one design system with a different accent each: "Honey and ink" is
+the family base, BabyTrails' accent is honey and LabTrails' is teal. Agreed by Thomas on 6 October
+2026, including the contrast fixes below.
 
 **Colours** (contrast ratios are WCAG 2.1, computed 6 October 2026):
 
@@ -394,9 +394,9 @@ below WCAG's 3:1 for meaningful graphics and 4.5:1 for text. So in light mode:
 - honey backgrounds always carry ink text (6.9:1).
 Dark mode needs no changes.
 
-**LabTrails' accent** is LabTrails' choice. The contrast check suggests teal `#0F7A6A` in light
-mode (5.1:1 on warm white, 5.2:1 behind white text) rather than `#2F8F87` (3.8:1), and `#4FC6AE` in
-dark mode (8.5:1).
+**LabTrails' accent** is teal `#0F7A6A` in light mode (5.1:1 on warm white) and `#4FC6AE` in dark
+mode, with plum flags for results outside a lab's range, never shown by colour alone (LabTrails'
+own spec has the details).
 
 - **Type:** Quicksand for the wordmark and headings, a plain system UI font for body text.
   Quicksand is under the SIL Open Font License and is self-hosted.
@@ -404,7 +404,8 @@ dark mode (8.5:1).
 - **Favicon and app icon:** a small trail of three dots rising left to right, honey on ink.
 - **Charts:** percentile bands in ink at two low strengths, the median dashed, the child's points in
   honey with an ink outline. Never red, amber and green, so nothing reads as a verdict.
-- **Tokens** live in `src/core/ui/` as CSS variables; each app sets only its accent.
+- **Tokens** live in `src/core/ui/tokens.css` as CSS variables. Each app sets only its accent (fill
+  and text, light and dark) and, if it shows flags, its flag colour; BabyTrails' is `src/app/accent.css`.
 
 ## 12. Security and privacy
 

@@ -22,3 +22,5 @@ export type Trails = Awaited<ReturnType<typeof openTrails>>
 export { Vault, WrongPassphraseError, VaultLockedError, VaultExistsError, WeakPassphraseError, MIN_PASSPHRASE_LENGTH } from './vault/vault'
 export { EncryptedStore, UnknownCollectionError, CORE_COLLECTIONS } from './store/store'
 export type { KdfParams } from './vault/crypto'
+export { MemoryStore } from './store/memory'
+export type { RecordStore, StoredRecord } from './store/types'

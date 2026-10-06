@@ -18,7 +18,7 @@ this folder. Nothing here knows about children or growth; app types live in the 
 | `documents/` | Not yet |
 | `review/` | Not yet |
 | `ai/` | Not yet |
-| `ui/` (design tokens) | Not yet |
+| `ui/` (design tokens) | Ready |
 
 ## Opening
 
@@ -90,6 +90,16 @@ await vault.unlock(passphrase)
   fails, nothing on the device changes. Then it replaces everything in one transaction.
 - Lock before restoring and unlock afterwards, so the vault picks up the restored key.
 
+## Reading and writing without caring which store
+
+`RecordStore` (in `store/types.ts`) is the interface screens should use. `EncryptedStore` implements
+it, and so does `MemoryStore`, an in-memory store for demo mode that writes nothing to the device.
+
+```ts
+import { MemoryStore, type RecordStore } from './core'
+const demo: RecordStore = new MemoryStore()   // same put/get/list/delete and blob methods
+```
+
 ## `settings/`
 
 ```ts
@@ -101,3 +111,25 @@ await saveAppSettings(store, app)
 ```
 
 Settings are stored encrypted, in the `settings` collection, so the API key is never in plain form.
+
+## `ui/`: design tokens
+
+`ui/tokens.css` holds the shared "Honey and ink" tokens: backgrounds, surfaces, text, borders, the
+primary button, radii, spacing, type (Quicksand for headings, system UI for body) and chart styles,
+in light and dark mode (following the system, or `data-theme="light|dark"` on `<html>`).
+
+Each app sets only its accent, and optionally a flag colour, in its own stylesheet loaded after the
+tokens:
+
+```css
+:root {
+  --accent-fill-light: #e0a21e;  /* fills and chart points */
+  --accent-text-light: #9a6400;  /* text and lines, ≥ 4.5:1 on the background */
+  --accent-fill-dark: #f2c45a;   /* also the dark-mode primary button, with ink text */
+  --accent-text-dark: #f2c45a;
+  /* optional, for flags: --flag-light, --flag-tint-light, --flag-dark, --flag-tint-dark */
+}
+```
+
+Components then use `--accent-fill`, `--accent-text`, `--flag` and `--flag-tint`, which follow the
+current mode. Fonts are self-hosted with `@fontsource/quicksand` (600 and 700, Latin).
