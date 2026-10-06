@@ -88,7 +88,7 @@ describe('checking an answer', () => {
       { role: 'ai', kind: 'answer', text: 'A1', createdAt: '' },
       { role: 'parent', text: 'Q2', createdAt: '' },
       { role: 'ai', kind: 'unchecked', text: '', createdAt: '' },
-    ])).toBe('Parent: Q1\n\nAnswer: A1\n\nParent: Q2')
+    ])).toBe('Question: Q1\n\nAnswer: A1\n\nQuestion: Q2')
   })
 })
 
@@ -128,6 +128,12 @@ describe('asking', () => {
     expect(out).toMatchObject({ answer: good })
     expect(fetch).toHaveBeenCalledTimes(2)
     expect(JSON.parse(fetch.mock.calls[1][1].body).messages[0].content[0].text).toMatch(/withheld because: "150 g" isn't one of the declared numbers/)
+    // The retry names who the facts are about: the app's subject, or "the person" by default.
+    expect(JSON.parse(fetch.mock.calls[1][1].body).messages[0].content[0].text).toMatch(/declare every number about the person in "numbers"/)
+    const again = vi.fn().mockResolvedValueOnce(answerReply(bad)).mockResolvedValueOnce(answerReply(good))
+    vi.stubGlobal('fetch', again)
+    await askQuestion({ ...base, subject: 'the baby' })
+    expect(JSON.parse(again.mock.calls[1][1].body).messages[0].content[0].text).toMatch(/declare every number about the baby in "numbers"/)
   })
 
   it('withholds an answer that fails twice', async () => {

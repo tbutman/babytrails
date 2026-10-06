@@ -107,6 +107,7 @@ export function Ask() {
         history: (thread?.turns ?? []).map((t) => ({ ...t, text: hide(t.text) })),
         question: hide(text),
         banned: ASK_BANNED,
+        subject: 'the baby',
       })
       const ai: AskTurn =
         'withheld' in outcome
