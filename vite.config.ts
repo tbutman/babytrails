@@ -68,7 +68,17 @@ export default defineConfig({
       },
     }),
   ],
-  build: { assetsInlineLimit: 0 },
+  build: {
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        // The PDF viewer's worker went out once with the wrong content type, and installed apps
+        // cached that copy under its (content-hashed) name. A new name makes every browser fetch
+        // it again; bump the suffix if a published asset ever needs the same treatment.
+        assetFileNames: (info) => (info.names?.some((n) => n.endsWith('.mjs')) ? 'assets/[name]-[hash]-r2[extname]' : 'assets/[name]-[hash][extname]'),
+      },
+    },
+  },
   test: {
     include: ['tests/unit/**/*.test.ts', 'src/**/*.test.ts'],
     environment: 'node',
