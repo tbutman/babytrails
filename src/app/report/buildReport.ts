@@ -19,15 +19,15 @@ export type ReportData = {
   chartSvg: string // a serialised GrowthChart
 }
 
-const INK = '#1d2340'
-const MUTED = '#646a85'
-const HONEY = '#e0a21e'
-const HONEY_TEXT = '#8f5c00'
+export const INK = '#1d2340'
+export const MUTED = '#646a85'
+export const HONEY = '#e0a21e'
+export const HONEY_TEXT = '#8f5c00'
 
 export const escapeXml = (s: string) => s.replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c]!)
 
 let fontData: Promise<string> | undefined
-function loadFont() {
+export function loadFont() {
   fontData ??= fetch(fontUrl)
     .then((r) => r.arrayBuffer())
     .then((b) => `data:font/woff2;base64,${toBase64(new Uint8Array(b))}`)

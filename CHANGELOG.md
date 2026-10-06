@@ -35,3 +35,8 @@ with real records.
   measurements, on the overview (a bar for each interval) and in the measurements list. Each gain
   sits next to the gain that would have kept the same WHO percentile over the same days, worked out
   by the code. Summaries can now describe the trend from these numbers.
+- A report card to share, now the default: the latest weight, length and head with percentiles and
+  the change since the previous measurement, four WHO charts, gain over time, the history and a few
+  highlights written by the code, as a phone-sized image (1080 × 1920) or an A4 PDF. Head
+  circumference, the history and the latest AI summary (labelled) are optional. The one-page report
+  stays as "Simple".

@@ -4,7 +4,10 @@
 export const REPORT_W = 1080
 export const REPORT_H = 1350
 
-async function svgToCanvas(svg: string, scale = 1): Promise<HTMLCanvasElement> {
+export type PageSize = { w: number; h: number }
+const SIMPLE: PageSize = { w: REPORT_W, h: REPORT_H }
+
+async function svgToCanvas(svg: string, size: PageSize, scale = 1): Promise<HTMLCanvasElement> {
   const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
   try {
     const img = new Image()
@@ -12,8 +15,8 @@ async function svgToCanvas(svg: string, scale = 1): Promise<HTMLCanvasElement> {
     img.src = url
     await img.decode()
     const canvas = document.createElement('canvas')
-    canvas.width = REPORT_W * scale
-    canvas.height = REPORT_H * scale
+    canvas.width = size.w * scale
+    canvas.height = size.h * scale
     const ctx = canvas.getContext('2d')!
     ctx.fillStyle = '#fffbf2'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -27,20 +30,22 @@ async function svgToCanvas(svg: string, scale = 1): Promise<HTMLCanvasElement> {
 const toBlob = (canvas: HTMLCanvasElement, type: string, quality?: number) =>
   new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Export failed'))), type, quality))
 
-export async function reportPng(svg: string): Promise<Blob> {
-  return toBlob(await svgToCanvas(svg), 'image/png')
+export async function reportPng(svg: string, size: PageSize = SIMPLE): Promise<Blob> {
+  return toBlob(await svgToCanvas(svg, size), 'image/png')
 }
 
-// A minimal, valid PDF: one A4 page with the report as a JPEG image (DCTDecode), centred.
-export async function reportPdf(svg: string): Promise<Blob> {
-  const canvas = await svgToCanvas(svg, 2)
+// A minimal, valid PDF: one A4 page with the report as a JPEG image (DCTDecode), centred and as large
+// as the margins allow.
+export async function reportPdf(svg: string, size: PageSize = SIMPLE): Promise<Blob> {
+  const canvas = await svgToCanvas(svg, size, size.w > 1100 ? 1.5 : 2)
   const jpeg = new Uint8Array(await (await toBlob(canvas, 'image/jpeg', 0.92)).arrayBuffer())
   const pageW = 595.28
   const pageH = 841.89
   const margin = 36
-  const drawW = pageW - margin * 2
-  const drawH = (drawW * REPORT_H) / REPORT_W
-  const x = margin
+  const fit = Math.min((pageW - margin * 2) / size.w, (pageH - margin * 2) / size.h)
+  const drawW = size.w * fit
+  const drawH = size.h * fit
+  const x = (pageW - drawW) / 2
   const y = (pageH - drawH) / 2
   const content = `q ${drawW.toFixed(2)} 0 0 ${drawH.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /Im0 Do Q`
 

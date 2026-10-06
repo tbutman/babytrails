@@ -68,6 +68,9 @@ fieldset + .chart-card {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
+.card-preview img {
+  max-width: 420px;
+}
 .offscreen {
   position: absolute;
   left: -10000px;
