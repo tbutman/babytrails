@@ -16,6 +16,8 @@ export async function askQuestion(o: {
   history: AskTurn[]
   question: string
   banned?: RegExp[]
+  /** The units whose numbers must be declared (GROWTH_UNITS by default). */
+  units?: string[]
   signal?: AbortSignal
 }): Promise<AskOutcome> {
   const earlier = historyText(o.history)
@@ -28,7 +30,7 @@ export async function askQuestion(o: {
     usage.inputTokens += u.inputTokens
     usage.outputTokens += u.outputTokens
     if (value.kind === 'out-of-scope') return { answer: value, usage }
-    const check = checkAnswer(value, o.facts, o.banned)
+    const check = checkAnswer(value, o.facts, o.banned, o.units)
     if (check.ok) return { answer: value, usage }
     problems = check.problems
   }

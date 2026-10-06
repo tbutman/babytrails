@@ -6,6 +6,13 @@
 // The rule (Thomas, 6 October 2026): answers use only numbers the code computed. The AI declares each
 // number it uses with the fact it came from; the code resolves the fact, compares the values, and
 // withholds any answer whose numbers don't check out or that contains numbers it didn't declare.
+//
+// For apps (coordination request 15): threads belong to one person (profileId). The app decides which
+// facts go with each question; pass only the relevant part of a large history, and the same object
+// is what answers are checked against. A value the app shows in another unit is a fact too: put it in
+// the facts (for example { value: 97, unit: 'mg/dL', shown: { value: 5.4, unit: 'mmol/L' } }) and the
+// AI cites whichever it writes. So is a reference range ("range.low", "range.high"). Numbers may be
+// written with a decimal comma ("5,4"). Pass the units your measurements use (MeasurementUnits).
 
 export type AnswerNumber = { text: string; fact: string }
 export type Answer = { kind: 'answer' | 'out-of-scope'; text: string; numbers: AnswerNumber[] }
@@ -71,20 +78,29 @@ export function firstNumber(text: string): Token | undefined {
   return { value: Number(raw), decimals: raw.split('.')[1]?.length ?? 0, raw: m[0] }
 }
 
+/** The units whose numbers must be declared. Growth units by default; LabTrails passes its own. */
+export const GROWTH_UNITS = ['kg', 'g', 'lb', 'lbs', 'oz', 'cm', 'mm', '%']
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
+
 // Numbers that describe a measurement: a unit, a percent, a percentile, or a z-score. Ages, counts and
 // dates aren't checked here.
-const MEASUREMENT = new RegExp(
-  [
-    String.raw`(${NUMBER})\s?(?:kg|g|lb|lbs|oz|cm|mm|%)(?![a-z])`,
-    String.raw`(${NUMBER})(?:st|nd|rd|th)?\s+(?:percentile|centile)`,
-    String.raw`z(?:-score)?\s*(?:of|=|≈|is)?\s*(${NUMBER})`,
-  ].join('|'),
-  'gi',
-)
+function measurementPattern(units: string[]): RegExp {
+  // Longest first, so "g/L" wins over "g"; a unit can't run on into a longer word or unit.
+  const alternatives = [...new Set(units)].sort((a, b) => b.length - a.length).map(escapeRe).join('|')
+  return new RegExp(
+    [
+      String.raw`(${NUMBER})\s?(?:${alternatives})(?![\p{L}/])`,
+      String.raw`(${NUMBER})(?:st|nd|rd|th)?\s+(?:percentile|centile)`,
+      String.raw`z(?:-score)?\s*(?:of|=|≈|is)?\s*(${NUMBER})`,
+    ].join('|'),
+    'giu',
+  )
+}
 
-export function measurementNumbers(text: string): Token[] {
+export function measurementNumbers(text: string, units: string[] = GROWTH_UNITS): Token[] {
   const out: Token[] = []
-  for (const m of text.matchAll(MEASUREMENT)) {
+  for (const m of text.matchAll(measurementPattern(units))) {
     const t = firstNumber(m[1] ?? m[2] ?? m[3])
     if (t) out.push({ ...t, raw: m[0] })
   }
@@ -96,7 +112,7 @@ const close = (a: number, b: number, decimals: number) => Math.abs(Math.abs(a) -
 export type Check = { ok: boolean; problems: string[] }
 
 /** Checks an answer's numbers against the facts, and its words against the app's banned phrases. */
-export function checkAnswer(answer: Answer, facts: unknown, banned: RegExp[] = []): Check {
+export function checkAnswer(answer: Answer, facts: unknown, banned: RegExp[] = [], units: string[] = GROWTH_UNITS): Check {
   const problems: string[] = []
   const verified: Token[] = []
   for (const n of answer.numbers) {
@@ -107,7 +123,7 @@ export function checkAnswer(answer: Answer, facts: unknown, banned: RegExp[] = [
     else if (!close(t.value, fact, t.decimals)) problems.push(`"${n.text}" doesn't match ${n.fact} (${fact})`)
     else verified.push(t)
   }
-  for (const t of measurementNumbers(answer.text)) {
+  for (const t of measurementNumbers(answer.text, units)) {
     if (!verified.some((v) => close(v.value, t.value, Math.min(v.decimals, t.decimals)))) problems.push(`"${t.raw}" isn't one of the declared numbers`)
   }
   for (const b of banned) {
