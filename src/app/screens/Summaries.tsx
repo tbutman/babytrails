@@ -9,7 +9,8 @@ import { AiError, askText, imageBlock, pdfBlock, shrinkImage } from '../../core/
 import { Markdown } from '../../core/ai/Markdown'
 import { redactNames } from '../../core/ai/redact'
 import { AiOutput, SendSheet } from '../../core/ai/SendSheet'
-import { Page } from '../components'
+import { PageHeader } from '../../core/ui/components'
+import { APP, childPath } from '../brand'
 import { useChild, useDocuments, useMeasurements } from '../data'
 import { SUMMARY_LABELS, useLatestSummary, useSummaries } from '../summaries'
 import { buildFacts, factsDigest, type Facts } from '../facts'
@@ -52,10 +53,17 @@ export function GrowthSummary() {
   if (!child || !measurements || !tables) return null
 
   const facts = buildFacts(tables, child, measurements, today())
-  const back = `/child/${child.id}`
+  const back = childPath(child.id)
   const title = kind === 'questions' ? 'Questions for the next check-up' : 'Explain the latest changes'
 
-  if (!facts) return <Page title={title} back={back}>Add a measurement first.</Page>
+  if (!facts) {
+    return (
+      <>
+        <PageHeader title={title} back={{ to: back, label: 'Overview' }} />
+        <p>Add a measurement first.</p>
+      </>
+    )
+  }
 
   async function save(text: string, model: string, f: Facts) {
     const summary: Summary = {
@@ -74,23 +82,25 @@ export function GrowthSummary() {
 
   if (mode === 'demo') {
     return (
-      <Page title={title} back={back}>
+      <>
+        <PageHeader title={title} back={{ to: back, label: 'Overview' }} />
         <p className="callout">Demo: this summary was written in advance for the made-up baby. No AI is called in the demo.</p>
         <button type="button" className="button primary" onClick={() => void save(DEMO_SUMMARIES[kind], 'prepared in advance', facts)}>
           Show it
         </button>
-      </Page>
+      </>
     )
   }
 
   if (!core.ai.apiKey) {
     return (
-      <Page title={title} back={back}>
+      <>
+        <PageHeader title={title} back={{ to: back, label: 'Overview' }} />
         <p>Summaries use AI with your own Anthropic API key. Add one in Settings first.</p>
-        <Link to="/settings#ai" className="button primary">
+        <Link to={`${APP}/settings#ai`} className="button primary">
           Go to Settings
         </Link>
-      </Page>
+      </>
     )
   }
 
@@ -115,7 +125,8 @@ export function GrowthSummary() {
   }
 
   return (
-    <Page title={title} back={back}>
+    <>
+        <PageHeader title={title} back={{ to: back, label: 'Overview' }} />
       {error && (
         <p className="error" role="alert">
           {error}
@@ -134,7 +145,7 @@ export function GrowthSummary() {
         onSend={() => void send()}
         onCancel={() => navigate(back)}
       />
-    </Page>
+    </>
   )
 }
 
@@ -150,29 +161,31 @@ export function DocumentSummary() {
   const [error, setError] = useState('')
   if (!child || docs === null || summaries === null) return null
   const doc = docs.find((d) => d.id === docId)
-  if (!doc) return <Page title="Not found">This document isn't in your records.</Page>
-  const back = `/child/${child.id}/documents/${doc.id}`
+  if (!doc) return <p>This document isn't in your records.</p>
+  const back = childPath(child.id, `documents/${doc.id}`)
   const existing = summaries.find((s) => s.kind === 'document' && s.documentId === doc.id)
 
   if (existing) {
     return (
-      <Page title={doc.title} back={back}>
+      <>
+        <PageHeader title={doc.title} back={{ to: back, label: 'Document' }} />
         <AiOutput label={SUMMARY_LABELS.document}>
           <Markdown text={existing.text} />
         </AiOutput>
-      </Page>
+      </>
     )
   }
   if (mode === 'demo' || !core.ai.apiKey) {
     return (
-      <Page title="Summarise this document" back={back}>
+      <>
+        <PageHeader title="Summarise this document" back={{ to: back, label: 'Document' }} />
         <p>{mode === 'demo' ? "The demo doesn't call the AI." : 'Summaries use AI with your own Anthropic API key. Add one in Settings first.'}</p>
         {mode !== 'demo' && (
-          <Link to="/settings#ai" className="button primary">
+          <Link to={`${APP}/settings#ai`} className="button primary">
             Go to Settings
           </Link>
         )}
-      </Page>
+      </>
     )
   }
 
@@ -201,7 +214,8 @@ export function DocumentSummary() {
 
   const kb = Math.max(1, Math.round(doc.bytes / 1024))
   return (
-    <Page title="Summarise this document" back={back}>
+    <>
+        <PageHeader title="Summarise this document" back={{ to: back, label: 'Document' }} />
       {error && (
         <p className="error" role="alert">
           {error}
@@ -218,7 +232,7 @@ export function DocumentSummary() {
         onSend={() => void send(doc)}
         onCancel={() => navigate(back)}
       />
-    </Page>
+    </>
   )
 }
 

@@ -15,9 +15,9 @@ test('installable, and opens offline once visited', async ({ page, context }) =>
   await page.evaluate(() => navigator.serviceWorker.ready)
   await context.setOffline(true)
   await page.reload()
-  await expect(page.getByRole('button', { name: 'Try the demo' })).toBeVisible()
-  await page.getByRole('button', { name: 'Try the demo' }).click()
-  await expect(page.getByRole('img', { name: /Weight for age/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Try the demo' }).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Try the demo' }).first().click()
+  await expect(page.getByRole('heading', { name: 'Robin' })).toBeVisible()
   await context.setOffline(false)
 })
 
@@ -33,7 +33,7 @@ test('a new version waits for the user to tap Reload', async ({ browser }) => {
     await page.reload()
     expect(await page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true)
     // Start the demo, so we can tell whether the page reloads by itself.
-    await page.getByRole('button', { name: 'Try the demo' }).click()
+    await page.getByRole('button', { name: 'Try the demo' }).first().click()
     await expect(page.getByRole('heading', { name: 'Robin' })).toBeVisible()
 
     // A deploy: the server now has a different service worker.
@@ -47,7 +47,7 @@ test('a new version waits for the user to tap Reload', async ({ browser }) => {
     await expect(page.getByRole('heading', { name: 'Robin' })).toBeVisible()
 
     await banner.getByRole('button', { name: 'Reload' }).click()
-    await expect(page.getByRole('button', { name: 'Try the demo' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Try the demo' }).first()).toBeVisible()
     await expect(banner).toHaveCount(0)
     expect(await page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.waiting)).toBe(false)
   } finally {

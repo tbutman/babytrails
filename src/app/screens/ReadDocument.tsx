@@ -10,7 +10,9 @@ import { DocumentViewer } from '../../core/documents/DocumentViewer'
 import { ReviewPanel } from '../../core/review/ReviewPanel'
 import type { Column, ConfirmedRow, ProposedRow } from '../../core/review/model'
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
-import { Disclaimer, Page } from '../components'
+import { Disclaimer } from '../components'
+import { PageHeader } from '../../core/ui/components'
+import { APP, childPath } from '../brand'
 import { useChild, useDocuments } from '../data'
 import { EXTRACTION_PROMPT, EXTRACTION_SCHEMA, EXTRACTION_SYSTEM, toProposedRows } from '../prompts/extraction'
 import { useSession, useStore } from '../sessionContext'
@@ -56,7 +58,7 @@ export function ReadDocument() {
   const docs = useDocuments(id)
   if (!child || docs === null) return null
   const doc = docs.find((d) => d.id === docId)
-  if (!doc) return <Page title="Not found">This document isn't in your records.</Page>
+  if (!doc) return <p>This document isn't in your records.</p>
   return <Reader child={child} doc={doc} />
 }
 
@@ -119,12 +121,13 @@ function Reader({ child, doc }: { child: Child; doc: BabyDocument }) {
     }
     if (mode === 'unlocked') await saveCore({ ...core, changesSinceBackup: core.changesSinceBackup + rows.length })
     changed()
-    navigate(`/child/${child.id}`)
+    navigate(childPath(child.id))
   }
 
   if (step === 'review') {
     return (
-      <Page title="Check the values" back={`/child/${child.id}/documents/${doc.id}`}>
+      <>
+        <PageHeader title="Check the values" back={{ to: childPath(child.id, `documents/${doc.id}`), label: 'Document' }} />
         <p>
           Compare each value with the document. Tick the ones that match, fix any that don't, and remove anything wrong. Only ticked
           values are saved.
@@ -135,17 +138,18 @@ function Reader({ child, doc }: { child: Child; doc: BabyDocument }) {
           proposed={proposed}
           source={(p) => <DocumentViewer store={store} doc={doc} page={p ?? page} onPageChange={setPage} />}
           onConfirm={save}
-          onCancel={() => navigate(`/child/${child.id}/documents/${doc.id}`)}
+          onCancel={() => navigate(childPath(child.id, `documents/${doc.id}`))}
           confirmLabel={(n) => `Save ${n} confirmed measurement${n === 1 ? '' : 's'}`}
         />
-        <Disclaimer compact />
-      </Page>
+        <Disclaimer />
+      </>
     )
   }
 
   if (demo) {
     return (
-      <Page title="Read measurements" back={`/child/${child.id}/documents/${doc.id}`}>
+      <>
+        <PageHeader title="Read measurements" back={{ to: childPath(child.id, `documents/${doc.id}`), label: 'Document' }} />
         <p>
           With your own Anthropic API key, BabyTrails sends the document to Anthropic, which proposes the measurements it can read. You then
           check every value before anything is saved.
@@ -161,24 +165,26 @@ function Reader({ child, doc }: { child: Child; doc: BabyDocument }) {
         >
           Show the review step
         </button>
-      </Page>
+      </>
     )
   }
 
   if (!apiKey) {
     return (
-      <Page title="Read measurements" back={`/child/${child.id}/documents/${doc.id}`}>
+      <>
+        <PageHeader title="Read measurements" back={{ to: childPath(child.id, `documents/${doc.id}`), label: 'Document' }} />
         <p>Reading documents uses AI with your own Anthropic API key. Add one in Settings first.</p>
-        <Link to="/settings#ai" className="button primary">
+        <Link to={`${APP}/settings#ai`} className="button primary">
           Go to Settings
         </Link>
-      </Page>
+      </>
     )
   }
 
   const kb = Math.max(1, Math.round(doc.bytes / 1024))
   return (
-    <Page title="Read measurements" back={`/child/${child.id}/documents/${doc.id}`}>
+    <>
+        <PageHeader title="Read measurements" back={{ to: childPath(child.id, `documents/${doc.id}`), label: 'Document' }} />
       {error && (
         <p className="error" role="alert">
           {error}
@@ -193,8 +199,8 @@ function Reader({ child, doc }: { child: Child; doc: BabyDocument }) {
         estimate={{ inputTokens: doc.mimeType === 'application/pdf' ? 6000 : 3000, outputTokens: 600 }}
         busy={step === 'sending'}
         onSend={() => void send()}
-        onCancel={() => navigate(`/child/${child.id}/documents/${doc.id}`)}
+        onCancel={() => navigate(childPath(child.id, `documents/${doc.id}`))}
       />
-    </Page>
+    </>
   )
 }

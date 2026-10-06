@@ -1,40 +1,201 @@
-import { Link, Navigate } from 'react-router'
-import { Disclaimer, Page } from '../components'
+// The app's start (/app): set up a vault, unlock it, or pick a child. The landing page is at /.
+
+import { ArchiveRestore, Baby, ChevronRight, KeyRound, Plus, ShieldCheck } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router'
+import { MIN_PASSPHRASE_LENGTH, WeakPassphraseError, WrongPassphraseError } from '../../core'
+import { AppIcon, Checkbox, EmptyState, PageHeader, TextField } from '../../core/ui/components'
+import { APP, childPath } from '../brand'
+import { Disclaimer } from '../components'
 import { useChildren } from '../data'
+import { DEMO_CHILD_ID } from '../demo'
 import { formatAge } from '../format'
-import { today } from '../types'
-import { BackupNudge } from './Settings'
 import { InstallHint } from '../InstallHint'
+import { Shell } from '../Layout'
+import { useSession } from '../sessionContext'
+import { today } from '../types'
+import { RestoreBackup } from './Backup'
+import { BackupNudge } from './Settings'
 
 export function Home() {
-  const children = useChildren()
-  if (children === null) return null
-  // One child (the usual case, and the demo): go straight to their page.
-  if (children.length === 1) return <Navigate to={`/child/${children[0].id}`} replace />
+  const { mode } = useSession()
+  if (mode === 'loading') return <Shell narrow>{<div className="skeleton loading-card" />}</Shell>
+  if (mode === 'demo') return <Navigate to={childPath(DEMO_CHILD_ID)} replace />
+  if (mode === 'unlocked') return <Children />
+  return <Auth />
+}
+
+function Auth() {
+  const { mode, startDemo } = useSession()
+  const navigate = useNavigate()
+  const [restoring, setRestoring] = useState(false)
+  return (
+    <Shell>
+      <div className="auth">
+        <div className="auth-card">
+          <div className="auth-head">
+            <AppIcon />
+            <h1>{restoring ? 'Restore from a backup' : mode === 'locked' ? 'Welcome back' : 'Set up your vault'}</h1>
+            <p>
+              {restoring
+                ? 'Choose a BabyTrails backup and enter the passphrase it was made with.'
+                : mode === 'locked'
+                  ? "Unlock to see your baby's records."
+                  : 'Your records are encrypted with a passphrase and stay in this browser.'}
+            </p>
+          </div>
+          <div className="card">{restoring ? <RestoreBackup /> : mode === 'locked' ? <Unlock /> : <CreateVault />}</div>
+          <div className="auth-links">
+            <button className="link-button" onClick={() => setRestoring((r) => !r)}>
+              <ArchiveRestore size={14} aria-hidden /> {restoring ? 'Back' : 'Restore from a backup'}
+            </button>
+            <button
+              className="link-button"
+              onClick={async () => {
+                await startDemo()
+                navigate(childPath(DEMO_CHILD_ID))
+              }}
+            >
+              Try the demo instead
+            </button>
+          </div>
+        </div>
+      </div>
+    </Shell>
+  )
+}
+
+function CreateVault() {
+  const { createVault } = useSession()
+  const [passphrase, setPassphrase] = useState('')
+  const [again, setAgain] = useState('')
+  const [understood, setUnderstood] = useState(false)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    if (passphrase.length < MIN_PASSPHRASE_LENGTH) return setError(`Use at least ${MIN_PASSPHRASE_LENGTH} characters. Four or more random words work well.`)
+    if (passphrase !== again) return setError("The two passphrases don't match.")
+    if (!understood) return setError('Please confirm you understand there is no way to reset it.')
+    setBusy(true)
+    setError('')
+    try {
+      await createVault(passphrase)
+    } catch (err) {
+      setError(err instanceof WeakPassphraseError ? err.message : 'The vault could not be created.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
-    <Page title={children.length ? 'Your children' : 'Welcome'}>
+    <form onSubmit={submit} noValidate>
+      <TextField
+        label="Passphrase"
+        type="password"
+        autoComplete="new-password"
+        value={passphrase}
+        onChange={(e) => setPassphrase(e.target.value)}
+        hint="At least 12 characters. Four or more random words are easy to type and hard to guess."
+      />
+      <TextField label="Passphrase again" type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} />
+      <Checkbox checked={understood} onChange={setUnderstood}>
+        <strong>There's no way to reset it.</strong> If I forget it, my records can't be recovered, by anyone, so I'll keep a backup.
+      </Checkbox>
+      {error && (
+        <p className="error form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <button className="button primary block large" disabled={busy}>
+        <ShieldCheck size={18} aria-hidden /> {busy ? 'Setting up…' : 'Create the vault'}
+      </button>
+      <p className="hint form-footnote">BabyTrails keeps records and draws charts; it doesn't give medical advice.</p>
+    </form>
+  )
+}
+
+function Unlock() {
+  const { unlock } = useSession()
+  const [passphrase, setPassphrase] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await unlock(passphrase)
+    } catch (err) {
+      setError(err instanceof WrongPassphraseError ? err.message : 'The vault could not be opened.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form onSubmit={submit} noValidate>
+      <TextField label="Passphrase" type="password" autoComplete="current-password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} error={error} autoFocus />
+      <button className="button primary block large" disabled={busy || !passphrase}>
+        <KeyRound size={18} aria-hidden /> {busy ? 'Unlocking…' : 'Unlock'}
+      </button>
+    </form>
+  )
+}
+
+function Children() {
+  const children = useChildren()
+  if (children === null) return <Shell narrow>{<div className="skeleton loading-card" />}</Shell>
+  // One child (the usual case): go straight to their overview.
+  if (children.length === 1) return <Navigate to={childPath(children[0].id)} replace />
+
+  return (
+    <Shell narrow>
+      <PageHeader
+        title={children.length ? 'Your children' : 'Welcome'}
+        actions={
+          children.length > 0 && (
+            <Link className="button primary" to={`${APP}/child/new`}>
+              <Plus size={16} aria-hidden /> Add a child
+            </Link>
+          )
+        }
+      />
       <BackupNudge />
-      {children.length === 0 && (
+      {children.length === 0 ? (
         <>
-          <p>Start by adding your baby. You can add more children later.</p>
+          <EmptyState
+            icon={Baby}
+            title="Add your baby to start"
+            action={
+              <Link className="button primary" to={`${APP}/child/new`}>
+                <Plus size={16} aria-hidden /> Add a child
+              </Link>
+            }
+          >
+            Their name, date of birth and sex, for the WHO charts. You can add more children later.
+          </EmptyState>
           <InstallHint />
         </>
-      )}
-      <ul className="child-list">
-        {children.map((c) => (
-          <li key={c.id} className="card">
-            <Link to={`/child/${c.id}`} className="child-link">
-              <strong>{c.nickname || c.name}</strong>
-              <span className="muted">{formatAge(c.dateOfBirth, today())}</span>
+      ) : (
+        <div className="card padless list">
+          {children.map((c) => (
+            <Link key={c.id} to={childPath(c.id)} className="list-row">
+              <span className="avatar" aria-hidden="true">
+                {(c.nickname || c.name).slice(0, 1).toUpperCase()}
+              </span>
+              <span className="list-row-main">
+                <span className="list-row-title">{c.nickname || c.name}</span>
+                <span className="list-row-sub">{formatAge(c.dateOfBirth, today())} old</span>
+              </span>
+              <ChevronRight size={18} aria-hidden />
             </Link>
-          </li>
-        ))}
-      </ul>
-      <Link to="/child/new" className="button primary">
-        Add a child
-      </Link>
+          ))}
+        </div>
+      )}
       <Disclaimer />
-    </Page>
+    </Shell>
   )
 }

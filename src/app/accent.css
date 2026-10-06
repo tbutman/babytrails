@@ -1,7 +1,22 @@
-/* BabyTrails' accent: honey. Everything else comes from the shared tokens in src/core/ui/. */
+/* BabyTrails' colours on the shared Trails UI tokens (src/core/ui/tokens.css): honey on ink.
+   WCAG 2.1 contrast, computed 6 October 2026 against the kit's surfaces:
+   - honey text #8F5C00: 5.68:1 on white, 5.39:1 on the page, 5.07:1 / 4.68:1 on surface-2 / -3,
+     5.1:1 on its tint. (#9A6400, the earlier honey text, is 4.47:1 on surface-2 and 4.12:1 on
+     surface-3, below the 4.5:1 the kit asks for on every surface, so it moved one step darker.)
+   - honey fill #E0A21E: for fills and chart points only, never text; ink on it is 6.85:1. On light
+     surfaces it's 2.1–2.2:1, so data points drawn in it always get an ink outline or sit on an
+     accent-text line.
+   - dark mode: honey #F2C45A is 8.4–11.4:1 on every dark surface, ink on it 11.4:1; text honey
+     #F6D27E 9.4–12.8:1 (also the primary button's hover, with ink text 12.8:1); text on the dark
+     tint #33301F 11.65:1. */
+
 :root {
-  --accent-fill-light: #e0a21e; /* fills only; ink text on it is 6.9:1 */
-  --accent-text-light: #9a6400; /* 4.8:1 on warm white, 5.0:1 on white */
-  --accent-fill-dark: #f2c45a; /* ink text on it is 9.4:1 */
-  --accent-text-dark: #f2c45a; /* 10.9:1 on deep ink */
+  --accent-light: #e0a21e;
+  --accent-text-light: #8f5c00;
+  --accent-soft-light: #fcf2dc;
+  --on-accent-light: #1d2340;
+  --accent-dark: #f2c45a;
+  --accent-text-dark: #f6d27e;
+  --accent-soft-dark: #33301f;
+  --on-accent-dark: #0e1124;
 }

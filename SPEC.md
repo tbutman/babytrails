@@ -36,7 +36,7 @@ are described neutrally, with "worth mentioning to your paediatrician" where app
 | Units | Metric and imperial; metric is the default. Values are stored in metric. |
 | After-visit summary | Change since the last visit (gain per week), neutral percentile movement, comparison with the previous visit, and questions for the next check-up. To be tuned after the first version. |
 | Babies born early | Gestational age at birth is recorded now; corrected-age charts come later. |
-| Visual identity | "Honey and ink" as the family base, LabTrails in teal (section 11). Agreed 6 October 2026. |
+| Visual identity | Trails UI v2: Inter, the refined "Honey and ink" palette, one kit for both apps, a landing page at `/` (section 11). Agreed 6 October 2026. |
 
 ## 3. Features and the cut line
 
@@ -368,44 +368,42 @@ Ultrasound images are stored and shown, never sent for interpretation; the app d
 - Reading a two-page growth report: about 7,000 tokens in (a PDF page is typically 1,500–3,000
   tokens) and 500 out, so about **2 US cents**.
 
-## 11. Visual identity (agreed 6 October 2026)
+## 11. Visual identity: Trails UI v2 (agreed 6 October 2026)
 
-BabyTrails and LabTrails share one design system with a different accent each: "Honey and ink" is
-the family base, BabyTrails' accent is honey and LabTrails' is teal. Agreed by Thomas on 6 October
-2026, including the contrast fixes below.
+BabyTrails and LabTrails share one design system, **Trails UI v2**, with a different accent each.
+It replaced the first "Honey and ink" tokens the same day, at Thomas's request, so both apps read
+as finished products from one studio. The kit lives in `src/core/ui/` (interface and rules in its
+README); LabTrails wrote it and BabyTrails moved it into the core.
 
-**Colours** (contrast ratios are WCAG 2.1, computed 6 October 2026):
+- **Type:** Inter for everything, wordmark included, self-hosted (`@fontsource-variable/inter`, OFL).
+  Quicksand is dropped. Numbers use tabular figures.
+- **Palette:** the "Honey and ink" neutrals, refined: near-white surfaces, soft layered shadows,
+  larger radii, a 4 px spacing scale, the accent used sparingly. Control borders meet WCAG's 3:1.
+- **Icons:** Lucide (`lucide-react`, ISC).
+- **Shell:** an app bar that becomes a bottom tab bar on phones (Overview, Charts, Measurements,
+  Documents, Share), a page header on every screen, metric cards for the latest measurements, and
+  empty states.
+- **Landing page** at `/`, from the shared landing sections, with the same structure as LabTrails'
+  (hero with a live preview drawn from the demo, features, how it works, showcases, privacy, FAQ,
+  call to action, footer linking LabTrails). The app moved to `/app`; old addresses redirect.
 
-| Token | Light mode | Dark mode | Use |
-| --- | --- | --- | --- |
-| Background | warm white `#FFFBF2` | deep ink `#12162B` | page |
-| Surface | white `#FFFFFF` | `#1C2140` | cards |
-| Text | ink `#1D2340` (14.9:1) | `#F1EFE6` | body text |
-| Muted text | `#646A85` (5.2:1) | `#A9ACC2` (7.0:1 on cards) | labels |
-| Primary button | ink `#1D2340`, white text (15.4:1) | honey `#F2C45A`, ink text (9.4:1) | main actions |
-| Honey | `#E0A21E` | `#F2C45A` | fills only: highlights, chips with ink text (6.9:1), the child's points |
-| Honey text | **`#9A6400`** (4.8:1) | `#F2C45A` (10.9:1) | accent text, links, the "trails" in the wordmark |
+**BabyTrails' accent** (`src/app/accent.css`; WCAG 2.1, computed against the kit's surfaces):
 
-**Contrast fixes** (from the LabTrails agent's check): honey `#E0A21E` is only 2.2:1 on warm white,
-below WCAG's 3:1 for meaningful graphics and 4.5:1 for text. So in light mode:
-- honey is never used for text; accent text uses the darker honey `#9A6400` (4.8:1);
-- the child's chart points are honey with a 1.5 px ink outline, and the line joining them is
-  `#9A6400` (4.8:1), so both pass 3:1;
-- honey backgrounds always carry ink text (6.9:1).
-Dark mode needs no changes.
+| Slot | Light | Dark |
+| --- | --- | --- |
+| `--accent` (fills, chart points) | honey `#E0A21E` (ink on it 6.85:1) | `#F2C45A` (8.4–11.4:1 on every surface) |
+| `--accent-text` (text, lines, focus ring) | `#8F5C00` (4.68:1 or more on every surface, 5.1:1 on the tint) | `#F6D27E` (9.4:1 or more) |
+| `--accent-soft` (tints) | `#FCF2DC` (ink 13.8:1) | `#33301F` (text 11.65:1) |
+| `--on-accent` (text on accent fills) | ink `#1D2340` | `#0E1124` |
 
-**LabTrails' accent** is teal `#0F7A6A` in light mode (5.1:1 on warm white) and `#4FC6AE` in dark
-mode, with plum flags for results outside a lab's range, never shown by colour alone (LabTrails'
-own spec has the details).
+The honey text moved from `#9A6400` to `#8F5C00` because v2's tinted surfaces are darker:
+`#9A6400` is 4.47:1 on `surface-2` and 4.12:1 on `surface-3`, below the 4.5:1 the kit requires on
+every surface. Honey fill stays for fills and points only; on light surfaces it's 2.1–2.2:1, so the
+child's chart points keep an ink outline and sit on an accent-text line. `tests/unit/contrast.test.ts`
+checks these rules against the CSS files in both modes.
 
-- **Type:** Quicksand for the wordmark and headings, a plain system UI font for body text.
-  Quicksand is under the SIL Open Font License and is self-hosted.
-- **Wordmark:** "babytrails", lowercase, with "trails" in honey text colour.
-- **Favicon and app icon:** a small trail of three dots rising left to right, honey on ink.
-- **Charts:** percentile bands in ink at two low strengths, the median dashed, the child's points in
-  honey with an ink outline. Never red, amber and green, so nothing reads as a verdict.
-- **Tokens** live in `src/core/ui/tokens.css` as CSS variables. Each app sets only its accent (fill
-  and text, light and dark) and, if it shows flags, its flag colour; BabyTrails' is `src/app/accent.css`.
+**Charts:** percentile bands in ink at two low strengths, the median dashed, the child's points in
+honey with an ink outline. Never red, amber and green, so nothing reads as a verdict.
 
 ## 12. Security and privacy
 

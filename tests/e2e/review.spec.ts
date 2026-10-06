@@ -1,14 +1,12 @@
 import { readFileSync } from 'node:fs'
-import { test, expect, ANTHROPIC } from './fixtures'
+import { test, expect, ANTHROPIC, startDemo, createVault, addChild, saveApiKey, tab } from './fixtures'
 
-const PASS = 'maple orbit velvet canoe'
 // A made-up key for the mock; it never reaches Anthropic.
 const TEST_KEY = 'sk-ant-test-' + 'x'.repeat(40)
 
 test('demo: only values the user confirms are saved', async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Try the demo' }).click()
-  await page.getByRole('link', { name: 'Documents' }).click()
+  await startDemo(page)
+  await tab(page, 'Documents').click()
   await page.getByRole('link', { name: /growth page \(sample\)/ }).click()
   await expect(page.getByRole('img', { name: /page 1 of 1/ })).toBeVisible()
   await page.getByRole('link', { name: 'Read measurements with AI' }).click()
@@ -20,7 +18,8 @@ test('demo: only values the user confirms are saved', async ({ page }) => {
   await expect(save).toHaveText('Save 1 confirmed measurement')
   await save.click()
   // 9 demo measurements plus the one confirmed; the two unconfirmed rows were not saved.
-  await expect(page.locator('.measure-list li')).toHaveCount(10)
+  await tab(page, 'Measurements').click()
+  await expect(page.getByText('10 recorded')).toBeVisible()
 })
 
 test.describe('with a mocked Anthropic API', () => {
@@ -48,28 +47,14 @@ test.describe('with a mocked Anthropic API', () => {
       })
     })
 
-    // Set up a vault, a child and a key.
-    await page.goto('/')
-    await page.getByRole('button', { name: 'Get started' }).click()
-    await page.getByLabel('Passphrase', { exact: true }).fill(PASS)
-    await page.getByLabel('Type it again').fill(PASS)
-    await page.getByLabel(/can't be reset/).check()
-    await page.getByRole('button', { name: 'Create my vault' }).click()
-    await page.getByRole('link', { name: 'Add a child' }).click()
-    await page.getByLabel('Name', { exact: true }).fill('Sam Example')
-    await page.getByLabel('Date of birth').fill('2026-03-15')
-    await page.getByRole('button', { name: 'Girl' }).click()
-    await page.getByRole('button', { name: 'Save' }).click()
-    await page.getByRole('link', { name: 'Settings' }).click()
-    await page.getByLabel('Anthropic API key').fill(TEST_KEY)
-    await page.getByRole('button', { name: 'Save key' }).click()
-    await expect(page.getByText(/ending in …xxxx/)).toBeVisible()
-    await page.getByRole('link', { name: 'BabyTrails home' }).click()
+    await createVault(page)
+    await addChild(page, { name: 'Sam Example', dob: '2026-03-15', sex: 'Girl' })
+    await saveApiKey(page, TEST_KEY)
 
     // Upload the fictional PDF.
-    await page.getByRole('link', { name: 'Documents' }).click()
-    await page.getByRole('link', { name: 'Add a document' }).click()
-    await page.getByLabel('File').setInputFiles({ name: 'report.pdf', mimeType: 'application/pdf', buffer: readFileSync('tests/fixtures/sample-growth-report.pdf') })
+    await tab(page, 'Documents').click()
+    await page.getByRole('link', { name: 'Add a document' }).first().click()
+    await page.getByLabel('Choose a PDF or a photo').setInputFiles({ name: 'report.pdf', mimeType: 'application/pdf', buffer: readFileSync('tests/fixtures/sample-growth-report.pdf') })
     await page.getByLabel('Title (optional)').fill('September check-up')
     await page.getByRole('button', { name: 'Save' }).click()
     await page.getByRole('link', { name: 'Read measurements with AI' }).click()
@@ -91,7 +76,8 @@ test.describe('with a mocked Anthropic API', () => {
     await expect(page.getByRole('button', { name: /^Save/ })).toHaveText('Save 1 confirmed measurement')
     await page.getByRole('button', { name: /^Save/ }).click()
 
-    await expect(page.locator('.measure-list li')).toHaveCount(1)
-    await expect(page.locator('.measure-list')).toContainText('6.05 kg')
+    await tab(page, 'Measurements').click()
+    await expect(page.getByText('1 recorded')).toBeVisible()
+    await expect(page.getByText(/6\.05 kg/)).toBeVisible()
   })
 })

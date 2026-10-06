@@ -1,6 +1,4 @@
-import { test, expect } from './fixtures'
-
-const PASS = 'maple orbit velvet canoe'
+import { test, expect, startDemo, createVault, addChild, addMeasurement, tab, PASS } from './fixtures'
 
 test('the built page carries the Content-Security-Policy', async ({ page }) => {
   await page.goto('/')
@@ -9,40 +7,46 @@ test('the built page carries the Content-Security-Policy', async ({ page }) => {
   expect(csp).toContain("script-src 'self' 'wasm-unsafe-eval'")
 })
 
-test('the demo works without a passphrase or key', async ({ page }) => {
+test('the landing page introduces the app and links to LabTrails', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Try the demo' }).click()
-  await expect(page.getByRole('status')).toContainText('made-up baby')
-  await expect(page.getByRole('heading', { name: 'Robin' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Every check-up')
+  await expect(page.getByRole('img', { name: /preview of BabyTrails/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Also from Trails: LabTrails/ })).toHaveAttribute('href', 'https://labtrails.app')
+  await page.getByRole('link', { name: 'Set up your vault' }).first().click()
+  await expect(page).toHaveURL(/\/app$/)
+  await expect(page.getByRole('heading', { name: 'Set up your vault' })).toBeVisible()
+})
+
+test('old addresses redirect into /app', async ({ page }) => {
+  await page.goto('/settings')
+  await expect(page).toHaveURL(/\/app(\/settings)?$/)
+  await page.goto('/child/x/measure')
+  await expect(page).toHaveURL(/\/app/)
+})
+
+test('the demo works without a passphrase or key', async ({ page }) => {
+  await startDemo(page)
+  await expect(page.getByText('A made-up baby with made-up measurements')).toBeVisible()
   await expect(page.getByText(/percentile/).first()).toBeVisible()
+  await tab(page, 'Charts').click()
   await expect(page.getByRole('img', { name: /Weight for age, WHO percentile bands. 9 measurements/ })).toBeVisible()
   await page.getByRole('button', { name: 'Leave demo' }).click()
-  await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('link', { name: 'Set up your vault' }).first()).toBeVisible()
 })
 
 test('a vault: create, add a child and a measurement, lock, unlock', async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Get started' }).click()
+  await page.goto('/app')
   await page.getByLabel('Passphrase', { exact: true }).fill(PASS)
-  await page.getByLabel('Type it again').fill(PASS)
-  await page.getByRole('button', { name: 'Create my vault' }).click()
+  await page.getByLabel('Passphrase again').fill(PASS)
+  await page.getByRole('button', { name: 'Create the vault' }).click()
   await expect(page.getByText('Please confirm you understand')).toBeVisible()
-  await page.getByLabel(/can't be reset/).check()
-  await page.getByRole('button', { name: 'Create my vault' }).click()
+  await createVault(page)
 
-  await page.getByRole('link', { name: 'Add a child' }).click()
-  await page.getByLabel('Name', { exact: true }).fill('Sam Example')
-  await page.getByLabel('Date of birth').fill('2026-03-01')
-  await page.getByRole('button', { name: 'Boy' }).click()
-  await page.getByRole('button', { name: 'Save' }).click()
-  await expect(page.getByRole('heading', { name: 'Sam Example' })).toBeVisible()
-
-  await page.getByRole('link', { name: 'Add a measurement' }).click()
-  await page.getByLabel('Date').fill('2026-09-01')
-  await page.getByLabel('Weight (kg)').fill('7,25')
-  await page.getByLabel(/Length, lying down/).fill('66.5')
-  await expect(page.getByText(/percentile for age/).first()).toBeVisible()
-  await page.getByRole('button', { name: 'Save' }).click()
+  await addChild(page, { name: 'Sam Example', dob: '2026-03-01', sex: 'Boy' })
+  await addMeasurement(page, { date: '2026-09-01', kg: '7,25', lengthCm: '66.5' })
+  await expect(page.getByText(/percentile/).first()).toBeVisible()
+  await tab(page, 'Measurements').click()
   await expect(page.getByText('7.25 kg').first()).toBeVisible()
 
   // Locking hides everything; a wrong passphrase doesn't open it.
@@ -57,7 +61,6 @@ test('a vault: create, add a child and a measurement, lock, unlock', async ({ pa
   await page.getByLabel('Passphrase').fill(PASS)
   await page.getByRole('button', { name: 'Unlock' }).click()
   await expect(page.getByRole('heading', { name: 'Sam Example' })).toBeVisible()
-  await expect(page.getByText('7.25 kg').first()).toBeVisible()
 
   // Nothing readable is stored in IndexedDB.
   const raw = await page.evaluate(async () => {

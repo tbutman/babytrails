@@ -1,0 +1,87 @@
+/* BabyTrails' own styles: only what the shared Trails UI (src/core/ui/) doesn't cover. */
+
+/* Growth charts (src/growth/GrowthChart.tsx) */
+.chart-card {
+  padding: var(--space-4);
+}
+.chart {
+  margin: 0;
+}
+.chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chart figcaption {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  padding: var(--space-2) var(--space-1) 0;
+}
+.chart-grid {
+  stroke: var(--chart-grid);
+}
+.chart-tick {
+  fill: var(--chart-axis);
+  font-size: 10px;
+  font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+}
+.chart-band-outer {
+  fill: var(--chart-band-outer);
+}
+.chart-band-inner {
+  fill: var(--chart-band-inner);
+}
+.chart-median {
+  fill: none;
+  stroke: var(--chart-median);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+/* The child's own line and points: accent text for the line (≥ 3:1), honey points with an ink
+   outline, because honey alone is only ~2.2:1 on light surfaces. */
+.chart-child-line {
+  fill: none;
+  stroke: var(--accent-text);
+  stroke-width: 2;
+}
+.chart-child-point {
+  fill: var(--accent);
+  stroke: var(--chart-outline);
+  stroke-width: 1.5;
+}
+.segmented + .chart-card,
+fieldset + .chart-card {
+  margin-top: var(--space-4);
+}
+
+/* The shareable report (src/app/screens/Report.tsx) */
+.report-preview {
+  margin: var(--space-4) 0;
+}
+.report-preview img {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+.offscreen {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 360px;
+}
+
+/* The overview (src/app/screens/Overview.tsx): three metric cards that share the row */
+.overview-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.overview-stats {
+  margin-top: var(--space-4);
+}
+.summary-actions {
+  margin-bottom: var(--space-2);
+}

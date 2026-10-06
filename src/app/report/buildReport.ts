@@ -2,7 +2,7 @@
 // measurements and percentiles, one WHO chart, the recent trend and a few highlights. Always drawn in
 // the light theme so it prints and shares well.
 
-import fontUrl from '@fontsource/quicksand/files/quicksand-latin-700-normal.woff2?url'
+import fontUrl from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url'
 import { toBase64 } from '../../core/ai/client'
 import { REPORT_H, REPORT_W } from './render'
 
@@ -22,7 +22,7 @@ export type ReportData = {
 const INK = '#1d2340'
 const MUTED = '#646a85'
 const HONEY = '#e0a21e'
-const HONEY_TEXT = '#9a6400'
+const HONEY_TEXT = '#8f5c00'
 
 export const escapeXml = (s: string) => s.replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c]!)
 
@@ -37,7 +37,7 @@ function loadFont() {
 // Chart styles are inlined because an SVG drawn as an image can't see the page's stylesheet.
 const CHART_STYLES: Record<string, Record<string, string>> = {
   'chart-grid': { stroke: 'rgb(29 35 64 / 0.08)' },
-  'chart-tick': { fill: MUTED, 'font-size': '10', 'font-family': 'Helvetica, Arial, sans-serif' },
+  'chart-tick': { fill: MUTED, 'font-size': '10', 'font-family': 'Inter, Helvetica, Arial, sans-serif' },
   'chart-band-outer': { fill: 'rgb(29 35 64 / 0.07)' },
   'chart-band-inner': { fill: 'rgb(29 35 64 / 0.12)' },
   'chart-median': { fill: 'none', stroke: 'rgb(29 35 64 / 0.55)', 'stroke-width': '1', 'stroke-dasharray': '4 3' },
@@ -62,8 +62,8 @@ export function serialiseChart(svg: SVGSVGElement): string {
 export async function buildReport(d: ReportData): Promise<string> {
   const font = await loadFont()
   const pad = 72
-  const display = `font-family="Quicksand, Helvetica, Arial, sans-serif" font-weight="700"`
-  const body = `font-family="Helvetica, Arial, sans-serif"`
+  const display = `font-family="Inter, Helvetica, Arial, sans-serif" font-weight="700" letter-spacing="-0.02em"`
+  const body = `font-family="Inter, Helvetica, Arial, sans-serif"`
   const statW = (REPORT_W - pad * 2 - 24 * (d.stats.length - 1)) / Math.max(1, d.stats.length)
 
   const stats = d.stats
@@ -89,7 +89,7 @@ export async function buildReport(d: ReportData): Promise<string> {
     .join('\n')
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${REPORT_W}" height="${REPORT_H}" viewBox="0 0 ${REPORT_W} ${REPORT_H}">
-<style>@font-face { font-family: Quicksand; font-weight: 700; src: url(${font}) format('woff2'); }</style>
+<style>@font-face { font-family: Inter; font-weight: 100 900; src: url(${font}) format('woff2'); }</style>
 <rect width="100%" height="100%" fill="#fffbf2"/>
 <text x="${pad}" y="104" ${display} font-size="34" fill="${INK}">baby<tspan fill="${HONEY_TEXT}">trails</tspan></text>
 <text x="${REPORT_W - pad}" y="104" ${body} font-size="22" fill="${MUTED}" text-anchor="end">${escapeXml(d.generatedOn)}</text>

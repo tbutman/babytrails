@@ -1,49 +1,60 @@
+import { ChevronRight, FileHeart, FileImage, FileText, FileUp, Plus, ScanText, Sparkles, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { addDocument, deleteDocument, DocumentError, MAX_DOCUMENT_BYTES } from '../../core'
 import { DocumentViewer } from '../../core/documents/DocumentViewer'
-import { Field, Page } from '../components'
+import { Callout, EmptyState, FileDrop, PageHeader, SelectField, TextField } from '../../core/ui/components'
+import { childPath } from '../brand'
 import { useChild, useDocuments } from '../data'
 import { formatDate } from '../format'
 import { useSession, useStore } from '../sessionContext'
 import { DOCUMENT_KINDS, EXTRACTABLE, today, type BabyDocument, type DocumentKind } from '../types'
 
 const kindLabel = (k: DocumentKind) => DOCUMENT_KINDS.find((d) => d.value === k)?.label ?? k
+const kindIcon = (d: BabyDocument) => (d.kind === 'ultrasound' ? FileHeart : d.mimeType === 'application/pdf' ? FileText : FileImage)
 
 export function Documents() {
-  const { id } = useParams()
+  const { id = '' } = useParams()
   const child = useChild(id)
   const docs = useDocuments(id)
-  if (child === undefined || docs === null) return null
-  if (child === null) return <Page title="Not found">This child isn't in your records.</Page>
+  if (!child || docs === null) return null
+  const add = (
+    <Link className="button primary" to={childPath(child.id, 'documents/new')}>
+      <Plus size={16} aria-hidden /> Add a document
+    </Link>
+  )
   return (
-    <Page title="Documents" back={`/child/${child.id}`}>
-      <p className="muted">Growth reports, health booklet pages, doctor's notes and ultrasound images, stored encrypted on this device.</p>
-      <Link to={`/child/${child.id}/documents/new`} className="button primary">
-        Add a document
-      </Link>
+    <>
+      <PageHeader title="Documents" subtitle="Growth reports, booklet pages, doctor's notes and ultrasound images, encrypted on this device" actions={docs.length > 0 && add} />
       {docs.length === 0 ? (
-        <p className="muted">No documents yet.</p>
+        <EmptyState icon={FileUp} title="No documents yet" action={add}>
+          Add a PDF or a photo. BabyTrails can read the measurements in a growth report for you to check.
+        </EmptyState>
       ) : (
-        <ul className="measure-list">
-          {docs.map((d) => (
-            <li key={d.id}>
-              <Link to={`/child/${child.id}/documents/${d.id}`}>
-                <span>
-                  <strong>{d.title}</strong> <span className="muted">· {kindLabel(d.kind)}</span>
+        <div className="card padless list">
+          {docs.map((d) => {
+            const Icon = kindIcon(d)
+            return (
+              <Link key={d.id} to={childPath(child.id, `documents/${d.id}`)} className="list-row">
+                <Icon size={20} aria-hidden />
+                <span className="list-row-main">
+                  <span className="list-row-title">{d.title}</span>
+                  <span className="list-row-sub">
+                    {kindLabel(d.kind)} · {formatDate(d.date)}
+                  </span>
                 </span>
-                <span className="muted">{formatDate(d.date)}</span>
+                <ChevronRight size={18} aria-hidden />
               </Link>
-            </li>
-          ))}
-        </ul>
+            )
+          })}
+        </div>
       )}
-    </Page>
+    </>
   )
 }
 
 export function AddDocument() {
-  const { id } = useParams()
+  const { id = '' } = useParams()
   const child = useChild(id)
   const store = useStore()
   const { changed, core, saveCore, mode } = useSession()
@@ -62,17 +73,11 @@ export function AddDocument() {
     setBusy(true)
     setError('')
     try {
-      const doc = await addDocument(store, file, {
-        profileId: child.id,
-        date,
-        kind,
-        title: title.trim() || kindLabel(kind),
-        meta: {},
-      })
+      const doc = await addDocument(store, file, { profileId: child.id, date, kind, title: title.trim() || kindLabel(kind), meta: {} })
       // Each new document is a good moment for a backup reminder.
       if (mode === 'unlocked') await saveCore({ ...core, changesSinceBackup: core.changesSinceBackup + 5 })
       changed()
-      navigate(`/child/${child.id}/documents/${doc.id}`)
+      navigate(childPath(child.id, `documents/${doc.id}`))
     } catch (err) {
       setError(err instanceof DocumentError ? err.message : "The file couldn't be saved.")
     } finally {
@@ -81,36 +86,42 @@ export function AddDocument() {
   }
 
   return (
-    <Page title="Add a document" back={`/child/${child.id}/documents`}>
-      <form onSubmit={submit} className="stack" noValidate>
-        <Field label="File" htmlFor="doc-file" error={error} hint={`A PDF or a photo, up to ${MAX_DOCUMENT_BYTES / 1024 / 1024} MB.`}>
-          <input id="doc-file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/gif" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        </Field>
-        <Field label="What is it?" htmlFor="doc-kind">
-          <select id="doc-kind" value={kind} onChange={(e) => setKind(e.target.value as DocumentKind)}>
-            {DOCUMENT_KINDS.map((k) => (
-              <option key={k.value} value={k.value}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Date" htmlFor="doc-date">
-          <input id="doc-date" type="date" max={today()} value={date} onChange={(e) => setDate(e.target.value)} />
-        </Field>
-        <Field label="Title (optional)" htmlFor="doc-title">
-          <input id="doc-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. 6-month check-up" />
-        </Field>
-        <button className="button primary" type="submit" disabled={busy}>
+    <>
+      <PageHeader title="Add a document" back={{ to: childPath(child.id, 'documents'), label: 'Documents' }} />
+      <form onSubmit={submit} className="card" noValidate>
+        <FileDrop
+          label={file ? file.name : 'Choose a PDF or a photo'}
+          hint={`Or drop it here. Up to ${MAX_DOCUMENT_BYTES / 1024 / 1024} MB.`}
+          accept="application/pdf,image/jpeg,image/png,image/webp,image/gif"
+          icon={FileUp}
+          onFile={setFile}
+        />
+        {error && (
+          <p className="error form-error" role="alert">
+            {error}
+          </p>
+        )}
+        <SelectField label="What is it?" value={kind} onChange={(e) => setKind(e.target.value as DocumentKind)}>
+          {DOCUMENT_KINDS.map((k) => (
+            <option key={k.value} value={k.value}>
+              {k.label}
+            </option>
+          ))}
+        </SelectField>
+        <div className="input-row">
+          <TextField label="Date" type="date" max={today()} value={date} onChange={(e) => setDate(e.target.value)} />
+          <TextField label="Title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. 6-month check-up" />
+        </div>
+        <button className="button primary" type="submit" disabled={busy || !file}>
           {busy ? 'Saving…' : 'Save'}
         </button>
       </form>
-    </Page>
+    </>
   )
 }
 
 export function DocumentPage() {
-  const { id, docId } = useParams()
+  const { id = '', docId } = useParams()
   const child = useChild(id)
   const docs = useDocuments(id)
   const store = useStore()
@@ -118,39 +129,45 @@ export function DocumentPage() {
   const navigate = useNavigate()
   if (!child || docs === null) return null
   const doc = docs.find((d) => d.id === docId)
-  if (!doc) return <Page title="Not found">This document isn't in your records.</Page>
+  if (!doc) return <p>This document isn't in your records.</p>
 
   async function remove(d: BabyDocument) {
     if (!window.confirm(`Delete "${d.title}"? This can't be undone.`)) return
     await deleteDocument(store, d)
     changed()
-    navigate(`/child/${child!.id}/documents`)
+    navigate(childPath(child!.id, 'documents'))
   }
 
   return (
-    <Page title={doc.title} back={`/child/${child.id}/documents`}>
-      <p className="muted">
-        {kindLabel(doc.kind)} · {formatDate(doc.date)}
-      </p>
-      <div className="row">
-        {EXTRACTABLE.has(doc.kind) && (
-          <Link to={`/child/${child.id}/documents/${doc.id}/read`} className="button primary">
-            Read measurements with AI
-          </Link>
-        )}
-        {doc.kind === 'doctor-note' && (
-          <Link to={`/child/${child.id}/documents/${doc.id}/summary`} className="button primary">
-            Summarise with AI
-          </Link>
-        )}
-      </div>
-      {doc.kind === 'ultrasound' && <p className="hint">Ultrasound images are stored and shown only. BabyTrails never sends them to the AI or interprets them.</p>}
+    <>
+      <PageHeader
+        title={doc.title}
+        subtitle={`${kindLabel(doc.kind)} · ${formatDate(doc.date)}`}
+        back={{ to: childPath(child.id, 'documents'), label: 'Documents' }}
+        actions={
+          <>
+            {EXTRACTABLE.has(doc.kind) && (
+              <Link className="button primary" to={childPath(child.id, `documents/${doc.id}/read`)}>
+                <ScanText size={16} aria-hidden /> Read measurements with AI
+              </Link>
+            )}
+            {doc.kind === 'doctor-note' && (
+              <Link className="button primary" to={childPath(child.id, `documents/${doc.id}/summary`)}>
+                <Sparkles size={16} aria-hidden /> Summarise with AI
+              </Link>
+            )}
+          </>
+        }
+      />
+      {doc.kind === 'ultrasound' && (
+        <Callout icon={FileHeart}>Ultrasound images are stored and shown only. BabyTrails never sends them to the AI or interprets them.</Callout>
+      )}
       <div className="doc-frame">
         <DocumentViewer store={store} doc={doc} />
       </div>
       <button type="button" className="button ghost danger" onClick={() => void remove(doc)}>
-        Delete this document
+        <Trash2 size={16} aria-hidden /> Delete this document
       </button>
-    </Page>
+    </>
   )
 }
