@@ -1,10 +1,12 @@
 import { ChevronRight, FileText, Plus, Ruler } from 'lucide-react'
 import { Link, useParams } from 'react-router'
-import { formatLength, formatWeight } from '../../growth/units'
+import { formatLength, formatMonthlyGain, formatWeeklyGain, formatWeight } from '../../growth/units'
 import { EmptyState, PageHeader } from '../../core/ui/components'
 import { childPath } from '../brand'
 import { useChild, useMeasurements } from '../data'
-import { formatAge, formatDate } from '../format'
+import { formatAge, formatDate, formatShortDate } from '../format'
+import { allIntervals, type Interval } from '../gains'
+import { useTables } from '../growthData'
 import { useSession } from '../sessionContext'
 
 export function Measurements() {
@@ -12,8 +14,17 @@ export function Measurements() {
   const child = useChild(id)
   const measurements = useMeasurements(id)
   const { app } = useSession()
+  const tables = useTables()
   if (!child || measurements === null) return null
   const units = app.units
+  // The gain since the previous measurement of each kind, keyed by the later measurement.
+  const gainsTo = new Map<string, Interval[]>()
+  if (tables) {
+    const all = allIntervals(tables, child, measurements)
+    for (const i of [...all.weight, ...all.length, ...all.head]) gainsTo.set(i.to.id, [...(gainsTo.get(i.to.id) ?? []), i])
+  }
+  const gainText = (i: Interval) =>
+    `${i.measure === 'weight' ? 'weight' : i.measure} ${i.change >= 0 ? '+' : ''}${i.measure === 'weight' ? formatWeeklyGain(i.rate, units) : formatMonthlyGain(i.rate, units)} since ${formatShortDate(i.from.date)}`
   const add = (
     <Link className="button primary" to={childPath(child.id, 'measurements/new')}>
       <Plus size={16} aria-hidden /> Add a measurement
@@ -45,6 +56,7 @@ export function Measurements() {
                     .filter(Boolean)
                     .join(' · ')}
                 </span>
+                {gainsTo.has(m.id) && <span className="list-row-sub muted">{gainsTo.get(m.id)!.map(gainText).join(' · ')}</span>}
               </span>
               {m.source === 'extracted' && <FileText size={16} aria-label="Read from a document" />}
               <ChevronRight size={18} aria-hidden />

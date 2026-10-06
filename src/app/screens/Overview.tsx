@@ -1,17 +1,19 @@
-// A child's overview: the latest measurements with their percentiles, the recent trend, and the
+// A child's overview: the latest measurements with their percentiles, gain over time, and the
 // plain-language summaries.
 
 import { FilePlus2, Pencil, Plus, Ruler, Sparkles } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { formatPercentile } from '../../growth/lms'
 import type { Indicator } from '../../growth/tables'
-import { cmToIn, formatWeeklyGain, kgToLbOz, KG_PER_LB, type Units } from '../../growth/units'
+import { cmToIn, kgToLbOz, KG_PER_LB, type Units } from '../../growth/units'
 import { Chip, EmptyState, MetricCard, PageHeader, Sparkline } from '../../core/ui/components'
 import { childPath } from '../brand'
 import { Disclaimer } from '../components'
 import { useChild, useMeasurements } from '../data'
 import { formatAge, formatDate } from '../format'
-import { growthFor, useTables, weeklyGain } from '../growthData'
+import { allIntervals } from '../gains'
+import { GainCard } from '../GainCard'
+import { growthFor, useTables } from '../growthData'
 import { useSession } from '../sessionContext'
 import { today, type Child, type Measurement } from '../types'
 import { BackupNudge } from './Settings'
@@ -48,7 +50,7 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
   const { app } = useSession()
   const units = app.units
   const now = today()
-  const gain = weeklyGain(measurements)
+  const series = tables ? allIntervals(tables, child, measurements) : null
 
   return (
     <>
@@ -113,22 +115,7 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
             })}
           </div>
 
-          {gain && (
-            <div className="stat-row overview-stats">
-              <div className="stat">
-                <div className="stat-value num">{formatWeeklyGain(gain.kgPerWeek, units)}</div>
-                <div className="stat-label">Weight change since {formatDate(gain.from.date)}</div>
-              </div>
-              <div className="stat">
-                <div className="stat-value num">{gain.days} days</div>
-                <div className="stat-label">Between the last two weighings</div>
-              </div>
-              <div className="stat">
-                <div className="stat-value num">{measurements.length}</div>
-                <div className="stat-label">Measurements recorded</div>
-              </div>
-            </div>
-          )}
+          {series && <GainCard series={series} units={units} />}
 
           <h2 className="section-title">
             <Sparkles size={18} aria-hidden /> In plain words

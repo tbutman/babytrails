@@ -29,6 +29,19 @@ export function adjustedZ(y: number, lms: Lms): number {
   return z
 }
 
+// The inverse of adjustedZ: the weight at a z-score, with the same rule beyond ±3 SD.
+export function valueAtAdjustedZ(lms: Lms, z: number): number {
+  if (z > 3) {
+    const sd3 = valueAtZ(lms, 3)
+    return sd3 + (z - 3) * (sd3 - valueAtZ(lms, 2))
+  }
+  if (z < -3) {
+    const sd3 = valueAtZ(lms, -3)
+    return sd3 + (z + 3) * (valueAtZ(lms, -2) - sd3)
+  }
+  return valueAtZ(lms, z)
+}
+
 // WHO's anthro software reports z-scores to 2 decimals.
 export function round2(n: number): number {
   return Math.round(n * 100) / 100

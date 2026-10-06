@@ -35,6 +35,25 @@ describe('summary facts', () => {
     expect(facts.worthMentioning).toEqual([])
   })
 
+  it('lists recent gains by age, with the same-line reference, and never a date', () => {
+    const data = [m('2026-05-01', 5.4), m('2026-06-01', 6.0, 61), m('2026-06-04', 6.05), m('2026-07-01', 6.5, 63.5), m('2026-08-01', 6.9, 65)]
+    const facts = buildFacts(tables, child, data, '2026-08-10')!
+    const w = facts.gains.weight!
+    expect(w.map((g) => [g.fromAgeDays, g.toAgeDays, g.days])).toEqual([[61, 92, 31], [92, 95, 3], [95, 122, 27], [122, 153, 31]])
+    expect(w[0].perWeekGrams).toBe(Math.round((600 / 31) * 7))
+    expect(w[0].sameLinePerWeekGrams).toBeGreaterThan(0)
+    expect(w[0].comparedWithSameLine).toBeDefined()
+    expect(w[1]).toMatchObject({ tooShortToCompare: true })
+    expect(w[1].sameLinePerWeekGrams).toBeUndefined()
+    expect(facts.gains.length!.map((g) => g.perMonthCm)).toEqual([Math.round((2.5 / 30) * 30.4375 * 10) / 10, Math.round((1.5 / 31) * 30.4375 * 10) / 10])
+    expect(JSON.stringify(facts.gains)).not.toMatch(/2026-/)
+  })
+
+  it('sends at most six intervals per kind', () => {
+    const data = Array.from({ length: 10 }, (_, i) => m(`2026-0${Math.floor(i / 3) + 4}-${String((i % 3) * 9 + 1).padStart(2, '0')}`, 5 + i * 0.2))
+    expect(buildFacts(tables, child, data, '2026-08-10')!.gains.weight).toHaveLength(6)
+  })
+
   it('changes its digest when the data changes', async () => {
     const a = await factsDigest(buildFacts(tables, child, [m('2026-09-01', 6.8)], '2026-09-10')!)
     const b = await factsDigest(buildFacts(tables, child, [m('2026-09-01', 6.9)], '2026-09-10')!)
