@@ -40,6 +40,9 @@ with your own key.
 - **Plain-language summaries (optional, AI).** "What changed" since the last check-up, and questions
   to ask at the next one. BabyTrails calculates the numbers; the AI only puts them into words.
   Doctor's notes can be summarised too.
+- **Ask about the numbers (optional, AI).** "Is this a usual weight gain?", "What does the 59th
+  percentile mean?": answers explain the numbers BabyTrails worked out, and every number in an
+  answer is checked against your records before you see it. Conversations are saved, encrypted.
 - **A report card to share.** The latest numbers with percentiles, four WHO charts, gain over time
   and the history, as a phone-sized image or an A4 PDF. You choose whether it shows the name, a
   nickname or no name. A simple one-page report is still there too.

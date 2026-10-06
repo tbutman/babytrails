@@ -61,3 +61,11 @@ with real records.
   the tests.
 - The review works out whether a document's dates are day first from all its rows, including the
   ones already saved, so a page with only one new row doesn't ask.
+- Ask about the numbers: questions answered from the facts BabyTrails computes, with suggested
+  questions that fit the baby's data and saved, encrypted conversations. The AI declares every
+  number it uses with the fact it came from; the app checks each one (and that there are no others,
+  and no reassurance), retries once, and otherwise withholds the answer. Questions about illness
+  get a fixed pointer to the paediatrician. The demo's suggested questions have answers prepared in
+  advance.
+- Deleting a child now also deletes their summaries and conversations.
+- A full name typed in a question becomes one "your baby", not one per word.

@@ -210,7 +210,7 @@ function gainFacts(series: Record<Measure, Interval[]>, child: Child): Facts['ga
 }
 
 // A digest of the facts, so the app can tell when a saved summary is out of date.
-export async function factsDigest(facts: Facts): Promise<string> {
+export async function factsDigest(facts: unknown): Promise<string> {
   const bytes = new TextEncoder().encode(JSON.stringify(facts))
   const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))
   return [...hash.slice(0, 12)].map((b) => b.toString(16).padStart(2, '0')).join('')

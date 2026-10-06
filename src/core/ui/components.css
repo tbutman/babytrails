@@ -1747,3 +1747,19 @@ details.disclosure > .disclosure-body {
   font-size: var(--text-sm);
   text-align: center;
 }
+
+/* Ask about the numbers (src/core/ask/AskThreadView.tsx) */
+.ask-thread {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+.ask-question {
+  justify-self: end;
+  max-width: min(36rem, 90%);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
+  background: var(--accent-soft);
+  color: var(--text);
+}

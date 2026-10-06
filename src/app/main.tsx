@@ -17,6 +17,7 @@ import { MeasurementForm } from './screens/MeasurementForm'
 import { Measurements } from './screens/Measurements'
 import { Overview } from './screens/Overview'
 import { ImportDocuments } from './screens/ImportDocuments'
+import { Ask } from './screens/Ask'
 import { Report } from './screens/Report'
 import { About, Settings } from './screens/Settings'
 import { DocumentSummary, GrowthSummary } from './screens/Summaries'
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
           { path: 'documents/:docId/read', element: <ReadLegacy /> },
           { path: 'documents/:docId/summary', element: <DocumentSummary /> },
           { path: 'summary', element: <GrowthSummary /> },
+          { path: 'ask', element: <Ask /> },
           { path: 'share', element: <Report /> },
         ],
       },

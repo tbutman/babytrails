@@ -63,7 +63,11 @@ export function percentile(z: number): number {
 
 // How a percentile is written: "52nd", "below the 0.1st", "above the 99.9th".
 export function formatPercentile(z: number): string {
-  const p = percentile(z)
+  return formatPercentileValue(percentile(z))
+}
+
+// The same, from a percentile rather than a z-score.
+export function formatPercentileValue(p: number): string {
   if (p < 0.1) return 'below the 0.1st'
   if (p > 99.9) return 'above the 99.9th'
   if (p < 1 || p > 99) return ordinal(Math.round(p * 10) / 10)
