@@ -31,6 +31,8 @@ export type Measurement = {
   documentId?: string
   visitId?: string
   note?: string
+  /** Measured at birth (entered from the child's page). */
+  birth?: true
   createdAt: string
   updatedAt: string
 }

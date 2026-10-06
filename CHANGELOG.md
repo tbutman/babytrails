@@ -40,3 +40,10 @@ with real records.
   highlights written by the code, as a phone-sized image (1080 × 1920) or an A4 PDF. Head
   circumference, the history and the latest AI summary (labelled) are optional. The one-page report
   stays as "Simple".
+- The first weeks: measurements at birth (offered right after adding a child), weight change from
+  birth weight on the measurements list, and an overview card with the lowest point and when birth
+  weight was regained. More than 10% lost in the first two weeks, or not back to birth weight by 3
+  weeks, is listed as worth mentioning to the paediatrician (NICE NG75).
+- Charts for babies under 14 weeks are drawn in weeks.
+- Summaries flag a measurement outside the 3rd–97th percentile band when it gets there; while it
+  stays there, they mention it as continuing instead of flagging it again at every visit.

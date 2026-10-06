@@ -7,6 +7,7 @@ import { useChild, useMeasurements } from '../data'
 import { formatAge, formatDate, formatShortDate } from '../format'
 import { allIntervals, type Interval } from '../gains'
 import { useTables } from '../growthData'
+import { birthMeasurement, formatPercentChange, newborn } from '../newborn'
 import { useSession } from '../sessionContext'
 
 export function Measurements() {
@@ -23,6 +24,9 @@ export function Measurements() {
     const all = allIntervals(tables, child, measurements)
     for (const i of [...all.weight, ...all.length, ...all.head]) gainsTo.set(i.to.id, [...(gainsTo.get(i.to.id) ?? []), i])
   }
+  const nb = newborn(child, measurements)
+  const birth = birthMeasurement(child, measurements)
+  const fromBirth = new Map(nb?.weighings.map((w) => [w.measurement.id, `${formatPercentChange(w.percentFromBirth)} from birth weight`]) ?? [])
   const gainText = (i: Interval) =>
     `${i.measure === 'weight' ? 'weight' : i.measure} ${i.change >= 0 ? '+' : ''}${i.measure === 'weight' ? formatWeeklyGain(i.rate, units) : formatMonthlyGain(i.rate, units)} since ${formatShortDate(i.from.date)}`
   const add = (
@@ -44,7 +48,7 @@ export function Measurements() {
             <Link key={m.id} to={childPath(child.id, `measurements/${m.id}`)} className="list-row">
               <span className="list-row-main">
                 <span className="list-row-title">
-                  {formatDate(m.date)} <span className="muted">· {formatAge(child.dateOfBirth, m.date)}</span>
+                  {formatDate(m.date)} <span className="muted">· {m.id === birth?.id ? 'Birth' : formatAge(child.dateOfBirth, m.date)}</span>
                 </span>
                 <span className="list-row-sub num">
                   {[
@@ -56,7 +60,9 @@ export function Measurements() {
                     .filter(Boolean)
                     .join(' · ')}
                 </span>
-                {gainsTo.has(m.id) && <span className="list-row-sub muted">{gainsTo.get(m.id)!.map(gainText).join(' · ')}</span>}
+                {(gainsTo.has(m.id) || fromBirth.has(m.id)) && (
+                  <span className="list-row-sub muted">{[fromBirth.get(m.id), ...(gainsTo.get(m.id) ?? []).map(gainText)].filter(Boolean).join(' · ')}</span>
+                )}
               </span>
               {m.source === 'extracted' && <FileText size={16} aria-label="Read from a document" />}
               <ChevronRight size={18} aria-hidden />

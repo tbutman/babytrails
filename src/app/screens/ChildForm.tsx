@@ -1,9 +1,10 @@
-import { Trash2 } from 'lucide-react'
+import { Baby, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
-import { PageHeader, Segmented, TextField } from '../../core/ui/components'
+import { Link, useNavigate, useParams } from 'react-router'
+import { Checkbox, PageHeader, Segmented, TextField } from '../../core/ui/components'
 import { APP, childPath } from '../brand'
-import { deleteChild, useChild } from '../data'
+import { deleteChild, useChild, useMeasurements } from '../data'
+import { birthMeasurement } from '../newborn'
 import { Shell } from '../Layout'
 import { useSession, useStore } from '../sessionContext'
 import { today, type Child } from '../types'
@@ -29,6 +30,9 @@ function ChildFormInner({ existing }: { existing?: Child }) {
   const [weeks, setWeeks] = useState(existing?.gestationalAge ? String(existing.gestationalAge.weeks) : '')
   const [days, setDays] = useState(existing?.gestationalAge ? String(existing.gestationalAge.days) : '')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [addBirth, setAddBirth] = useState(true)
+  const measurements = useMeasurements(existing?.id)
+  const birth = existing && measurements ? birthMeasurement(existing, measurements) : undefined
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -54,8 +58,10 @@ function ChildFormInner({ existing }: { existing?: Child }) {
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
     await store.put('children', child)
+    // A birth measurement follows the date of birth if it changes.
+    if (birth?.birth && birth.date !== dateOfBirth) await store.put('measurements', { ...birth, date: dateOfBirth, updatedAt: new Date().toISOString() })
     changed()
-    navigate(childPath(child.id))
+    navigate(!existing && addBirth ? childPath(child.id, 'measurements/new?birth=1') : childPath(child.id))
   }
 
   async function remove() {
@@ -106,6 +112,17 @@ function ChildFormInner({ existing }: { existing?: Child }) {
             <p className="hint">Recorded for now; charts by corrected age for babies born early come later.</p>
           )}
         </fieldset>
+        {existing ? (
+          <p>
+            <Link className="button small" to={childPath(existing.id, 'measurements/new?birth=1')}>
+              <Baby size={14} aria-hidden /> {birth ? 'Edit the measurements at birth' : 'Add the measurements at birth'}
+            </Link>
+          </p>
+        ) : (
+          <Checkbox checked={addBirth} onChange={setAddBirth}>
+            Add the measurements at birth next <span className="muted">(weight, length and head circumference, if you have them)</span>
+          </Checkbox>
+        )}
         <div className="row">
           <button className="button primary" type="submit">
             Save

@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = 4191
+// Its own port: LabTrails' tests use 4191 on the same machine, and a reused server would be the wrong app.
+const PORT = Number(process.env.E2E_PORT ?? 4192)
 
 // Tests run against the production build (with its Content-Security-Policy), not the dev server.
 // Locally they use the installed Google Chrome; CI installs Playwright's own Chromium.

@@ -670,12 +670,14 @@ covers 1- and 2-month intervals" and shows part one only.
 
 ### 17.7 Newborn details and flags about changes
 
-- **Birth:** the child form gets optional birth weight, length and head circumference, saved as a
-  measurement on the date of birth with `place: 'clinic'` and a "Birth" label.
+- **Birth:** after adding a child, the measurement form opens in a "Measurements at birth" mode (dated
+  on the date of birth, marked `birth: true`), reusing its units and checks; the child's edit page
+  links to it.
 - **Weight change from birth**, for measurements in the first 28 days: "−7% from birth weight",
   and "back to birth weight by day 11" (the first measurement at or above it; no interpolation).
-  A loss of more than 10% in the first two weeks goes under "worth mentioning" (**cite the source for
-  the 10% threshold in the code**).
+  A loss of more than 10% in the first two weeks, or not being back to birth weight by 3 weeks, goes
+  under "worth mentioning" while the latest measurement is under 6 weeks old. Source: NICE NG75,
+  "Faltering growth" (2017), recommendations 1.1.1–1.1.4, cited in `src/app/newborn.ts`.
 - **Charts in weeks for the first three months:** while the latest age is under 14 weeks, age charts
   run from birth to 14 weeks with weekly ticks, instead of the current six-month minimum.
 - **Flags about changes, not positions** (changes `buildFacts`):

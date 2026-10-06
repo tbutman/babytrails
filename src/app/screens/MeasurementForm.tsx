@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { formatPercentile } from '../../growth/lms'
 import { cmToIn, inToCm, kgToLbOz, lbOzToKg, parseDecimal, type Units } from '../../growth/units'
@@ -7,7 +7,8 @@ import { Trash2 } from 'lucide-react'
 import { Checkbox, PageHeader, TextField } from '../../core/ui/components'
 import { childPath } from '../brand'
 import { useChild, useMeasurements } from '../data'
-import { formatAge } from '../format'
+import { formatAge, formatDate } from '../format'
+import { birthMeasurement } from '../newborn'
 import { growthFor, useTables } from '../growthData'
 import { useSession, useStore } from '../sessionContext'
 import { nowIso, today, type Child, type Measurement } from '../types'
@@ -18,27 +19,30 @@ const RANGES = { weightKg: [0.3, 40], statureCm: [25, 130], headCm: [18, 60] } a
 
 export function MeasurementForm() {
   const { id, mid } = useParams()
+  const [params] = useSearchParams()
   const child = useChild(id)
   const measurements = useMeasurements(id)
   if (child === undefined || measurements === null) return null
   if (child === null) return <p>This child isn't in your records.</p>
-  const existing = mid ? measurements.find((m) => m.id === mid) : undefined
+  // ?birth=1 adds (or edits) the measurement at birth, dated on the date of birth.
+  const forBirth = params.get('birth') === '1'
+  const existing = mid ? measurements.find((m) => m.id === mid) : forBirth ? birthMeasurement(child, measurements) : undefined
   if (mid && !existing) return <p>This measurement isn't in your records.</p>
-  return <Form key={mid ?? 'new'} child={child} existing={existing} />
+  return <Form key={mid ?? (forBirth ? 'birth' : 'new')} child={child} existing={existing} birth={forBirth || !!existing?.birth} />
 }
 
 function toText(n: number | undefined, digits = 2) {
   return n === undefined ? '' : String(Math.round(n * 10 ** digits) / 10 ** digits)
 }
 
-function Form({ child, existing }: { child: Child; existing?: Measurement }) {
+function Form({ child, existing, birth }: { child: Child; existing?: Measurement; birth: boolean }) {
   const store = useStore()
   const { app, changed, core, saveCore, mode } = useSession()
   const tables = useTables()
   const navigate = useNavigate()
   const units: Units = app.units
 
-  const [date, setDate] = useState(existing?.date ?? today())
+  const [date, setDate] = useState(birth ? child.dateOfBirth : (existing?.date ?? today()))
   const lbOz = existing?.weightKg !== undefined ? kgToLbOz(existing.weightKg) : undefined
   const [kg, setKg] = useState(toText(existing?.weightKg, 3))
   const [lb, setLb] = useState(lbOz ? String(lbOz.lb) : '')
@@ -118,6 +122,7 @@ function Form({ child, existing }: { child: Child; existing?: Measurement }) {
       documentId: existing?.documentId,
       visitId: existing?.visitId,
       note: note.trim() || undefined,
+      ...(birth ? { birth: true as const } : {}),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     }
@@ -143,12 +148,16 @@ function Form({ child, existing }: { child: Child; existing?: Measurement }) {
   return (
     <>
       <PageHeader
-        title={existing ? 'Edit measurement' : 'Add a measurement'}
-        subtitle={date && ageDays >= 0 ? `${child.nickname || child.name} at ${formatAge(child.dateOfBirth, date)}` : undefined}
+        title={birth ? 'Measurements at birth' : existing ? 'Edit measurement' : 'Add a measurement'}
+        subtitle={birth ? `${child.nickname || child.name}, born ${formatDate(child.dateOfBirth)}` : date && ageDays >= 0 ? `${child.nickname || child.name} at ${formatAge(child.dateOfBirth, date)}` : undefined}
         back={{ to: childPath(child.id, existing ? 'measurements' : ''), label: existing ? 'Measurements' : 'Overview' }}
       />
       <form onSubmit={submit} noValidate className="card">
-        <TextField label="Date" type="date" min={child.dateOfBirth} max={today()} value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} />
+        {birth ? (
+          <p className="hint">From the birth record or the health booklet: any of weight, length and head circumference.</p>
+        ) : (
+          <TextField label="Date" type="date" min={child.dateOfBirth} max={today()} value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} />
+        )}
 
         {units === 'metric' ? (
           <TextField label="Weight (kg)" inputMode="decimal" autoComplete="off" placeholder="e.g. 7.25" value={kg} onChange={(e) => setKg(e.target.value)} error={errors.weight} hint={pct('wfa')} />
