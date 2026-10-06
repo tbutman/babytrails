@@ -27,6 +27,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # WHO's tables are downloaded, not committed (see DATA-NOTICE.md); cache them by checksum list.
+      - uses: actions/cache@v6
+        with:
+          path: .cache/who
+          key: who-${{ hashFiles('scripts/who-data.mjs') }}
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

@@ -8,12 +8,13 @@
     "node": ">=22 <23"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "npm run who-data && vite",
+    "who-data": "node scripts/who-data.mjs",
+    "build": "npm run who-data && tsc -b && vite build",
     "lint": "oxlint",
-    "typecheck": "tsc -b",
+    "typecheck": "npm run who-data && tsc -b",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "npm run who-data && vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "fake-indexeddb": "^6.2.5",
+    "fflate": "^0.8.3",
     "oxlint": "^1.87.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.3",
