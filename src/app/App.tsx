@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { UpdatePrompt } from '../core/ui/UpdatePrompt'
 import { DemoBanner, Header } from './components'
 import { SessionProvider } from './session'
 import { useSession } from './sessionContext'
@@ -14,6 +15,16 @@ import { About, Settings } from './screens/Settings'
 import { Unlock, Welcome } from './screens/Welcome'
 
 function Screens() {
+  const { mode } = useSession()
+  return (
+    <>
+      <UpdatePrompt appName="BabyTrails" locksVault={mode === 'unlocked'} />
+      <ModeScreens />
+    </>
+  )
+}
+
+function ModeScreens() {
   const { mode } = useSession()
   if (mode === 'loading') return null
   if (mode === 'welcome') return <Welcome />
