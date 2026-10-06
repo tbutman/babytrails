@@ -159,7 +159,7 @@ export function Landing() {
               points={['Never your baby\'s name or date of birth in the prompt', 'Units converted by BabyTrails, not the AI', 'Every value sits next to the original page', 'Only the values you tick are saved']}
               visual={
                 <div className="device">
-                  <img src="/landing/review.png" alt="Checking measurements read from a made-up growth report, with the report page next to each value to confirm" loading="lazy" width="1280" height="860" />
+                  <img src="/landing/review.png" alt="Checking measurements read from a made-up growth report, with the report page next to each value to confirm" loading="lazy" width="1280" height="1000" />
                 </div>
               }
             />
