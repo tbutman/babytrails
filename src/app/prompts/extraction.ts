@@ -18,6 +18,10 @@ Rules:
 
 export const EXTRACTION_PROMPT = 'Copy every growth measurement in this document, following the rules.'
 
+// Several photos of one document, sent together in page order (request 17).
+export const extractionPagesPrompt = (pages: number) =>
+  `These ${pages} images are pages 1 to ${pages} of one document, in order. A table may run across pages: copy every growth measurement on every page, once, following the rules, and set "page" to the page (1 to ${pages}) each row is printed on.`
+
 const num = { type: ['number', 'null'] }
 export const EXTRACTION_SCHEMA = {
   type: 'object',
