@@ -55,8 +55,9 @@ expect_type /child/some/route text/html
   || { echo "FAIL www redirect"; fail=1; }
 curl -s -o /dev/null -H "Host: evil.example" "http://127.0.0.1:$PORT/" && { echo "FAIL unknown host was answered"; fail=1; }
 
-# Missing files must not be cacheable, or Cloudflare keeps the 404 after the file arrives.
-for path in /assets/missing-abc123.js /assets/missing-abc123.mjs /vendor/missing.js; do
+# Missing files must not be cacheable, or Cloudflare keeps the 404 after the file arrives. One path
+# per location that sets its own Cache-Control.
+for path in /assets/missing-abc123.js /assets/missing-abc123.mjs /vendor/missing.js /workbox-missing.js; do
   headers="$(curl -sI -H "Host: $HOST" "http://127.0.0.1:$PORT$path")"
   grep -q "^HTTP/1.1 404" <<<"$headers" || { echo "FAIL $path: expected 404"; fail=1; }
   grep -qi "^cache-control: no-store" <<<"$headers" || { echo "FAIL $path: a 404 without Cache-Control: no-store"; fail=1; }

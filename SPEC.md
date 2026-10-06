@@ -479,8 +479,11 @@ Server changes are staged as files and a setup script for Thomas to review and r
 needs `sudo`). DNS and Cloudflare changes are his. Afterwards the homelab runbook is updated with
 the status, date, evidence and how to undo it.
 
-GitHub's unauthenticated API limit is 60 requests an hour per server address. With three sites
-polling every 2 minutes this is fine, because unchanged responses (HTTP 304) don't count.
+GitHub's unauthenticated API limit is 60 requests an hour per server address, and without a token
+even unchanged (HTTP 304) responses count. Three sites polling every 2 minutes made about 90 an hour,
+and deploys stalled on HTTP 403 (6 October 2026). `trails-deploy.sh` therefore reads the newest tag
+from github.com's "latest release" redirect, not the API; it's one shared file on the server, kept
+identical to LabTrails' copy (coordination request 14).
 
 ## 14. Testing
 
