@@ -8,7 +8,8 @@ import { GrowthChart, type ChartPoint } from '../../growth/GrowthChart'
 import { formatPercentile } from '../../growth/lms'
 import type { Indicator } from '../../growth/tables'
 import { formatLength, formatWeeklyGain, formatWeight } from '../../growth/units'
-import { Page } from '../components'
+import { FileDown, ImageDown, Share2 } from 'lucide-react'
+import { Checkbox, PageHeader, Segmented } from '../../core/ui/components'
 import { useChild, useMeasurements } from '../data'
 import { formatAge, formatDate } from '../format'
 import { growthFor, useTables, weeklyGain } from '../growthData'
@@ -88,41 +89,38 @@ export function Report() {
   }
 
   return (
-    <Page title="Share a report" back={`/child/${child.id}`}>
-      <p>A one-page picture of the latest growth, made on this device. You choose what's on it, and you share the file yourself.</p>
-
-      <fieldset className="field">
-        <legend className="legend">Name on the report</legend>
-        <div className="segmented" role="group" aria-label="Name on the report">
-          <button type="button" aria-pressed={nameMode === 'nickname'} onClick={() => setNameMode('nickname')}>
-            {child.nickname ? 'Nickname' : 'First name'}
-          </button>
-          <button type="button" aria-pressed={nameMode === 'name'} onClick={() => setNameMode('name')}>
-            Full name
-          </button>
-          <button type="button" aria-pressed={nameMode === 'none'} onClick={() => setNameMode('none')}>
-            No name
-          </button>
-        </div>
-      </fieldset>
-      <div className="checkbox">
-        <input id="show-dob" type="checkbox" checked={showBirthDate} onChange={(e) => setShowBirthDate(e.target.checked)} />
-        <label htmlFor="show-dob">Show the date of birth instead of the age</label>
+    <>
+      <PageHeader title="Share a report" subtitle="A one-page picture of the latest growth, made on this device. You choose what's on it, and you share the file yourself." />
+      <div className="card">
+        <Segmented
+          legend="Name on the report"
+          name="name-mode"
+          value={nameMode}
+          onChange={setNameMode}
+          options={[
+            { value: 'nickname', label: child.nickname ? 'Nickname' : 'First name' },
+            { value: 'name', label: 'Full name' },
+            { value: 'none', label: 'No name' },
+          ]}
+        />
+        <Checkbox checked={showBirthDate} onChange={setShowBirthDate}>
+          Show the date of birth instead of the age
+        </Checkbox>
       </div>
 
       <div className="report-preview">
-        {svg ? <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt="Preview of the report" /> : <p className="muted">Preparing…</p>}
+        {svg ? <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt="Preview of the report" /> : <div className="skeleton loading-card" />}
       </div>
 
       <div className="row">
         <button type="button" className="button primary" onClick={() => void act('share')} disabled={!svg}>
-          Share
+          <Share2 size={16} aria-hidden /> Share
         </button>
         <button type="button" className="button" onClick={() => void act('png')} disabled={!svg}>
-          Save image
+          <ImageDown size={16} aria-hidden /> Save image
         </button>
         <button type="button" className="button" onClick={() => void act('pdf')} disabled={!svg}>
-          Save PDF
+          <FileDown size={16} aria-hidden /> Save PDF
         </button>
       </div>
       {message && <p role="status">{message}</p>}
@@ -131,6 +129,6 @@ export function Report() {
       <div ref={chartRef} className="offscreen" aria-hidden="true">
         <GrowthChart tables={tables} indicator="wfa" sex={child.sex} points={points} units={units} ageDaysNow={ageInDays(child.dateOfBirth, now)} />
       </div>
-    </Page>
+    </>
   )
 }

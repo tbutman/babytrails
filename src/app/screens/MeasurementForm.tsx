@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router'
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { formatPercentile } from '../../growth/lms'
 import { cmToIn, inToCm, kgToLbOz, lbOzToKg, parseDecimal, type Units } from '../../growth/units'
-import { Field, Page } from '../components'
+import { Trash2 } from 'lucide-react'
+import { Checkbox, PageHeader, TextField } from '../../core/ui/components'
+import { childPath } from '../brand'
 import { useChild, useMeasurements } from '../data'
 import { formatAge } from '../format'
 import { growthFor, useTables } from '../growthData'
@@ -19,9 +21,9 @@ export function MeasurementForm() {
   const child = useChild(id)
   const measurements = useMeasurements(id)
   if (child === undefined || measurements === null) return null
-  if (child === null) return <Page title="Not found">This child isn't in your records.</Page>
+  if (child === null) return <p>This child isn't in your records.</p>
   const existing = mid ? measurements.find((m) => m.id === mid) : undefined
-  if (mid && !existing) return <Page title="Not found">This measurement isn't in your records.</Page>
+  if (mid && !existing) return <p>This measurement isn't in your records.</p>
   return <Form key={mid ?? 'new'} child={child} existing={existing} />
 }
 
@@ -122,14 +124,14 @@ function Form({ child, existing }: { child: Child; existing?: Measurement }) {
     await store.put('measurements', m)
     if (mode === 'unlocked') await saveCore({ ...core, changesSinceBackup: core.changesSinceBackup + 1 })
     changed()
-    navigate(`/child/${child.id}`)
+    navigate(childPath(child.id))
   }
 
   async function remove() {
     if (!existing || !window.confirm('Delete this measurement?')) return
     await store.delete('measurements', existing.id)
     changed()
-    navigate(`/child/${child.id}`)
+    navigate(childPath(child.id, 'measurements'))
   }
 
   const pct = (key: 'wfa' | 'lhfa' | 'hcfa') => {
@@ -139,60 +141,66 @@ function Form({ child, existing }: { child: Child; existing?: Measurement }) {
   const lenUnit = units === 'metric' ? 'cm' : 'in'
 
   return (
-    <Page title={existing ? 'Edit measurement' : 'Add a measurement'} back={`/child/${child.id}`}>
-      <form onSubmit={submit} noValidate className="stack">
-        <Field label="Date" htmlFor="date" error={errors.date} hint={date && ageDays >= 0 ? `Age: ${formatAge(child.dateOfBirth, date)}` : undefined}>
-          <input id="date" type="date" min={child.dateOfBirth} max={today()} value={date} onChange={(e) => setDate(e.target.value)} />
-        </Field>
+    <>
+      <PageHeader
+        title={existing ? 'Edit measurement' : 'Add a measurement'}
+        subtitle={date && ageDays >= 0 ? `${child.nickname || child.name} at ${formatAge(child.dateOfBirth, date)}` : undefined}
+        back={{ to: childPath(child.id, existing ? 'measurements' : ''), label: existing ? 'Measurements' : 'Overview' }}
+      />
+      <form onSubmit={submit} noValidate className="card">
+        <TextField label="Date" type="date" min={child.dateOfBirth} max={today()} value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} />
 
         {units === 'metric' ? (
-          <Field label="Weight (kg)" htmlFor="kg" error={errors.weight} hint={pct('wfa')}>
-            <input id="kg" inputMode="decimal" autoComplete="off" placeholder="e.g. 7.25" value={kg} onChange={(e) => setKg(e.target.value)} />
-          </Field>
+          <TextField label="Weight (kg)" inputMode="decimal" autoComplete="off" placeholder="e.g. 7.25" value={kg} onChange={(e) => setKg(e.target.value)} error={errors.weight} hint={pct('wfa')} />
         ) : (
-          <fieldset className={`field${errors.weight ? ' has-error' : ''}`}>
-            <legend className="legend">Weight</legend>
-            <div className="inline-fields">
-              <input aria-label="Pounds" inputMode="decimal" placeholder="lb" value={lb} onChange={(e) => setLb(e.target.value)} />
-              <input aria-label="Ounces" inputMode="decimal" placeholder="oz" value={oz} onChange={(e) => setOz(e.target.value)} />
+          <fieldset>
+            <legend>Weight</legend>
+            <div className="input-row">
+              <TextField label="Pounds" inputMode="decimal" value={lb} onChange={(e) => setLb(e.target.value)} />
+              <TextField label="Ounces" inputMode="decimal" value={oz} onChange={(e) => setOz(e.target.value)} />
             </div>
-            {errors.weight ? <p className="error" role="alert">{errors.weight}</p> : pct('wfa') && <p className="hint">{pct('wfa')}</p>}
+            {errors.weight ? (
+              <p className="error" role="alert">
+                {errors.weight}
+              </p>
+            ) : (
+              pct('wfa') && <p className="hint">{pct('wfa')}</p>
+            )}
           </fieldset>
         )}
 
-        <Field label={`${standing ? 'Height, standing' : 'Length, lying down'} (${lenUnit})`} htmlFor="stature" error={errors.stature} hint={pct('lhfa')}>
-          <input id="stature" inputMode="decimal" autoComplete="off" value={statureText} onChange={(e) => setStatureText(e.target.value)} />
-        </Field>
-        <div className="checkbox">
-          <input id="standing" type="checkbox" checked={standing} onChange={(e) => setStanding(e.target.checked)} />
-          <label htmlFor="standing">
-            Measured standing up{' '}
-            <span className="muted">(WHO uses lying length under 2 years and standing height from 2; the charts adjust by 0.7 cm if needed)</span>
-          </label>
-        </div>
+        <TextField
+          label={`${standing ? 'Height, standing' : 'Length, lying down'} (${lenUnit})`}
+          inputMode="decimal"
+          autoComplete="off"
+          value={statureText}
+          onChange={(e) => setStatureText(e.target.value)}
+          error={errors.stature}
+          hint={pct('lhfa')}
+        />
+        <Checkbox checked={standing} onChange={setStanding}>
+          Measured standing up <span className="muted">(WHO uses lying length under 2 years and standing height from 2; the charts adjust by 0.7 cm if needed)</span>
+        </Checkbox>
 
-        <Field label={`Head circumference (${lenUnit})`} htmlFor="head" error={errors.head} hint={pct('hcfa')}>
-          <input id="head" inputMode="decimal" autoComplete="off" value={headText} onChange={(e) => setHeadText(e.target.value)} />
-        </Field>
-
-        <Field label="Note (optional)" htmlFor="note">
-          <input id="note" type="text" value={note} onChange={(e) => setNote(e.target.value)} />
-        </Field>
+        <TextField label={`Head circumference (${lenUnit})`} inputMode="decimal" autoComplete="off" value={headText} onChange={(e) => setHeadText(e.target.value)} error={errors.head} hint={pct('hcfa')} />
+        <TextField label="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
 
         {errors.form && (
-          <p className="error" role="alert">
+          <p className="error form-error" role="alert">
             {errors.form}
           </p>
         )}
-        <button className="button primary" type="submit">
-          Save
-        </button>
-        {existing && (
-          <button className="button ghost danger" type="button" onClick={() => void remove()}>
-            Delete this measurement
+        <div className="row">
+          <button className="button primary" type="submit">
+            Save
           </button>
-        )}
+          {existing && (
+            <button className="button ghost danger" type="button" onClick={() => void remove()}>
+              <Trash2 size={16} aria-hidden /> Delete this measurement
+            </button>
+          )}
+        </div>
       </form>
-    </Page>
+    </>
   )
 }

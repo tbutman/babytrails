@@ -1,7 +1,8 @@
+import { Download, FileArchive } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { WrongPassphraseError } from '../../core'
 import { backupFileName, exportBackup, readBackup, restoreBackup, BackupError } from '../../core/backup/backup'
-import { Field } from '../components'
+import { FileDrop, TextField } from '../../core/ui/components'
 import { useSession } from '../sessionContext'
 import { APP_ID } from '../types'
 
@@ -30,15 +31,17 @@ export function ExportBackup() {
   return (
     <div className="stack">
       <p>
-        A backup is one file with everything, including documents, still encrypted. Your passphrase opens
-        it. Keep it somewhere other than this device, such as your cloud storage or email.
+        One file with everything, including documents, still encrypted. Your passphrase opens it. Keep it somewhere other than this
+        device, such as your cloud storage or email.
       </p>
       <p className="hint">
         {core.lastBackupAt ? `Last backup: ${new Date(core.lastBackupAt).toLocaleDateString('en-GB', { dateStyle: 'medium' })}.` : 'No backup yet.'}
       </p>
-      <button className="button primary" onClick={() => void download()} disabled={busy}>
-        {busy ? 'Preparing…' : 'Download a backup'}
-      </button>
+      <div>
+        <button className="button primary" onClick={() => void download()} disabled={busy}>
+          <Download size={16} aria-hidden /> {busy ? 'Preparing…' : 'Download a backup'}
+        </button>
+      </div>
     </div>
   )
 }
@@ -74,14 +77,9 @@ export function RestoreBackup() {
 
   return (
     <form onSubmit={submit} className="stack" noValidate>
-      <p>Choose a BabyTrails backup file and enter the passphrase it was made with.</p>
-      <Field label="Backup file" htmlFor="backup-file">
-        <input id="backup-file" type="file" accept=".json,application/json" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-      </Field>
-      <Field label="Passphrase" htmlFor="backup-pass" error={error}>
-        <input id="backup-pass" type="password" autoComplete="current-password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} />
-      </Field>
-      <button className="button primary" type="submit" disabled={busy || !file || !passphrase}>
+      <FileDrop label={file ? file.name : 'Choose a backup file'} hint="A .json file made by BabyTrails" accept=".json,application/json" icon={FileArchive} onFile={setFile} />
+      <TextField label="Passphrase" type="password" autoComplete="current-password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} error={error} />
+      <button className="button primary block" type="submit" disabled={busy || !file || !passphrase}>
         {busy ? 'Checking…' : 'Restore'}
       </button>
     </form>

@@ -1,10 +1,13 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { Archive, Bot, HardDrive, KeyRound, Palette, Ruler, Timer } from 'lucide-react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Link, Navigate } from 'react-router'
 import { MIN_PASSPHRASE_LENGTH, WrongPassphraseError } from '../../core'
-import type { Theme } from '../../core/settings/settings'
 import { ApiKeySettings } from '../../core/ai/ApiKeySettings'
-import { Field, Page } from '../components'
+import type { Theme } from '../../core/settings/settings'
+import { Callout, PageHeader, Segmented, SelectField, TextField, type Icon } from '../../core/ui/components'
+import { APP } from '../brand'
 import { InstallHint } from '../InstallHint'
+import { Shell } from '../Layout'
 import { useSession } from '../sessionContext'
 import { ExportBackup, RestoreBackup } from './Backup'
 
@@ -21,20 +24,19 @@ export function BackupNudge() {
   const due = core.changesSinceBackup >= 5 || (core.changesSinceBackup > 0 && now - last > TWO_WEEKS)
   if (!due || now - dismissed < 86_400_000) return null
   return (
-    <div className="callout" role="status">
+    <Callout icon={Archive} tone="warning">
       <p>
-        <strong>Time for a backup.</strong> {core.changesSinceBackup} change{core.changesSinceBackup === 1 ? '' : 's'} since your
-        last one. If this browser's data is cleared, a backup is the only way to get your records back.
+        <strong>Time for a backup.</strong> If this browser's data is cleared, a backup is the only way to get your records back.
       </p>
       <div className="row">
-        <Link to="/settings#backup" className="button small primary">
+        <Link to={`${APP}/settings#backup`} className="button small primary">
           Back up now
         </Link>
         <button className="button small ghost" onClick={() => void saveCore({ ...core, backupNudgeDismissedAt: new Date().toISOString() })}>
           Later
         </button>
       </div>
-    </div>
+    </Callout>
   )
 }
 
@@ -53,62 +55,90 @@ function StorageStatus() {
   )
 }
 
+function SettingsCard({ id, icon: I, title, children }: { id?: string; icon: Icon; title: string; children: ReactNode }) {
+  return (
+    <section id={id} className="card">
+      <div className="card-header">
+        <h3>
+          <I size={18} aria-hidden /> {title}
+        </h3>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 export function Settings() {
-  const { core, app, saveCore, saveApp } = useSession()
+  const { core, app, saveCore, saveApp, mode } = useSession()
+  if (mode !== 'unlocked') return <Navigate to={APP} replace />
 
   return (
-    <Page title="Settings" back="/">
-      <h2>Units</h2>
-      <div className="segmented" role="group" aria-label="Units">
-        <button type="button" aria-pressed={app.units === 'metric'} onClick={() => void saveApp({ ...app, units: 'metric' })}>
-          Metric (kg, cm)
-        </button>
-        <button type="button" aria-pressed={app.units === 'imperial'} onClick={() => void saveApp({ ...app, units: 'imperial' })}>
-          Imperial (lb, in)
-        </button>
+    <Shell narrow>
+      <PageHeader title="Settings" back={{ to: APP, label: 'Back' }} />
+      <div className="stack">
+        <SettingsCard icon={Ruler} title="Units">
+          <Segmented
+            legend="Units"
+            name="units"
+            value={app.units}
+            onChange={(units) => void saveApp({ ...app, units })}
+            options={[
+              { value: 'metric', label: 'Metric (kg, cm)' },
+              { value: 'imperial', label: 'Imperial (lb, in)' },
+            ]}
+          />
+        </SettingsCard>
+
+        <SettingsCard icon={Palette} title="Appearance">
+          <Segmented
+            legend="Theme"
+            name="theme"
+            value={core.theme}
+            onChange={(theme: Theme) => void saveCore({ ...core, theme })}
+            options={[
+              { value: 'system', label: 'Match device' },
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+            ]}
+          />
+        </SettingsCard>
+
+        <SettingsCard icon={Timer} title="Lock">
+          <SelectField label="Lock after this many minutes without use" value={core.autoLockMinutes} onChange={(e) => void saveCore({ ...core, autoLockMinutes: Number(e.target.value) })}>
+            {[1, 2, 5, 10, 15, 30].map((m) => (
+              <option key={m} value={m}>
+                {m} minute{m === 1 ? '' : 's'}
+              </option>
+            ))}
+          </SelectField>
+        </SettingsCard>
+
+        <SettingsCard id="ai" icon={Bot} title="AI (optional)">
+          <ApiKeySettings apiKey={core.ai.apiKey} model={core.ai.model} onSave={({ apiKey, model }) => saveCore({ ...core, ai: { ...core.ai, apiKey, model } })} />
+        </SettingsCard>
+
+        <SettingsCard id="backup" icon={HardDrive} title="Backup">
+          <ExportBackup />
+          <StorageStatus />
+          <InstallHint />
+          <details className="disclosure">
+            <summary>Restore from a backup</summary>
+            <div className="disclosure-body">
+              <RestoreBackup />
+            </div>
+          </details>
+        </SettingsCard>
+
+        <SettingsCard icon={KeyRound} title="Passphrase">
+          <ChangePassphrase />
+        </SettingsCard>
+
+        <p className="hint">
+          BabyTrails is free and open source. Your records are encrypted on this device and never sent to BabyTrails' server.{' '}
+          <Link to={`${APP}/about`}>About the data and charts</Link>.
+        </p>
       </div>
-
-      <h2>Appearance</h2>
-      <div className="segmented" role="group" aria-label="Theme">
-        {(['system', 'light', 'dark'] as Theme[]).map((t) => (
-          <button key={t} type="button" aria-pressed={core.theme === t} onClick={() => void saveCore({ ...core, theme: t })}>
-            {t === 'system' ? 'Match device' : t === 'light' ? 'Light' : 'Dark'}
-          </button>
-        ))}
-      </div>
-
-      <h2>Lock</h2>
-      <Field label="Lock after this many minutes without use" htmlFor="autolock">
-        <select id="autolock" value={core.autoLockMinutes} onChange={(e) => void saveCore({ ...core, autoLockMinutes: Number(e.target.value) })}>
-          {[1, 2, 5, 10, 15, 30].map((m) => (
-            <option key={m} value={m}>
-              {m} minute{m === 1 ? '' : 's'}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      <h2 id="ai">AI (optional)</h2>
-      <ApiKeySettings apiKey={core.ai.apiKey} model={core.ai.model} onSave={({ apiKey, model }) => saveCore({ ...core, ai: { ...core.ai, apiKey, model } })} />
-
-      <h2 id="backup">Backup</h2>
-      <ExportBackup />
-      <StorageStatus />
-      <InstallHint />
-      <details>
-        <summary>Restore from a backup</summary>
-        <RestoreBackup />
-      </details>
-
-      <h2>Passphrase</h2>
-      <ChangePassphrase />
-
-      <h2>About</h2>
-      <p>
-        BabyTrails is free and open source. Your records are encrypted on this device and never sent to
-        BabyTrails' server. <Link to="/about">About the data and charts</Link>.
-      </p>
-    </Page>
+    </Shell>
   )
 }
 
@@ -135,13 +165,9 @@ function ChangePassphrase() {
   }
 
   return (
-    <form onSubmit={submit} className="stack" noValidate>
-      <Field label="Current passphrase" htmlFor="cur-pass">
-        <input id="cur-pass" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
-      </Field>
-      <Field label="New passphrase" htmlFor="new-pass" error={error}>
-        <input id="new-pass" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
-      </Field>
+    <form onSubmit={submit} noValidate>
+      <TextField label="Current passphrase" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+      <TextField label="New passphrase" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} error={error} />
       <button className="button" type="submit" disabled={!current || !next}>
         Change passphrase
       </button>
@@ -152,25 +178,25 @@ function ChangePassphrase() {
 
 export function About() {
   return (
-    <Page title="About the data and charts" back="/">
-      <p>
-        The charts and percentiles use the <strong>WHO Child Growth Standards</strong> (birth to 5 years),
-        © World Health Organization, used unmodified for non-commercial purposes. WHO doesn't endorse
-        this app. Source: <a href="https://www.who.int/tools/child-growth-standards">who.int/tools/child-growth-standards</a>.
-      </p>
-      <p>
-        In the United States, the CDC recommends the WHO charts from birth to 2 years. In Portugal, the
-        national child health programme uses the WHO curves (weight, length or height and BMI to 5
-        years; head circumference to 2 years). CDC charts for children over 2 aren't in BabyTrails yet.
-      </p>
-      <p>
-        Percentiles are computed with WHO's LMS method on this device. A percentile describes where a
-        measurement sits compared with WHO's reference children; it isn't a diagnosis. Your paediatrician
-        looks at much more than one number.
-      </p>
-      <p>
-        BabyTrails is open source under the MIT licence. The WHO data is not covered by that licence.
-      </p>
-    </Page>
+    <Shell narrow>
+      <PageHeader title="About the data and charts" back={{ to: APP, label: 'Back' }} />
+      <div className="card">
+        <p>
+          The charts and percentiles use the <strong>WHO Child Growth Standards</strong> (birth to 5 years), © World Health Organization, used
+          unmodified for non-commercial purposes. WHO doesn't endorse this app. Source:{' '}
+          <a href="https://www.who.int/tools/child-growth-standards">who.int/tools/child-growth-standards</a>.
+        </p>
+        <p>
+          In the United States, the CDC recommends the WHO charts from birth to 2 years. In Portugal, the national child health programme
+          uses the WHO curves (weight, length or height and BMI to 5 years; head circumference to 2 years). CDC charts for children over 2
+          aren't in BabyTrails yet.
+        </p>
+        <p>
+          Percentiles are computed with WHO's LMS method on this device. A percentile describes where a measurement sits compared with WHO's
+          reference children; it isn't a diagnosis. Your paediatrician looks at much more than one number.
+        </p>
+        <p>BabyTrails is open source under the MIT licence. The WHO data is not covered by that licence.</p>
+      </div>
+    </Shell>
   )
 }

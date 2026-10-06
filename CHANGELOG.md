@@ -20,3 +20,6 @@ with real records.
 - A demo with a made-up baby, no passphrase or key needed.
 - Installable, and works offline once opened. Light and dark themes.
 - When a new version has downloaded, a banner offers to reload into it; it never reloads by itself.
+- Trails UI v2, shared with LabTrails: Inter throughout, a refined honey-and-ink palette, a tab bar
+  on phones, metric cards with sparklines, and a landing page at babytrails.app with the app at
+  /app (old addresses redirect).

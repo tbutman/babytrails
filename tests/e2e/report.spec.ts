@@ -1,14 +1,13 @@
 import { readFileSync } from 'node:fs'
-import { test, expect } from './fixtures'
+import { test, expect, startDemo, tab } from './fixtures'
 
 test('the report exports as a PNG and a PDF, made in the browser', async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Try the demo' }).click()
-  await page.getByRole('link', { name: 'Share a report' }).click()
+  await startDemo(page)
+  await tab(page, 'Share').click()
   await expect(page.getByRole('img', { name: 'Preview of the report' })).toBeVisible()
 
   // "No name" keeps the name off the report.
-  await page.getByRole('button', { name: 'No name' }).click()
+  await page.getByLabel('No name').check()
   const src = await page.getByRole('img', { name: 'Preview of the report' }).getAttribute('src')
   expect(decodeURIComponent(src!)).not.toContain('Robin')
   expect(decodeURIComponent(src!)).toContain('Growth report')

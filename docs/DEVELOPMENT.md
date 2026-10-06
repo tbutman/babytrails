@@ -8,8 +8,11 @@
   components, settings and design tokens. Its interface is in [src/core/README.md](../src/core/README.md).
 - **`src/growth/`** is the WHO maths (LMS z-scores, the ±3 SD adjustment, length/height
   adjustment), the tables loader, unit conversions and the chart component.
-- **`src/app/`** is BabyTrails itself: screens, app types, the summary facts, prompts, the demo and
-  the report.
+- **`src/app/`** is BabyTrails itself: the landing page (`/`), the app's screens under `/app`
+  (`Layout.tsx` has the app bar and the routes for one child), app types, the summary facts,
+  prompts, the demo and the report. `accent.css` holds the honey accent; `app.css` only what the
+  kit doesn't cover (the growth chart, the report preview).
+- **`src/core/ui/`** is Trails UI v2, the design system shared with LabTrails; see its README.
 - **WHO data** isn't committed. `scripts/who-data.mjs` downloads WHO's expanded tables, checks them
   against pinned SHA-256 checksums and writes JSON to `src/growth/data/` (git-ignored). See
   [DATA-NOTICE.md](../DATA-NOTICE.md).
@@ -34,8 +37,8 @@ files).
 ### Images
 
 - `node scripts/make-images.mjs` renders the app icons and the Open Graph image with local Chrome.
-- `node scripts/screenshots.mjs` takes the demo screenshots in `docs/screenshots/` from a running
-  build (`npx vite preview --port 4190`).
+- `node scripts/screenshots.mjs` takes the demo screenshots in `docs/screenshots/` and the landing
+  page's images in `public/landing/` from a running build (`npx vite preview --port 4190`).
 - `node scripts/make-sample-pdf.mjs` writes the made-up growth report used by the demo and tests.
 
 All three are run by hand and their output is committed. Screenshots and fixtures use made-up data

@@ -2,7 +2,7 @@
 
 *A private, local-first baby growth tracker with optional AI. Built October 2026.*
 Code: [github.com/tbutman/babytrails](https://github.com/tbutman/babytrails) ·
-App: [babytrails.app](https://babytrails.app) (being set up)
+App: [babytrails.app](https://babytrails.app)
 
 <p>
   <img src="screenshots/child.png" width="220" alt="A made-up baby's page with the latest measurements and percentiles">

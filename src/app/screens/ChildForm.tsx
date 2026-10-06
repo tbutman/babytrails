@@ -1,7 +1,10 @@
+import { Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Field, Page } from '../components'
+import { PageHeader, Segmented, TextField } from '../../core/ui/components'
+import { APP, childPath } from '../brand'
 import { deleteChild, useChild } from '../data'
+import { Shell } from '../Layout'
 import { useSession, useStore } from '../sessionContext'
 import { today, type Child } from '../types'
 
@@ -9,8 +12,10 @@ export function ChildForm() {
   const { id } = useParams()
   const existing = useChild(id)
   if (id && existing === undefined) return null
-  if (id && existing === null) return <Page title="Not found">This child isn't in your records.</Page>
-  return <ChildFormInner key={id ?? 'new'} existing={existing ?? undefined} />
+  if (id && existing === null) return <p>This child isn't in your records.</p>
+  const form = <ChildFormInner key={id ?? 'new'} existing={existing ?? undefined} />
+  // Editing happens inside the child's layout; adding a new child has its own frame.
+  return id ? form : <Shell narrow>{form}</Shell>
 }
 
 function ChildFormInner({ existing }: { existing?: Child }) {
@@ -20,7 +25,7 @@ function ChildFormInner({ existing }: { existing?: Child }) {
   const [name, setName] = useState(existing?.name ?? '')
   const [nickname, setNickname] = useState(existing?.nickname ?? '')
   const [dateOfBirth, setDateOfBirth] = useState(existing?.dateOfBirth ?? '')
-  const [sex, setSex] = useState<Child['sex'] | ''>(existing?.sex ?? '')
+  const [sex, setSex] = useState<Child['sex'] | undefined>(existing?.sex)
   const [weeks, setWeeks] = useState(existing?.gestationalAge ? String(existing.gestationalAge.weeks) : '')
   const [days, setDays] = useState(existing?.gestationalAge ? String(existing.gestationalAge.days) : '')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -43,69 +48,75 @@ function ChildFormInner({ existing }: { existing?: Child }) {
       name: name.trim(),
       nickname: nickname.trim() || undefined,
       dateOfBirth,
-      sex: sex as Child['sex'],
+      sex: sex!,
       gestationalAge: w ? { weeks: w, days: d } : undefined,
       photoBlobId: existing?.photoBlobId,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
     await store.put('children', child)
     changed()
-    navigate(`/child/${child.id}`)
+    navigate(childPath(child.id))
   }
 
   async function remove() {
     if (!existing) return
-    if (!window.confirm(`Delete ${existing.name} and all their measurements? This can't be undone.`)) return
+    if (!window.confirm(`Delete ${existing.name} and all their measurements and documents? This can't be undone.`)) return
     await deleteChild(store, existing)
     changed()
-    navigate('/')
+    navigate(APP)
   }
 
   return (
-    <Page title={existing ? `Edit ${existing.name}` : 'Add a child'} back={existing ? `/child/${existing.id}` : '/'}>
-      <form onSubmit={submit} noValidate className="stack">
-        <Field label="Name" htmlFor="name" error={errors.name} hint="Only you see this. It's never sent to the AI.">
-          <input id="name" type="text" autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} />
-        </Field>
-        <Field label="Nickname (optional)" htmlFor="nickname" hint="Used instead of the name on shared reports, if you like.">
-          <input id="nickname" type="text" autoComplete="off" value={nickname} onChange={(e) => setNickname(e.target.value)} />
-        </Field>
-        <Field label="Date of birth" htmlFor="dob" error={errors.dateOfBirth}>
-          <input id="dob" type="date" max={today()} value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
-        </Field>
-        <fieldset className={`field${errors.sex ? ' has-error' : ''}`}>
-          <legend className="legend">Sex</legend>
-          <div className="segmented" role="group" aria-label="Sex">
-            <button type="button" aria-pressed={sex === 'female'} onClick={() => setSex('female')}>
-              Girl
-            </button>
-            <button type="button" aria-pressed={sex === 'male'} onClick={() => setSex('male')}>
-              Boy
-            </button>
-          </div>
-          {errors.sex ? <p className="error" role="alert">{errors.sex}</p> : <p className="hint">The WHO charts are different for girls and boys.</p>}
-        </fieldset>
-        <fieldset className={`field${errors.gestation ? ' has-error' : ''}`}>
-          <legend className="legend">Born at (optional)</legend>
-          <div className="inline-fields">
-            <input aria-label="Weeks of pregnancy" inputMode="numeric" placeholder="Weeks" value={weeks} onChange={(e) => setWeeks(e.target.value)} />
-            <input aria-label="And days" inputMode="numeric" placeholder="Days" value={days} onChange={(e) => setDays(e.target.value)} />
+    <>
+      <PageHeader
+        title={existing ? `Edit ${existing.nickname || existing.name}` : 'Add a child'}
+        back={existing ? { to: childPath(existing.id), label: 'Overview' } : { to: APP, label: 'Back' }}
+      />
+      <form onSubmit={submit} noValidate className="card">
+        <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} autoComplete="off" hint="Only you see this. It's never sent to the AI." />
+        <TextField label="Nickname (optional)" value={nickname} onChange={(e) => setNickname(e.target.value)} autoComplete="off" hint="Shown instead of the name, and on shared reports if you like." />
+        <TextField label="Date of birth" type="date" max={today()} value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} error={errors.dateOfBirth} />
+        <Segmented
+          legend="Sex"
+          name="sex"
+          options={[
+            { value: 'female', label: 'Girl' },
+            { value: 'male', label: 'Boy' },
+          ]}
+          value={sex}
+          onChange={setSex}
+          hint="The WHO charts are different for girls and boys."
+        />
+        {errors.sex && (
+          <p className="error form-error" role="alert">
+            {errors.sex}
+          </p>
+        )}
+        <fieldset>
+          <legend>Born at (optional)</legend>
+          <div className="input-row">
+            <TextField label="Weeks of pregnancy" inputMode="numeric" value={weeks} onChange={(e) => setWeeks(e.target.value)} />
+            <TextField label="And days" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} />
           </div>
           {errors.gestation ? (
-            <p className="error" role="alert">{errors.gestation}</p>
+            <p className="error" role="alert">
+              {errors.gestation}
+            </p>
           ) : (
-            <p className="hint">Weeks of pregnancy at birth. Recorded for now; charts by corrected age for babies born early come later.</p>
+            <p className="hint">Recorded for now; charts by corrected age for babies born early come later.</p>
           )}
         </fieldset>
-        <button className="button primary" type="submit">
-          Save
-        </button>
-        {existing && (
-          <button className="button ghost danger" type="button" onClick={() => void remove()}>
-            Delete this child
+        <div className="row">
+          <button className="button primary" type="submit">
+            Save
           </button>
-        )}
+          {existing && (
+            <button className="button ghost danger" type="button" onClick={() => void remove()}>
+              <Trash2 size={16} aria-hidden /> Delete this child
+            </button>
+          )}
+        </div>
       </form>
-    </Page>
+    </>
   )
 }

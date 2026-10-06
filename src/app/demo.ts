@@ -29,28 +29,34 @@ const POINTS: [number, number, number | undefined, number | undefined][] = [
 
 export const DEMO_CHILD_ID = 'demo-child'
 
-export async function loadDemo(): Promise<MemoryStore> {
-  const store = new MemoryStore()
+// The demo baby and measurements, built synchronously (the landing page's preview uses them too).
+export function demoData(): { child: Child; measurements: Measurement[]; born: string } {
   const now = today()
   const born = daysBefore(now, DEMO_AGE_DAYS)
   const createdAt = new Date().toISOString()
   const child: Child = { id: DEMO_CHILD_ID, name: 'Robin', dateOfBirth: born, sex: 'female', createdAt }
-  await store.put('children', child)
-  for (const [day, weightKg, lengthCm, headCm] of POINTS) {
-    const date = daysBefore(now, DEMO_AGE_DAYS - day)
-    const m: Measurement = {
+  const measurements = POINTS.map(
+    ([day, weightKg, lengthCm, headCm]): Measurement => ({
       id: `demo-m${day}`,
       childId: child.id,
-      date,
+      date: daysBefore(now, DEMO_AGE_DAYS - day),
       weightKg,
       lengthCm,
       headCm,
       source: 'manual',
       createdAt,
       updatedAt: createdAt,
-    }
-    await store.put('measurements', m)
-  }
+    }),
+  )
+  return { child, measurements, born }
+}
+
+export async function loadDemo(): Promise<MemoryStore> {
+  const store = new MemoryStore()
+  const now = today()
+  const { child, measurements } = demoData()
+  await store.put('children', child)
+  for (const m of measurements) await store.put('measurements', m)
   // A made-up growth report (scripts/make-sample-pdf.mjs), served with the app.
   try {
     const pdf = await fetch('/demo/sample-growth-report.pdf').then((r) => (r.ok ? r.blob() : Promise.reject(new Error())))

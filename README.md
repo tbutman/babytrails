@@ -4,10 +4,10 @@
 growth charts, store their growth reports, health booklet pages, doctor's notes and ultrasound
 images, and get plain-language summaries of what's changed.
 
-**Free and open source** (MIT licence). Website: [babytrails.app](https://babytrails.app) (being set
-up). There's no account, no sign-up, no ads and no tracking. Everything you enter stays encrypted on
-your device. If you choose to use an AI feature, your browser sends that one request straight to the
-AI provider, with your own key.
+**Free and open source** (MIT licence). Website: [babytrails.app](https://babytrails.app). There's
+no account, no sign-up, no ads and no tracking. Everything you enter stays encrypted on your device.
+If you choose to use an AI feature, your browser sends that one request straight to the AI provider,
+with your own key.
 
 <p>
   <img src="docs/screenshots/child.png" width="240" alt="A made-up baby's page: latest weight, length and head circumference with percentiles, and the weight gained per week">
@@ -43,7 +43,7 @@ don't need a passphrase or a key, and nothing you do in the demo is saved.
 
 ## Start using it
 
-1. Open [babytrails.app](https://babytrails.app) and tap **Get started**.
+1. Open [babytrails.app](https://babytrails.app) and tap **Set up your vault**.
 2. Choose a passphrase. Four or more random words are strong and easy to type.
    **There's no way to reset it.** If you forget it, your records can't be recovered, by anyone.
 3. Add your baby, then add a measurement.
@@ -118,4 +118,4 @@ Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 ## Licence
 
 [MIT](LICENSE) © Thomas Butman. The WHO growth data isn't covered by the MIT licence; see
-[DATA-NOTICE.md](DATA-NOTICE.md). pdf.js is Apache-2.0; Quicksand is under the SIL Open Font Licence.
+[DATA-NOTICE.md](DATA-NOTICE.md). pdf.js is Apache-2.0; Inter is under the SIL Open Font Licence; Lucide icons are ISC.

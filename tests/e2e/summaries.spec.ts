@@ -1,11 +1,9 @@
-import { test, expect, ANTHROPIC } from './fixtures'
+import { test, expect, ANTHROPIC, startDemo, createVault, addChild, addMeasurement, saveApiKey } from './fixtures'
 
-const PASS = 'maple orbit velvet canoe'
 const TEST_KEY = 'sk-ant-test-' + 'y'.repeat(40)
 
-test('demo: a prepared summary, labelled as AI output', async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Try the demo' }).click()
+test('demo: a prepared summary, labelled honestly', async ({ page }) => {
+  await startDemo(page)
   await page.getByRole('link', { name: 'Explain the latest changes' }).click()
   await page.getByRole('button', { name: 'Show it' }).click()
   const card = page.getByRole('region', { name: 'What changed' })
@@ -29,29 +27,11 @@ test.describe('with a mocked Anthropic API', () => {
       })
     })
 
-    await page.goto('/')
-    await page.getByRole('button', { name: 'Get started' }).click()
-    await page.getByLabel('Passphrase', { exact: true }).fill(PASS)
-    await page.getByLabel('Type it again').fill(PASS)
-    await page.getByLabel(/can't be reset/).check()
-    await page.getByRole('button', { name: 'Create my vault' }).click()
-    await page.getByRole('link', { name: 'Add a child' }).click()
-    await page.getByLabel('Name', { exact: true }).fill('Ines Exemplo')
-    await page.getByLabel('Nickname (optional)').fill('Nini')
-    await page.getByLabel('Date of birth').fill('2026-03-01')
-    await page.getByRole('button', { name: 'Girl' }).click()
-    await page.getByRole('button', { name: 'Save' }).click()
-    for (const [date, kg] of [['2026-08-01', '6,4'], ['2026-09-01', '6,9']]) {
-      await page.getByRole('link', { name: 'Add a measurement' }).click()
-      await page.getByLabel('Date').fill(date)
-      await page.getByLabel('Weight (kg)').fill(kg)
-      await page.getByLabel('Note (optional)').fill('Nini liked the zebra')
-      await page.getByRole('button', { name: 'Save' }).click()
-    }
-    await page.getByRole('link', { name: 'Settings' }).click()
-    await page.getByLabel('Anthropic API key').fill(TEST_KEY)
-    await page.getByRole('button', { name: 'Save key' }).click()
-    await page.getByRole('link', { name: 'BabyTrails home' }).click()
+    await createVault(page)
+    await addChild(page, { name: 'Ines Exemplo', nickname: 'Nini', dob: '2026-03-01', sex: 'Girl' })
+    await addMeasurement(page, { date: '2026-08-01', kg: '6,4', note: 'Nini liked the zebra' })
+    await addMeasurement(page, { date: '2026-09-01', kg: '6,9', note: 'Nini liked the zebra' })
+    await saveApiKey(page, TEST_KEY)
 
     await page.getByRole('link', { name: 'Explain the latest changes' }).click()
     expect(bodies).toHaveLength(0)

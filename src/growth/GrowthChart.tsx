@@ -45,13 +45,15 @@ type Props = {
   units: Units
   // For age charts: the child's age today, so the chart reaches it.
   ageDaysNow?: number
+  // The legend under the chart; off where the page explains the chart itself.
+  caption?: boolean
 }
 
 const W = 360
 const H = 240
 const M = { top: 24, right: 12, bottom: 30, left: 40 }
 
-export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow = 0 }: Props) {
+export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow = 0, caption = true }: Props) {
   const table = tables[indicator]
   const [tMin, tMax] = tableRange(table)
   const byAge = table.x === 'day'
@@ -153,9 +155,7 @@ export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow 
           </circle>
         ))}
       </svg>
-      <figcaption>
-        Shaded: 3rd–97th and 15th–85th percentiles. Dashed: 50th. Source: WHO Child Growth Standards.
-      </figcaption>
+      {caption && <figcaption>Shaded: 3rd–97th and 15th–85th percentiles. Dashed: 50th. Source: WHO Child Growth Standards.</figcaption>}
     </figure>
   )
 }
