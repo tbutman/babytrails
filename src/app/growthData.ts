@@ -1,8 +1,10 @@
 // Ties the app's records to the growth maths.
 
 import { useEffect, useState } from 'react'
-import { ageInDays, computeGrowth, type GrowthResult } from '../growth/growth'
-import { loadTables, type Tables } from '../growth/tables'
+import { ageInDays, computeGrowth, HEIGHT_FROM_DAY, type GrowthResult } from '../growth/growth'
+import type { ChartPoint } from '../growth/GrowthChart'
+import { loadTables, type Indicator, type Tables } from '../growth/tables'
+import { formatAge, formatDate } from './format'
 import type { Child, Measurement } from './types'
 
 export function useTables(): Tables | null {
@@ -32,4 +34,22 @@ export function weeklyGain(measurements: Measurement[]): { kgPerWeek: number; da
   const days = ageInDays(from.date, to.date)
   if (days <= 0) return null
   return { kgPerWeek: ((to.weightKg! - from.weightKg!) / days) * 7, days, from, to }
+}
+
+export type ChartChoice = 'wfa' | 'lhfa' | 'hcfa' | 'wfl' | 'bfa'
+
+// The points for one chart, and the WHO indicator it uses (weight-for-height from 2 years).
+export function chartPoints(tables: Tables, child: Child, measurements: Measurement[], choice: ChartChoice, ageNow: number): { indicator: Indicator; points: ChartPoint[] } {
+  const indicator: Indicator = choice === 'wfl' && ageNow >= HEIGHT_FROM_DAY ? 'wfh' : choice
+  const points = measurements.flatMap((m) => {
+    const g = growthFor(tables, child, m)
+    const label = `${formatDate(m.date)}, ${formatAge(child.dateOfBirth, m.date)}`
+    if (choice === 'wfl') {
+      const r = g[indicator]
+      return r && g.statureCm !== undefined ? [{ x: g.statureCm, y: r.value, label }] : []
+    }
+    const r = g[choice]
+    return r ? [{ x: ageInDays(child.dateOfBirth, m.date), y: r.value, label }] : []
+  })
+  return { indicator, points }
 }

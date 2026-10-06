@@ -138,7 +138,7 @@ export function Landing() {
               { icon: FileText, title: 'Documents in one place', text: "Growth reports, health booklet pages, doctor's notes and ultrasound images, stored encrypted and opened in the app." },
               { icon: ScanText, title: 'Reads growth reports', text: 'Optional, with your own key. The AI copies the measurements from a report or booklet page, Portuguese ones too; you check every value first.' },
               { icon: Sparkles, title: 'In plain words', text: "What changed since the last check-up, and questions for the next one. BabyTrails calculates the numbers; the AI only explains them." },
-              { icon: Share2, title: 'A page to share', text: "The latest numbers and the chart on one page, as an image or PDF. Show the name, a nickname or no name." },
+              { icon: Share2, title: 'A report card to share', text: 'The latest numbers, four WHO charts, gain over time and the history, as an image or PDF. Show the name, a nickname or no name.' },
             ]}
           />
         </Section>
@@ -166,12 +166,12 @@ export function Landing() {
             <Showcase
               reverse
               checkIcon={Check}
-              title="A page for the grandparents"
-              text="One page with the latest weight, length and head circumference, their percentiles, the weight chart and the recent trend."
-              points={['Save it as an image or PDF, or share it from your phone', 'A nickname or no name, and the age instead of the date of birth', 'A file you share yourself, never a link to a server']}
+              title="A report card for the grandparents"
+              text="The latest weight, length and head circumference with their percentiles, four WHO charts, gain over time and the history, drawn from your records."
+              points={['A phone-sized image to send, or an A4 PDF to print', 'A nickname or no name, and the age instead of the date of birth', 'Every number worked out by BabyTrails; the AI summary only if you add it', 'A file you share yourself, never a link to a server']}
               visual={
                 <div className="device">
-                  <img src="/landing/report.png" alt="A one-page growth report of a made-up baby" loading="lazy" width="1080" height="1350" />
+                  <img src="/landing/report.png" alt="A report card of a made-up baby: the latest numbers, four growth charts, gain over time and the history" loading="lazy" width="1080" height="1920" />
                 </div>
               }
             />

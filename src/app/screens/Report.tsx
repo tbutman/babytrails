@@ -1,7 +1,7 @@
-// The shareable report: a one-page image of the latest growth, made in the browser and saved or
-// shared as a file. Privacy choices decide what's on it.
+// The shareable report, made in the browser and saved or shared as a file: the report card (a
+// phone-shaped image, or an A4 PDF) or the simple one-page report. Privacy choices decide what's on it.
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router'
 import { ageInDays } from '../../growth/growth'
 import { GrowthChart, type ChartPoint } from '../../growth/GrowthChart'
@@ -10,15 +10,20 @@ import type { Indicator } from '../../growth/tables'
 import { formatLength, formatWeeklyGain, formatWeight } from '../../growth/units'
 import { FileDown, ImageDown, Share2 } from 'lucide-react'
 import { Checkbox, PageHeader, Segmented } from '../../core/ui/components'
+import { buildCard, CARD_SIZE, type CardLayout } from '../report/buildCard'
+import { buildCardData } from '../report/cardData'
+import { useLatestSummary } from '../summaries'
 import { useChild, useMeasurements } from '../data'
 import { formatAge, formatDate } from '../format'
-import { growthFor, useTables, weeklyGain } from '../growthData'
+import { chartPoints, growthFor, useTables, weeklyGain, type ChartChoice } from '../growthData'
 import { buildReport, serialiseChart, type ReportStat } from '../report/buildReport'
-import { download, reportPdf, reportPng, shareFile } from '../report/render'
+import { download, reportPdf, reportPng, shareFile, type PageSize } from '../report/render'
 import { useSession } from '../sessionContext'
-import { today, type Measurement } from '../types'
+import { today, type Child, type Measurement } from '../types'
 
 type NameMode = 'nickname' | 'name' | 'none'
+type Layout = 'card' | 'simple'
+const CARD_CHARTS: ChartChoice[] = ['wfa', 'lhfa', 'hcfa', 'wfl']
 
 export function Report() {
   const { id } = useParams()
@@ -28,15 +33,47 @@ export function Report() {
   const { app } = useSession()
   const [nameMode, setNameMode] = useState<NameMode>('nickname')
   const [showBirthDate, setShowBirthDate] = useState(false)
+  const [layout, setLayout] = useState<Layout>('card')
+  const [includeHead, setIncludeHead] = useState(true)
+  const [includeHistory, setIncludeHistory] = useState(true)
+  const [includeAi, setIncludeAi] = useState(false)
   const [svg, setSvg] = useState<string | null>(null)
   const [message, setMessage] = useState('')
   const chartRef = useRef<HTMLDivElement>(null)
+  const cardChartsRef = useRef<HTMLDivElement>(null)
+  const { summary } = useLatestSummary(child, 'after-data')
 
   const now = today()
   const units = app.units
 
+  // The report card, as a function so the PDF can ask for the A4 layout.
+  const cardSvg = useCallback(
+    async (cardLayout: CardLayout) => {
+      if (!child || !measurements || !tables || !cardChartsRef.current) return null
+      const charts: Record<string, string> = {}
+      cardChartsRef.current.querySelectorAll<HTMLElement>('[data-choice]').forEach((el) => {
+        const svgEl = el.querySelector('svg')
+        if (svgEl) charts[el.dataset.choice!] = serialiseChart(svgEl)
+      })
+      const data = buildCardData(tables, child, measurements, units, now, {
+        title: shownName(child, nameMode),
+        subtitle: showBirthDate ? `Born ${formatDate(child.dateOfBirth)}` : `${formatAge(child.dateOfBirth, now)} old`,
+        includeHead,
+        includeHistory,
+        ai: includeAi && summary ? { text: summary.text, date: summary.createdAt.slice(0, 10), prepared: summary.model === 'prepared in advance' } : undefined,
+      })
+      return buildCard(data, charts, cardLayout)
+    },
+    [child, measurements, tables, units, now, nameMode, showBirthDate, includeHead, includeHistory, includeAi, summary],
+  )
+
   useEffect(() => {
-    if (!child || !measurements || !tables || !chartRef.current) return
+    if (layout !== 'card') return
+    void cardSvg('phone').then((s) => s && setSvg(s))
+  }, [layout, cardSvg])
+
+  useEffect(() => {
+    if (layout !== 'simple' || !child || !measurements || !tables || !chartRef.current) return
     const chartEl = chartRef.current.querySelector('svg')
     if (!chartEl) return
     const latest = (pick: (m: Measurement) => number | undefined) => [...measurements].reverse().find((m) => pick(m) !== undefined)
@@ -48,10 +85,9 @@ export function Report() {
     const s = latest((m) => m.lengthCm ?? m.heightCm)
     const h = latest((m) => m.headCm)
     const gain = weeklyGain(measurements)
-    const shownName = nameMode === 'name' ? child.name : nameMode === 'nickname' ? child.nickname || child.name.split(' ')[0] : 'Growth report'
     const last = measurements.at(-1)
     void buildReport({
-      title: shownName,
+      title: shownName(child, nameMode),
       subtitle: showBirthDate ? `Born ${formatDate(child.dateOfBirth)}` : `${formatAge(child.dateOfBirth, now)} old`,
       generatedOn: formatDate(now),
       stats: [
@@ -68,7 +104,7 @@ export function Report() {
       chartTitle: 'Weight for age',
       chartSvg: serialiseChart(chartEl),
     }).then(setSvg)
-  }, [child, measurements, tables, nameMode, showBirthDate, units, now])
+  }, [layout, child, measurements, tables, nameMode, showBirthDate, units, now])
 
 
   if (!child || !measurements || !tables) return null
@@ -81,8 +117,16 @@ export function Report() {
   async function act(kind: 'png' | 'pdf' | 'share') {
     if (!svg) return
     setMessage('')
-    if (kind === 'pdf') return download(await reportPdf(svg), `${base}.pdf`)
-    const png = await reportPng(svg)
+    const size: PageSize | undefined = layout === 'card' ? CARD_SIZE.phone : undefined
+    if (kind === 'pdf') {
+      if (layout === 'card') {
+        const a4 = await cardSvg('a4')
+        if (a4) download(await reportPdf(a4, CARD_SIZE.a4), `${base}.pdf`)
+        return
+      }
+      return download(await reportPdf(svg), `${base}.pdf`)
+    }
+    const png = await reportPng(svg, size)
     if (kind === 'png') return download(png, `${base}.png`)
     const result = await shareFile(png, `${base}.png`, 'Growth report')
     if (result === 'unsupported') setMessage("This browser can't share files. Save the image instead and share it from your photos or files.")
@@ -90,8 +134,22 @@ export function Report() {
 
   return (
     <>
-      <PageHeader title="Share a report" subtitle="A one-page picture of the latest growth, made on this device. You choose what's on it, and you share the file yourself." />
+      <PageHeader title="Share a report" subtitle="A picture of the latest growth, made on this device. You choose what's on it, and you share the file yourself." />
       <div className="card">
+        <Segmented
+          legend="Layout"
+          name="layout"
+          value={layout}
+          onChange={(v) => {
+            setSvg(null)
+            setLayout(v)
+          }}
+          options={[
+            { value: 'card', label: 'Report card' },
+            { value: 'simple', label: 'Simple' },
+          ]}
+          hint={layout === 'card' ? 'The latest numbers, four charts, gain over time and the history. The image is phone-shaped; the PDF is an A4 page.' : 'The latest numbers and the weight chart on one page.'}
+        />
         <Segmented
           legend="Name on the report"
           name="name-mode"
@@ -106,9 +164,24 @@ export function Report() {
         <Checkbox checked={showBirthDate} onChange={setShowBirthDate}>
           Show the date of birth instead of the age
         </Checkbox>
+        {layout === 'card' && (
+          <>
+            <Checkbox checked={includeHead} onChange={setIncludeHead}>
+              Include head circumference
+            </Checkbox>
+            <Checkbox checked={includeHistory} onChange={setIncludeHistory}>
+              Include the history of measurements
+            </Checkbox>
+            {summary && (
+              <Checkbox checked={includeAi} onChange={setIncludeAi}>
+                Include the latest summary in plain words (labelled as written by AI)
+              </Checkbox>
+            )}
+          </>
+        )}
       </div>
 
-      <div className="report-preview">
+      <div className={layout === 'card' ? 'report-preview card-preview' : 'report-preview'}>
         {svg ? <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt="Preview of the report" /> : <div className="skeleton loading-card" />}
       </div>
 
@@ -125,10 +198,25 @@ export function Report() {
       </div>
       {message && <p role="status">{message}</p>}
 
-      {/* The chart is drawn off-screen by the same component as the app, then copied into the report. */}
+      {/* Charts are drawn off-screen by the same component as the app, then copied into the report. */}
       <div ref={chartRef} className="offscreen" aria-hidden="true">
         <GrowthChart tables={tables} indicator="wfa" sex={child.sex} points={points} units={units} ageDaysNow={ageInDays(child.dateOfBirth, now)} />
       </div>
+      <div ref={cardChartsRef} className="offscreen" aria-hidden="true">
+        {CARD_CHARTS.map((choice) => {
+          const ageNow = ageInDays(child.dateOfBirth, now)
+          const { indicator, points: pts } = chartPoints(tables, child, measurements, choice, ageNow)
+          return (
+            <div key={choice} data-choice={choice}>
+              <GrowthChart tables={tables} indicator={indicator} sex={child.sex} points={pts} units={units} ageDaysNow={ageNow} caption={false} />
+            </div>
+          )
+        })}
+      </div>
     </>
   )
+}
+
+function shownName(child: Child, mode: NameMode): string {
+  return mode === 'name' ? child.name : mode === 'nickname' ? child.nickname || child.name.split(' ')[0] : 'Growth report'
 }

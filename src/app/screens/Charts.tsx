@@ -7,12 +7,11 @@ import type { Indicator } from '../../growth/tables'
 import { EmptyState, PageHeader, Segmented } from '../../core/ui/components'
 import { Disclaimer } from '../components'
 import { useChild, useMeasurements } from '../data'
-import { formatAge, formatDate } from '../format'
-import { growthFor, useTables } from '../growthData'
+import { chartPoints, useTables, type ChartChoice } from '../growthData'
 import { useSession } from '../sessionContext'
 import { today } from '../types'
 
-type Choice = 'wfa' | 'lhfa' | 'hcfa' | 'wfl' | 'bfa'
+type Choice = ChartChoice
 
 export function Charts() {
   const { id = '' } = useParams()
@@ -25,19 +24,7 @@ export function Charts() {
 
   const ageNow = ageInDays(child.dateOfBirth, today())
   const toddler = ageNow >= HEIGHT_FROM_DAY
-  const indicator: Indicator = chart === 'wfl' && toddler ? 'wfh' : chart
-  const points: ChartPoint[] = tables
-    ? measurements.flatMap((m) => {
-        const g = growthFor(tables, child, m)
-        const label = `${formatDate(m.date)}, ${formatAge(child.dateOfBirth, m.date)}`
-        if (chart === 'wfl') {
-          const r = g[indicator]
-          return r && g.statureCm !== undefined ? [{ x: g.statureCm, y: r.value, label }] : []
-        }
-        const r = g[chart]
-        return r ? [{ x: ageInDays(child.dateOfBirth, m.date), y: r.value, label }] : []
-      })
-    : []
+  const { indicator, points } = tables ? chartPoints(tables, child, measurements, chart, ageNow) : { indicator: (chart === 'wfl' && toddler ? 'wfh' : chart) as Indicator, points: [] as ChartPoint[] }
 
   return (
     <>

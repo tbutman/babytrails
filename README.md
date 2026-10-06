@@ -35,8 +35,9 @@ with your own key.
 - **Plain-language summaries (optional, AI).** "What changed" since the last check-up, and questions
   to ask at the next one. BabyTrails calculates the numbers; the AI only puts them into words.
   Doctor's notes can be summarised too.
-- **A report to share.** One page with the latest numbers and the chart, as an image or PDF. You
-  choose whether it shows the name, a nickname or no name.
+- **A report card to share.** The latest numbers with percentiles, four WHO charts, gain over time
+  and the history, as a phone-sized image or an A4 PDF. You choose whether it shows the name, a
+  nickname or no name. A simple one-page report is still there too.
 - **Works offline** once you've opened it, and can be installed like an app.
 
 ## Try it
