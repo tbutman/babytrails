@@ -4,7 +4,9 @@ import { SessionProvider } from './session'
 import { useSession } from './sessionContext'
 import { ChildForm } from './screens/ChildForm'
 import { ChildPage } from './screens/ChildPage'
+import { AddDocument, DocumentPage, Documents } from './screens/Documents'
 import { Home } from './screens/Home'
+import { ReadDocument } from './screens/ReadDocument'
 import { MeasurementForm } from './screens/MeasurementForm'
 import { About, Settings } from './screens/Settings'
 import { Unlock, Welcome } from './screens/Welcome'
@@ -25,6 +27,10 @@ function Screens() {
         <Route path="/child/:id/edit" element={<ChildForm />} />
         <Route path="/child/:id/measure" element={<MeasurementForm />} />
         <Route path="/child/:id/measure/:mid" element={<MeasurementForm />} />
+        <Route path="/child/:id/documents" element={<Documents />} />
+        <Route path="/child/:id/documents/new" element={<AddDocument />} />
+        <Route path="/child/:id/documents/:docId" element={<DocumentPage />} />
+        <Route path="/child/:id/documents/:docId/read" element={<ReadDocument />} />
         {mode === 'unlocked' && <Route path="/settings" element={<Settings />} />}
         <Route path="/about" element={<About />} />
         <Route path="*" element={<Navigate to="/" replace />} />

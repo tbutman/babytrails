@@ -2,7 +2,8 @@
 // Dates are relative to today, so the demo always shows a baby of about six and a half months.
 
 import { MemoryStore } from '../core'
-import type { Child, Measurement } from './types'
+import { addDocument } from '../core'
+import type { BabyDocument, Child, Measurement } from './types'
 import { today } from './types'
 
 const DEMO_AGE_DAYS = 200
@@ -49,6 +50,19 @@ export async function loadDemo(): Promise<MemoryStore> {
       updatedAt: createdAt,
     }
     await store.put('measurements', m)
+  }
+  // A made-up growth report (scripts/make-sample-pdf.mjs), served with the app.
+  try {
+    const pdf = await fetch('/demo/sample-growth-report.pdf').then((r) => (r.ok ? r.blob() : Promise.reject(new Error())))
+    await addDocument<BabyDocument["kind"], BabyDocument["meta"]>(store, pdf, {
+      profileId: child.id,
+      date: daysBefore(now, DEMO_AGE_DAYS - 183),
+      kind: 'growth-report',
+      title: 'Health booklet: growth page (sample)',
+      meta: {},
+    })
+  } catch {
+    // The demo still works without its sample document.
   }
   return store
 }

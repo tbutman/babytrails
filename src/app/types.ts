@@ -3,6 +3,7 @@
 
 import type { Sex } from '../growth/tables'
 import type { Units } from '../growth/units'
+import type { DocumentRecord } from '../core'
 
 export const APP_ID = 'babytrails'
 export const APP_COLLECTIONS = ['children', 'measurements', 'visits', 'summaries'] as const
@@ -46,6 +47,20 @@ export type Summary = {
   text: string
   inputsDigest: string
 }
+
+export type DocumentKind = 'growth-report' | 'booklet' | 'doctor-note' | 'ultrasound' | 'other'
+export type BabyDocument = DocumentRecord<DocumentKind, { visitId?: string }>
+
+export const DOCUMENT_KINDS: { value: DocumentKind; label: string }[] = [
+  { value: 'growth-report', label: 'Growth report' },
+  { value: 'booklet', label: 'Health booklet page' },
+  { value: 'doctor-note', label: "Doctor's note" },
+  { value: 'ultrasound', label: 'Ultrasound image' },
+  { value: 'other', label: 'Other' },
+]
+
+// Kinds the AI can read measurements from. Ultrasound images are stored and shown, never sent.
+export const EXTRACTABLE: ReadonlySet<DocumentKind> = new Set(['growth-report', 'booklet'])
 
 export type AppSettings = { units: Units }
 export const DEFAULT_APP_SETTINGS: AppSettings = { units: 'metric' }

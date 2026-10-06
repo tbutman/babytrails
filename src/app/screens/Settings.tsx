@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { MIN_PASSPHRASE_LENGTH, WrongPassphraseError } from '../../core'
 import type { Theme } from '../../core/settings/settings'
+import { ApiKeySettings } from '../../core/ai/ApiKeySettings'
 import { Field, Page } from '../components'
 import { useSession } from '../sessionContext'
 import { ExportBackup, RestoreBackup } from './Backup'
@@ -85,6 +86,9 @@ export function Settings() {
           ))}
         </select>
       </Field>
+
+      <h2 id="ai">AI (optional)</h2>
+      <ApiKeySettings apiKey={core.ai.apiKey} model={core.ai.model} onSave={({ apiKey, model }) => saveCore({ ...core, ai: { ...core.ai, apiKey, model } })} />
 
       <h2 id="backup">Backup</h2>
       <ExportBackup />

@@ -98,9 +98,14 @@ export function ChildPage() {
         </p>
       )}
 
-      <Link to={`/child/${child.id}/measure`} className="button primary">
-        Add a measurement
-      </Link>
+      <div className="row">
+        <Link to={`/child/${child.id}/measure`} className="button primary">
+          Add a measurement
+        </Link>
+        <Link to={`/child/${child.id}/documents`} className="button">
+          Documents
+        </Link>
+      </div>
 
       <h2>Growth charts</h2>
       <div className="chart-tabs" role="group" aria-label="Choose a chart">
