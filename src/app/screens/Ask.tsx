@@ -62,7 +62,7 @@ export function Ask() {
   }
   const suggestions = askSuggestions(facts, app.units)
   const factsText = redactNames(factsMessage(facts), [child.name, child.nickname], 'your baby')
-  const lastDigest = thread?.turns.filter((t) => t.role === 'ai').at(-1)?.factsDigest
+  const lastDigest = thread?.turns.filter((t) => t.role === 'answer').at(-1)?.factsDigest
   const needsConsent = !thread || lastDigest !== digest
 
   async function saveTurns(turns: AskTurn[]) {
@@ -83,8 +83,8 @@ export function Ask() {
       if (!prepared) return setError('In the demo, try one of the suggested questions. Answers to your own questions use your own Anthropic key.')
       setQuestion('')
       return saveTurns([
-        { role: 'parent', text, createdAt: nowIso() },
-        { role: 'ai', kind: 'prepared', text: prepared.text, model: 'prepared in advance', factsDigest: digest, createdAt: nowIso() },
+        { role: 'question', text, createdAt: nowIso() },
+        { role: 'answer', kind: 'prepared', text: prepared.text, model: 'prepared in advance', factsDigest: digest, createdAt: nowIso() },
       ])
     }
     if (!core.ai.apiKey) return setError('NO_KEY')
@@ -111,9 +111,9 @@ export function Ask() {
       })
       const ai: AskTurn =
         'withheld' in outcome
-          ? { role: 'ai', kind: 'unchecked', text: '', model: core.ai.model, factsDigest: digest, createdAt: nowIso() }
-          : { role: 'ai', kind: outcome.answer.kind, text: outcome.answer.text, model: core.ai.model, factsDigest: digest, createdAt: nowIso() }
-      await saveTurns([{ role: 'parent', text, createdAt: nowIso() }, ai])
+          ? { role: 'answer', kind: 'unchecked', text: '', model: core.ai.model, factsDigest: digest, createdAt: nowIso() }
+          : { role: 'answer', kind: outcome.answer.kind, text: outcome.answer.text, model: core.ai.model, factsDigest: digest, createdAt: nowIso() }
+      await saveTurns([{ role: 'question', text, createdAt: nowIso() }, ai])
       setQuestion('')
       setPending(null)
     } catch (err) {
@@ -227,7 +227,7 @@ export function Ask() {
                   <span className="list-row-main">
                     <span className="list-row-title">{t.turns[0]?.text}</span>
                     <span className="list-row-sub">
-                      {formatDate(t.updatedAt.slice(0, 10))} · {t.turns.filter((x) => x.role === 'parent').length} question{t.turns.filter((x) => x.role === 'parent').length === 1 ? '' : 's'}
+                      {formatDate(t.updatedAt.slice(0, 10))} · {t.turns.filter((x) => x.role === 'question').length} question{t.turns.filter((x) => x.role === 'question').length === 1 ? '' : 's'}
                     </span>
                   </span>
                 </Link>

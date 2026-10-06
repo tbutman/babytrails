@@ -84,10 +84,10 @@ describe('checking an answer', () => {
 
   it('sends earlier turns as text, without withheld answers', () => {
     expect(historyText([
-      { role: 'parent', text: 'Q1', createdAt: '' },
-      { role: 'ai', kind: 'answer', text: 'A1', createdAt: '' },
-      { role: 'parent', text: 'Q2', createdAt: '' },
-      { role: 'ai', kind: 'unchecked', text: '', createdAt: '' },
+      { role: 'question', text: 'Q1', createdAt: '' },
+      { role: 'answer', kind: 'answer', text: 'A1', createdAt: '' },
+      { role: 'question', text: 'Q2', createdAt: '' },
+      { role: 'answer', kind: 'unchecked', text: '', createdAt: '' },
     ])).toBe('Question: Q1\n\nAnswer: A1\n\nQuestion: Q2')
   })
 })
