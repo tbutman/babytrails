@@ -248,3 +248,17 @@ import { ApiKeySettings } from './core/ai/ApiKeySettings'
 - `SendSheet` always names Anthropic, says the request doesn't go through the app's server, and
   states Anthropic's data terms (no training on API content; deleted within 30 days, up to 2 years
   if flagged; checked 6 October 2026). Nothing is sent until the user taps **Send**.
+
+## `ui/UpdatePrompt.tsx`: "a new version is ready"
+
+```tsx
+import { UpdatePrompt } from './core/ui/UpdatePrompt'
+<UpdatePrompt appName="LabTrails" locksVault={mode === 'unlocked'} />   // near the top of the app
+```
+
+Needs `vite-plugin-pwa` with `registerType: 'prompt'` and `injectRegister: false`, and
+`"vite-plugin-pwa/vanillajs"` in the tsconfig `types`. It registers the service worker, checks for
+a new version every 30 minutes and when the app comes back to the foreground, and shows a banner
+when one has downloaded. It switches only when the user taps **Reload** (a reload locks the vault
+and drops anything being typed). Without it, a new version waits until every tab or the installed
+app is closed.

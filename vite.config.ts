@@ -35,8 +35,9 @@ export default defineConfig({
     // Installable and offline. The service worker precaches the app, the WHO tables and pdf.js; the
     // pdf.js support files (decoders, fonts, character maps) are cached the first time a PDF needs them.
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'script',
+      // A new version waits until the user taps Reload (src/core/ui/UpdatePrompt.tsx).
+      registerType: 'prompt',
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'BabyTrails',

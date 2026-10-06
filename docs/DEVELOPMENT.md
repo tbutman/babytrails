@@ -61,7 +61,9 @@ npm run test:e2e   # browser tests (Playwright) against the production build
   allow Anthropic and answer with a mock, so nothing real is sent): the CSP is in the build; the
   demo; a full vault flow; extraction sends nothing before the user agrees, sends no name or date of
   birth, and saves only confirmed rows; summaries send no name, nickname, date of birth or notes;
-  report exports; offline reload.
+  report exports; offline reload; and an update: the test serves a copy of the build, changes
+  `sw.js` on disk like a deploy, and checks that the banner appears, nothing reloads by itself, and
+  Reload switches to the new version.
 
 What the tests can't prove: how real growth reports read (that needs Thomas's own documents, in his
 own browser), and behaviour on real phones (iPhone Safari, Android Chrome).

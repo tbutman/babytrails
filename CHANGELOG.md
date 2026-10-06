@@ -19,3 +19,4 @@ with real records.
 - A one-page report to share as an image or PDF, with privacy choices.
 - A demo with a made-up baby, no passphrase or key needed.
 - Installable, and works offline once opened. Light and dark themes.
+- When a new version has downloaded, a banner offers to reload into it; it never reloads by itself.
