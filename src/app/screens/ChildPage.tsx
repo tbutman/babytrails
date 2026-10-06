@@ -13,6 +13,7 @@ import { growthFor, useTables, weeklyGain } from '../growthData'
 import { useSession } from '../sessionContext'
 import { today, type Measurement } from '../types'
 import { BackupNudge } from './Settings'
+import { SummaryCard } from './Summaries'
 
 const CHARTS: Indicator[] = ['wfa', 'lhfa', 'hcfa', 'wfl', 'bfa']
 
@@ -106,6 +107,23 @@ export function ChildPage() {
           Documents
         </Link>
       </div>
+
+      {measurements.length > 0 && (
+        <>
+          <h2>In plain words</h2>
+          <SummaryCard child={child} kind="after-data" />
+          <SummaryCard child={child} kind="questions" />
+          <div className="row">
+            <Link to={`/child/${child.id}/summary?kind=after-data`} className="button small">
+              Explain the latest changes
+            </Link>
+            <Link to={`/child/${child.id}/summary?kind=questions`} className="button small">
+              Questions for the next check-up
+            </Link>
+          </div>
+          <p className="hint">Uses AI with your own key. BabyTrails calculates the numbers; the AI only puts them into words.</p>
+        </>
+      )}
 
       <h2>Growth charts</h2>
       <div className="chart-tabs" role="group" aria-label="Choose a chart">

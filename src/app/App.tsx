@@ -7,6 +7,7 @@ import { ChildPage } from './screens/ChildPage'
 import { AddDocument, DocumentPage, Documents } from './screens/Documents'
 import { Home } from './screens/Home'
 import { ReadDocument } from './screens/ReadDocument'
+import { DocumentSummary, GrowthSummary } from './screens/Summaries'
 import { MeasurementForm } from './screens/MeasurementForm'
 import { About, Settings } from './screens/Settings'
 import { Unlock, Welcome } from './screens/Welcome'
@@ -31,6 +32,8 @@ function Screens() {
         <Route path="/child/:id/documents/new" element={<AddDocument />} />
         <Route path="/child/:id/documents/:docId" element={<DocumentPage />} />
         <Route path="/child/:id/documents/:docId/read" element={<ReadDocument />} />
+        <Route path="/child/:id/documents/:docId/summary" element={<DocumentSummary />} />
+        <Route path="/child/:id/summary" element={<GrowthSummary />} />
         {mode === 'unlocked' && <Route path="/settings" element={<Settings />} />}
         <Route path="/about" element={<About />} />
         <Route path="*" element={<Navigate to="/" replace />} />

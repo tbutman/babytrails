@@ -66,3 +66,19 @@ export async function loadDemo(): Promise<MemoryStore> {
   }
   return store
 }
+
+// Summaries for the demo, written in advance in the style the real ones follow, from the numbers the
+// app computes for the demo measurements above. No AI is called.
+export const DEMO_SUMMARIES = {
+  'after-data': `Your baby was last measured at **about 6 months**. Since the previous measurement 31 days earlier, weight went up by about **90 g a week**, from 7.10 kg to 7.50 kg. Length grew by 1.7 cm and head circumference by 0.8 cm.
+
+- **Weight for age** moved from about the 60th to the 59th percentile.
+- **Length for age** moved from about the 55th to the 54th percentile.
+- **Head circumference** moved from about the 54th to the 56th percentile.
+
+All three are in much the same place on the WHO charts as last time.`,
+  questions: `- When should we come back for the next weight and length check?
+- Is there anything you'd like us to watch for before then?
+- Weight gain was about 90 g a week this month. Is that what you expected at this age?
+- Which measurements will you take at the 9-month check-up?`,
+}
