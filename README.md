@@ -28,6 +28,9 @@ with your own key.
   month for length and head, each next to the gain that would have kept the same percentile.
 - **Quick entry at the doctor's.** Type the numbers on your phone; you see the percentile as you
   type. Metric or imperial, and "7,25" works as well as "7.25".
+- **A second look at odd numbers.** A value far off the chart, or a length smaller than last time,
+  gets a gentle "measure again?". Record whether it was measured at home, and leave out a
+  measurement you doubt without deleting it.
 - **Documents in one place.** Add PDFs and photos of growth reports, health booklet pages, doctor's
   notes and ultrasound images, several at once or in a zip. Files you've already added are spotted.
   They're stored encrypted and open in the app.

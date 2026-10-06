@@ -43,6 +43,7 @@ const CHART_STYLES: Record<string, Record<string, string>> = {
   'chart-median': { fill: 'none', stroke: 'rgb(29 35 64 / 0.55)', 'stroke-width': '1', 'stroke-dasharray': '4 3' },
   'chart-child-line': { fill: 'none', stroke: HONEY_TEXT, 'stroke-width': '2' },
   'chart-child-point': { fill: HONEY, stroke: INK, 'stroke-width': '1.5' },
+  hollow: { fill: '#fffbf2', stroke: HONEY_TEXT, 'stroke-width': '2' },
 }
 
 export function serialiseChart(svg: SVGSVGElement): string {

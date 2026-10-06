@@ -9,7 +9,7 @@ import { cmToIn, kgToLbOz, KG_PER_LB, type Units } from '../../growth/units'
 import { Chip, EmptyState, MetricCard, PageHeader, Sparkline } from '../../core/ui/components'
 import { childPath } from '../brand'
 import { Disclaimer } from '../components'
-import { useChild, useMeasurements } from '../data'
+import { useChild, useCountedMeasurements } from '../data'
 import { formatAge, formatDate } from '../format'
 import { allIntervals } from '../gains'
 import { FirstWeeks } from '../FirstWeeks'
@@ -41,7 +41,7 @@ const METRICS: Metric[] = [
 export function Overview() {
   const { id = '' } = useParams()
   const child = useChild(id)
-  const measurements = useMeasurements(id)
+  const measurements = useCountedMeasurements(id)
   if (!child || measurements === null) return null
   return <OverviewInner child={child} measurements={measurements} />
 }

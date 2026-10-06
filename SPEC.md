@@ -657,7 +657,7 @@ covers 1- and 2-month intervals" and shows part one only.
   - *Far off the chart for the age:* |z| ≥ 4 → "That's far above the chart for this age. Babies are
     hard to measure at home; if you can, measure again." Still savable. Beyond WHO Anthro's
     "biologically implausible" limits (weight-for-age below −6 or above +5, length-for-age beyond
-    ±6, weight-for-length and head beyond ±5; **to check against Anthro's documentation**) → "This
+    ±6, head beyond ±5, as flagged by WHO's `anthro_zscores`; cited in `src/app/checks.ts`) → "This
     is very unlikely to be right. Check the number and the unit." Savable only after a second tap.
   - *Shrinking:* length or head more than 1 cm less than the previous measurement → "Length can't
     go down; one of the two measurements is probably off. Measurements of a baby's length often

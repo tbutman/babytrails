@@ -13,7 +13,7 @@ import { Checkbox, PageHeader, Segmented } from '../../core/ui/components'
 import { buildCard, CARD_SIZE, type CardLayout } from '../report/buildCard'
 import { buildCardData } from '../report/cardData'
 import { useLatestSummary } from '../summaries'
-import { useChild, useMeasurements } from '../data'
+import { useChild, useCountedMeasurements } from '../data'
 import { formatAge, formatDate } from '../format'
 import { chartPoints, growthFor, useTables, weeklyGain, type ChartChoice } from '../growthData'
 import { buildReport, serialiseChart, type ReportStat } from '../report/buildReport'
@@ -28,7 +28,7 @@ const CARD_CHARTS: ChartChoice[] = ['wfa', 'lhfa', 'hcfa', 'wfl']
 export function Report() {
   const { id } = useParams()
   const child = useChild(id)
-  const measurements = useMeasurements(id)
+  const measurements = useCountedMeasurements(id)
   const tables = useTables()
   const { app } = useSession()
   const [nameMode, setNameMode] = useState<NameMode>('nickname')

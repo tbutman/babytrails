@@ -1,7 +1,7 @@
 import { ChevronRight, FileText, Plus, Ruler } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { formatLength, formatMonthlyGain, formatWeeklyGain, formatWeight } from '../../growth/units'
-import { EmptyState, PageHeader } from '../../core/ui/components'
+import { Chip, EmptyState, PageHeader } from '../../core/ui/components'
 import { childPath } from '../brand'
 import { useChild, useMeasurements } from '../data'
 import { formatAge, formatDate, formatShortDate } from '../format'
@@ -9,6 +9,7 @@ import { allIntervals, type Interval } from '../gains'
 import { useTables } from '../growthData'
 import { birthMeasurement, formatPercentChange, newborn } from '../newborn'
 import { useSession } from '../sessionContext'
+import { counted } from '../types'
 
 export function Measurements() {
   const { id = '' } = useParams()
@@ -21,10 +22,10 @@ export function Measurements() {
   // The gain since the previous measurement of each kind, keyed by the later measurement.
   const gainsTo = new Map<string, Interval[]>()
   if (tables) {
-    const all = allIntervals(tables, child, measurements)
+    const all = allIntervals(tables, child, counted(measurements))
     for (const i of [...all.weight, ...all.length, ...all.head]) gainsTo.set(i.to.id, [...(gainsTo.get(i.to.id) ?? []), i])
   }
-  const nb = newborn(child, measurements)
+  const nb = newborn(child, counted(measurements))
   const birth = birthMeasurement(child, measurements)
   const fromBirth = new Map(nb?.weighings.map((w) => [w.measurement.id, `${formatPercentChange(w.percentFromBirth)} from birth weight`]) ?? [])
   const gainText = (i: Interval) =>
@@ -45,10 +46,17 @@ export function Measurements() {
       ) : (
         <div className="card padless list">
           {[...measurements].reverse().map((m) => (
-            <Link key={m.id} to={childPath(child.id, `measurements/${m.id}`)} className="list-row">
+            <Link key={m.id} to={childPath(child.id, `measurements/${m.id}`)} className={m.excluded ? 'list-row excluded' : 'list-row'}>
               <span className="list-row-main">
                 <span className="list-row-title">
                   {formatDate(m.date)} <span className="muted">· {m.id === birth?.id ? 'Birth' : formatAge(child.dateOfBirth, m.date)}</span>
+                  {m.place === 'home' && <span className="muted"> · at home</span>}
+                  {m.excluded && (
+                    <>
+                      {' '}
+                      <Chip tone="outline">Left out</Chip>
+                    </>
+                  )}
                 </span>
                 <span className="list-row-sub num">
                   {[
