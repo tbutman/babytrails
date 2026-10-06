@@ -73,6 +73,16 @@ nginx config changes aren't part of a release: copy the changed files into the c
 - `trails-deploy.sh` in an Ubuntu 24.04 container against this repository's real releases: first
   install, a no-op re-run (HTTP 304), rollback and pin, a timer run while pinned, unpin and redeploy.
 - The nginx config in `nginx:1.30.5-alpine` (the pinned image), serving a real release: `nginx -t`
-  passes; every path returns the right type with the headers; client-side routes get `index.html`;
-  missing assets get 404; `www` redirects to the bare domain with the path kept; unknown host names
-  get no response.
+  passes; client-side routes get `index.html`; missing assets get 404; `www` redirects to the bare
+  domain with the path kept; unknown host names get no response.
+- `check-nginx.sh` runs in CI on every build: it serves the build through the pinned image and this
+  config and checks the content type of every file the app loads, plus the security headers. It was
+  added after the first live deploy, when the PDF viewer's `.mjs` worker went out as
+  `application/octet-stream` (nginx's default types don't include `.mjs`) and browsers refused to
+  run it; the earlier manual check had only sampled a few files.
+
+## Cloudflare
+
+Tunnel routes are managed in the main dashboard under **Networking → Tunnels** (no Zero Trust plan
+needed): `babytrails.app` and `www.babytrails.app` → `http://trails-web:80`. In the zone: Always Use
+HTTPS on (SSL/TLS → Edge Certificates), no script-injecting features.
