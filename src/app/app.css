@@ -197,3 +197,25 @@ fieldset + .chart-card {
   text-decoration: line-through;
   color: var(--text-faint);
 }
+
+/* Ask about the numbers (src/app/screens/Ask.tsx, src/app/AskCard.tsx) */
+.ask-card {
+  margin-top: var(--space-4);
+}
+.ask-card .section-title {
+  margin-top: 0;
+}
+.ask-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+.ask-suggestions .button {
+  white-space: normal;
+  text-align: left;
+}
+.ask-question.pending {
+  margin-left: auto;
+  margin-bottom: var(--space-3);
+}

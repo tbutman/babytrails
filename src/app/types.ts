@@ -6,7 +6,7 @@ import type { Units } from '../growth/units'
 import type { DocumentRecord } from '../core'
 
 export const APP_ID = 'babytrails'
-export const APP_COLLECTIONS = ['children', 'measurements', 'visits', 'summaries'] as const
+export const APP_COLLECTIONS = ['children', 'measurements', 'visits', 'summaries', 'askThreads'] as const
 
 export type Child = {
   id: string

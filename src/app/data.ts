@@ -44,6 +44,12 @@ export async function deleteChild(store: RecordStore, child: Child) {
   for (const d of await store.list<BabyDocument>('documents')) {
     if (d.profileId === child.id) await deleteDocument(store, d)
   }
+  for (const s of await store.list<{ id: string; childId: string }>('summaries')) {
+    if (s.childId === child.id) await store.delete('summaries', s.id)
+  }
+  for (const t of await store.list<{ id: string; profileId: string }>('askThreads')) {
+    if (t.profileId === child.id) await store.delete('askThreads', t.id)
+  }
   if (child.photoBlobId) await store.deleteBlob(child.photoBlobId)
   await store.delete('children', child.id)
 }

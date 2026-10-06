@@ -19,6 +19,7 @@ import { useSession } from '../sessionContext'
 import { today, type Child, type Measurement } from '../types'
 import { BackupNudge } from './Settings'
 import { SummaryCard } from './Summaries'
+import { AskCard } from '../AskCard'
 
 type Metric = { label: string; indicator: Indicator; pick: (m: Measurement) => number | undefined; show: (v: number, u: Units) => { value: string; unit?: string } }
 
@@ -133,6 +134,7 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
             </Link>
           </div>
           <p className="hint">Uses AI with your own key. BabyTrails calculates the numbers; the AI only puts them into words.</p>
+          <AskCard child={child} measurements={measurements} />
         </>
       )}
       <Disclaimer />

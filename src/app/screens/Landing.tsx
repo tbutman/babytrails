@@ -137,7 +137,7 @@ export function Landing() {
               { icon: Ruler, title: 'Quick entry at check-ups', text: 'Type the numbers on your phone and see the percentile as you type. Metric or imperial, and "7,25" works as well as "7.25".' },
               { icon: FileText, title: 'Documents in one place', text: "Growth reports, health booklet pages, doctor's notes and ultrasound images, stored encrypted and opened in the app." },
               { icon: ScanText, title: 'Reads growth reports', text: 'Optional, with your own key. The AI copies the measurements from a report or booklet page, Portuguese ones too; you check every value first.' },
-              { icon: Sparkles, title: 'In plain words', text: "What changed since the last check-up, and questions for the next one. BabyTrails calculates the numbers; the AI only explains them." },
+              { icon: Sparkles, title: 'In plain words', text: 'What changed since the last check-up, questions for the next one, and answers to your own questions about the numbers. BabyTrails calculates every number and checks the answers; the AI only explains.' },
               { icon: Share2, title: 'A report card to share', text: 'The latest numbers, four WHO charts, gain over time and the history, as an image or PDF. Show the name, a nickname or no name.' },
             ]}
           />
