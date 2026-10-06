@@ -72,3 +72,6 @@ with real records.
 - Weight gains compared with WHO's own weight velocity standards when the two measurements match
   one of WHO's 1- or 2-month intervals (within 3 days): "about the 50th percentile of WHO's weight
   gains for 5–6 months", on the overview, the report card and in summaries and answers.
+- A refreshed case study and screenshots (landing page, overview and gains, the booklet review, the
+  import queue, the report card, Ask about the numbers, and a dark chart on a phone), taken from
+  the demo by `scripts/screenshots.mjs`, which now captures close-ups without the app bar over them.
