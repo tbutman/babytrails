@@ -18,6 +18,7 @@ export type AnswerNumber = { text: string; fact: string }
 export type Answer = { kind: 'answer' | 'out-of-scope'; text: string; numbers: AnswerNumber[] }
 
 export type AskTurn = {
+  /** 'parent' is the person asking, in any app (the value is kept as it is for threads already stored). */
   role: 'parent' | 'ai'
   text: string
   /** For AI turns: an answer, a question it doesn't answer, or one whose numbers couldn't be checked. */
@@ -137,6 +138,6 @@ export function checkAnswer(answer: Answer, facts: unknown, banned: RegExp[] = [
 export function historyText(turns: AskTurn[]): string {
   return turns
     .filter((t) => t.role === 'parent' || t.kind === 'answer' || t.kind === 'prepared')
-    .map((t) => `${t.role === 'parent' ? 'Parent' : 'Answer'}: ${t.text}`)
+    .map((t) => `${t.role === 'parent' ? 'Question' : 'Answer'}: ${t.text}`)
     .join('\n\n')
 }
