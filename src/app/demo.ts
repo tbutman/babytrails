@@ -1,18 +1,19 @@
-// Demo mode: a fictional baby with a few months of made-up measurements, kept in memory only.
-// Dates are relative to today, so the demo always shows a baby of about six and a half months.
+// Demo mode: a fictional baby with a few months of made-up measurements, kept in memory only. The
+// dates are fixed (born 20 March 2026), so the demo's booklet page (demoBooklet.json, drawn by
+// scripts/make-booklet.mjs) matches the measurements saved from it.
 
 import { MemoryStore } from '../core'
 import { addDocument } from '../core'
 import type { ProposedRow } from '../core/review/model'
 import type { BabyDocument, Child, Measurement } from './types'
-import { today } from './types'
+import booklet from './demoBooklet.json'
 
-const DEMO_AGE_DAYS = 200
+const BORN = '2026-03-20'
 
-function daysBefore(date: string, days: number): string {
-  const d = new Date(`${date}T12:00:00`)
-  d.setDate(d.getDate() - days)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+function daysAfter(date: string, days: number): string {
+  const d = new Date(`${date}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
 }
 
 // Day of age, weight (kg), length (cm), head circumference (cm). Fictional, but in a typical range.
@@ -32,19 +33,20 @@ export const DEMO_CHILD_ID = 'demo-child'
 
 // The demo baby and measurements, built synchronously (the landing page's preview uses them too).
 export function demoData(): { child: Child; measurements: Measurement[]; born: string } {
-  const now = today()
-  const born = daysBefore(now, DEMO_AGE_DAYS)
+  const born = BORN
   const createdAt = new Date().toISOString()
   const child: Child = { id: DEMO_CHILD_ID, name: 'Robin', dateOfBirth: born, sex: 'female', createdAt }
   const measurements = POINTS.map(
     ([day, weightKg, lengthCm, headCm]): Measurement => ({
       id: `demo-m${day}`,
       childId: child.id,
-      date: daysBefore(now, DEMO_AGE_DAYS - day),
+      date: daysAfter(born, day),
       weightKg,
       lengthCm,
       headCm,
       source: 'manual',
+      place: 'clinic',
+      ...(day === 0 ? { birth: true as const } : {}),
       createdAt,
       updatedAt: createdAt,
     }),
@@ -54,17 +56,17 @@ export function demoData(): { child: Child; measurements: Measurement[]; born: s
 
 export async function loadDemo(): Promise<MemoryStore> {
   const store = new MemoryStore()
-  const now = today()
   const { child, measurements } = demoData()
   await store.put('children', child)
   for (const m of measurements) await store.put('measurements', m)
-  // A made-up growth report (scripts/make-sample-pdf.mjs), served with the app.
+  // A photo of a made-up booklet page (scripts/make-booklet.mjs), served with the app. Its rows are the
+  // check-ups above plus one more, so reading it shows the earlier rows left out as already saved.
   try {
-    const pdf = await fetch('/demo/sample-growth-report.pdf').then((r) => (r.ok ? r.blob() : Promise.reject(new Error())))
-    await addDocument<BabyDocument["kind"], BabyDocument["meta"]>(store, pdf, {
+    const photo = await fetch(DEMO_PAGE_URL).then((r) => (r.ok ? r.blob() : Promise.reject(new Error())))
+    await addDocument<BabyDocument['kind'], BabyDocument['meta']>(store, photo, {
       profileId: child.id,
-      date: daysBefore(now, DEMO_AGE_DAYS - 183),
-      kind: 'growth-report',
+      date: booklet.rows.at(-1)!.date,
+      kind: 'booklet',
       title: DEMO_DOCUMENT_TITLE,
       meta: {},
     })
@@ -92,11 +94,21 @@ All three are in much the same place on the WHO charts as last time.`,
 
 // The demo's stored sample document, and the title the import gives the sample when it's added again.
 export const DEMO_DOCUMENT_TITLE = 'Health booklet: growth page (sample)'
-export const SAMPLE_IMPORT_TITLE = 'Sample growth report (fictional).pdf'
+export const SAMPLE_IMPORT_TITLE = 'Health booklet page (sample).jpg'
+export const DEMO_PAGE_URL = '/demo/booklet-page.jpg'
 
-// The demo's "AI answer" for the sample growth report, prepared in advance. No request is made.
-export const DEMO_PROPOSALS: ProposedRow[] = [
-  { values: { date: '15/07/2026', weightKg: 6.05, statureCm: 60.3, standing: 'no', headCm: 39.7 }, confidence: 'high', sourceText: '15/07/2026 6,05 kg 60,3 cm 39,7 cm', page: 1 },
-  { values: { date: '14/08/2026', weightKg: 6.6, statureCm: 62.5, standing: 'no', headCm: 40.8 }, confidence: 'high', sourceText: '14/08/2026 6,60 kg 62,5 cm 40,8 cm', page: 1 },
-  { values: { date: '15/09/2026', weightKg: 7.1, statureCm: 64.3, standing: 'no', headCm: 41.6 }, confidence: 'medium', sourceText: '15/09/2026 7,10 kg 64,3 cm 41,6 cm', page: 1 },
-]
+// The demo's "AI answer" for the booklet page, prepared in advance from the page's own rows. No
+// request is made. Weights printed in grams are read as kilograms, as the extraction does.
+const ddmmyyyy = (iso: string) => iso.split('-').reverse().join('/')
+export const DEMO_PROPOSALS: ProposedRow[] = booklet.rows.map((r) => ({
+  values: {
+    date: r.cells[0].includes('.') ? r.cells[0] : ddmmyyyy(r.date),
+    weightKg: r.read.weightKg,
+    statureCm: 'statureCm' in r.read ? r.read.statureCm : undefined,
+    standing: 'statureCm' in r.read ? 'no' : undefined,
+    headCm: 'headCm' in r.read ? r.read.headCm : undefined,
+  },
+  confidence: (('confidence' in r ? r.confidence : 'high') as ProposedRow['confidence']),
+  sourceText: r.source,
+  page: 1,
+}))

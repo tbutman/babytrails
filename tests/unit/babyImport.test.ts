@@ -6,7 +6,8 @@ import type { IntakeFile } from '../../src/core/import/intake'
 import { babyAdapter, kindFromName } from '../../src/app/import/babyAdapter'
 import { alreadySavedRows } from '../../src/app/import/duplicates'
 import { notReadYet } from '../../src/app/import/notReadYet'
-import { DEMO_PROPOSALS, SAMPLE_IMPORT_TITLE } from '../../src/app/demo'
+import { DEMO_PROPOSALS, demoData, SAMPLE_IMPORT_TITLE } from '../../src/app/demo'
+import type { ProposedRow } from '../../src/core/review/model'
 import type { BabyDocument, Child, Measurement } from '../../src/app/types'
 
 const child: Child = { id: 'c', name: 'Test Baby', dateOfBirth: '2026-03-15', sex: 'female', createdAt: '2026-03-15T00:00:00Z' }
@@ -15,6 +16,12 @@ const m = (date: string, weightKg?: number, lengthCm?: number, headCm?: number, 
 })
 const pdf = new TextEncoder().encode('%PDF-1.4\nx\n%%EOF') as Uint8Array<ArrayBuffer>
 const intakeFile = (name: string, zip?: string) => ({ name, zip }) as IntakeFile
+// Made-up rows as the AI would propose them.
+const ROWS: ProposedRow[] = [
+  { values: { date: '15/07/2026', weightKg: 6.05, statureCm: 60.3, standing: 'no', headCm: 39.7 }, confidence: 'high' },
+  { values: { date: '14/08/2026', weightKg: 6.6, statureCm: 62.5, standing: 'no', headCm: 40.8 }, confidence: 'high' },
+  { values: { date: '15/09/2026', weightKg: 7.1, statureCm: 64.3, standing: 'no', headCm: 41.6 }, confidence: 'medium' },
+]
 
 describe('kinds from file names', () => {
   it('guesses ultrasound, doctor\'s note, booklet or growth report, in English and Portuguese', () => {
@@ -40,14 +47,14 @@ describe('kinds from file names', () => {
 describe('already saved', () => {
   it('matches rows to measurements on the same date with the same values', () => {
     const saved = [m('2026-07-15', 6.05, 60.3, 39.7), m('2026-08-14', 6.6)]
-    const rows = alreadySavedRows(DEMO_PROPOSALS, saved)
+    const rows = alreadySavedRows(ROWS, saved)
     // 15/07 matches fully; 14/08 has a different saved length (none) but the weight, length and head
     // printed must all match, so it doesn't; 15/09 has nothing saved.
     expect(rows.map((r) => r.values.date)).toEqual(['15/07/2026'])
   })
 
   it('treats a measurement on the same date with different values as new', () => {
-    expect(alreadySavedRows(DEMO_PROPOSALS, [m('2026-07-15', 6.1, 60.3, 39.7)])).toEqual([])
+    expect(alreadySavedRows(ROWS, [m('2026-07-15', 6.1, 60.3, 39.7)])).toEqual([])
   })
 
   it('takes a booklet page photographed again with new rows: old rows left out, new rows kept, no skipping', async () => {
@@ -115,8 +122,18 @@ describe('the BabyTrails adapter', () => {
     ])
     expect((await store.get<StoredDoc>('documents', doc.id))?.date).toBe('2026-08-14')
 
-    const check = await adapter.check!({ rows: DEMO_PROPOSALS, meta: {}, dropped: 0 })
+    const check = await adapter.check!({ rows: ROWS, meta: {}, dropped: 0 })
     expect(check.alreadySaved.map((r) => r.values.date)).toEqual(['15/07/2026', '14/08/2026'])
     expect(check.similar).toBeUndefined()
+  })
+})
+
+describe('the demo booklet page', () => {
+  it('repeats every saved check-up and adds one new visit, like a page photographed again', () => {
+    const { measurements } = demoData()
+    const saved = alreadySavedRows(DEMO_PROPOSALS, measurements)
+    expect(DEMO_PROPOSALS).toHaveLength(9)
+    expect(saved).toHaveLength(8)
+    expect(DEMO_PROPOSALS.filter((r) => !saved.includes(r)).map((r) => r.values.date)).toEqual(['02.10.26'])
   })
 })

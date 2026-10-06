@@ -55,7 +55,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,mjs,css,html,svg,png,woff2,wasm}', 'demo/*.pdf'],
+        globPatterns: ['**/*.{js,mjs,css,html,svg,png,woff2,wasm}', 'demo/*.jpg'],
         globIgnores: ['vendor/pdfjs/**', 'og.png'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         navigateFallback: '/index.html',

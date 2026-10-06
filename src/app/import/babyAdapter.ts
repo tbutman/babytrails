@@ -9,7 +9,7 @@ import type { StoredDoc } from '../../core/import/duplicates'
 import type { IntakeFile } from '../../core/import/intake'
 import type { ConfirmedRow, ProposedRow } from '../../core/review/model'
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
-import { DEMO_DOCUMENT_TITLE, DEMO_PROPOSALS, SAMPLE_IMPORT_TITLE } from '../demo'
+import { DEMO_DOCUMENT_TITLE, DEMO_PAGE_URL, DEMO_PROPOSALS, SAMPLE_IMPORT_TITLE } from '../demo'
 import { formatDate } from '../format'
 import { EXTRACTION_PROMPT, EXTRACTION_SCHEMA, EXTRACTION_SYSTEM, toProposedRows } from '../prompts/extraction'
 import { counted, nowIso, type Child, type DocumentKind, type Measurement } from '../types'
@@ -68,7 +68,7 @@ export function babyAdapter(deps: {
     kinds: IMPORT_KINDS,
     kindFor: (file: IntakeFile) => kindFromName(file.zip ? `${file.zip}/${file.name}` : file.name),
     storeOnlyByDefault: (file: IntakeFile) => !readable(kindFromName(file.zip ? `${file.zip}/${file.name}` : file.name)),
-    sample: { url: '/demo/sample-growth-report.pdf', title: SAMPLE_IMPORT_TITLE },
+    sample: { url: DEMO_PAGE_URL, title: SAMPLE_IMPORT_TITLE },
     sendSheet: {
       notSending: ["Your baby's name and date of birth, and their other records", "Ultrasound images and doctor's notes in this import"],
       notes: ["Growth reports and booklet pages may show your baby's name. BabyTrails can't remove text from a PDF or photo."],

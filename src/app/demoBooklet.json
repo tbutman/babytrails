@@ -1,0 +1,204 @@
+{
+  "about": "A made-up health booklet growth page for the demo baby, Robin (born 20 March 2026). Drawn by scripts/make-booklet.mjs; read in the demo with the answers below, prepared in advance. Every value is made up.",
+  "language": "en",
+  "title": "Growth record",
+  "subtitle": "For health professionals: plot these on the growth charts and explain them to the parents.",
+  "headers": [
+    "Date",
+    "Age",
+    "Weight",
+    "Length / Height",
+    "Head circ.",
+    "BMI",
+    "BMI centile",
+    "BP"
+  ],
+  "versions": [
+    4,
+    8,
+    9
+  ],
+  "rows": [
+    {
+      "date": "2026-03-25",
+      "cells": [
+        "25/03/2026",
+        "5 days",
+        "3200",
+        "(−3.0%)",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "note": "Bilirubin 6.1",
+      "hand": 1,
+      "read": {
+        "weightKg": 3.2
+      },
+      "source": "…/2026 5 days 3200 (−3.0%) (date partly covered)",
+      "confidence": "low"
+    },
+    {
+      "date": "2026-04-03",
+      "cells": [
+        "03/04/2026",
+        "2 wks",
+        "3750",
+        "52",
+        "35.6",
+        "",
+        "",
+        ""
+      ],
+      "hand": 1,
+      "read": {
+        "weightKg": 3.75,
+        "statureCm": 52,
+        "headCm": 35.6
+      },
+      "source": "03/04/2026 2 wks 3750 52 35.6"
+    },
+    {
+      "date": "2026-04-19",
+      "cells": [
+        "19/04/2026",
+        "1 m",
+        "4.35",
+        "54",
+        "36.7",
+        "14.9",
+        "50-85",
+        ""
+      ],
+      "hand": 1,
+      "read": {
+        "weightKg": 4.35,
+        "statureCm": 54,
+        "headCm": 36.7
+      },
+      "source": "19/04/2026 1 m 4.35 54 36.7"
+    },
+    {
+      "date": "2026-05-20",
+      "cells": [
+        "20/05/2026",
+        "2 m",
+        "5.30",
+        "57.5",
+        "38.4",
+        "16.0",
+        "50-85",
+        ""
+      ],
+      "hand": 1,
+      "read": {
+        "weightKg": 5.3,
+        "statureCm": 57.5,
+        "headCm": 38.4
+      },
+      "source": "20/05/2026 2 m 5.30 57.5 38.4"
+    },
+    {
+      "date": "2026-06-19",
+      "cells": [
+        "19/06/2026",
+        "3 m",
+        "6.05",
+        "60.3",
+        "39.7",
+        "16.6",
+        "50-85",
+        ""
+      ],
+      "hand": 1,
+      "read": {
+        "weightKg": 6.05,
+        "statureCm": 60.3,
+        "headCm": 39.7
+      },
+      "source": "19/06/2026 3 m 6.05 60.3 39.7"
+    },
+    {
+      "date": "2026-07-20",
+      "cells": [
+        "20/07/2026",
+        "4 m",
+        "6.60",
+        "62.5",
+        "40.8",
+        "16.9",
+        "50-85",
+        ""
+      ],
+      "hand": 1,
+      "read": {
+        "weightKg": 6.6,
+        "statureCm": 62.5,
+        "headCm": 40.8
+      },
+      "source": "20/07/2026 4 m 6.60 62.5 40.8"
+    },
+    {
+      "date": "2026-08-19",
+      "cells": [
+        "19/08/2026",
+        "5 m",
+        "7.10",
+        "64.3",
+        "41.6",
+        "17.2",
+        "50-85",
+        ""
+      ],
+      "hand": 1,
+      "read": {
+        "weightKg": 7.1,
+        "statureCm": 64.3,
+        "headCm": 41.6
+      },
+      "source": "19/08/2026 5 m 7.10 64.3 41.6"
+    },
+    {
+      "date": "2026-09-19",
+      "cells": [
+        "19/09/2026",
+        "6 m",
+        "7.50",
+        "66",
+        "42.4",
+        "17.2",
+        "50-85",
+        ""
+      ],
+      "hand": 1,
+      "read": {
+        "weightKg": 7.5,
+        "statureCm": 66,
+        "headCm": 42.4
+      },
+      "source": "19/09/2026 6 m 7.50 66 42.4"
+    },
+    {
+      "date": "2026-10-02",
+      "cells": [
+        "02.10.26",
+        "6m 12d",
+        "7.72",
+        "67",
+        "42.8",
+        "",
+        "",
+        ""
+      ],
+      "hand": 2,
+      "read": {
+        "weightKg": 7.72,
+        "statureCm": 67,
+        "headCm": 42.8
+      },
+      "source": "02.10.26 6m 12d 7.72 67 42.8",
+      "confidence": "medium"
+    }
+  ]
+}

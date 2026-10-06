@@ -1,0 +1,17 @@
+{
+  "about": "A made-up Portuguese growth page for a test baby (boy, born 10 January 2026, 3.60 kg), photographed three times as rows were added. Drawn by scripts/make-booklet.mjs. Every value is made up.",
+  "language": "pt",
+  "title": "Avaliação do crescimento",
+  "subtitle": "Para os profissionais: registem estes dados nos gráficos e expliquem-nos aos pais.",
+  "headers": ["Data", "Idade", "Peso", "Comp. / Altura", "Perím. Cef.", "IMC", "P. IMC", "TA"],
+  "versions": [3, 5, 7],
+  "rows": [
+    { "date": "2026-01-12", "cells": ["12/01/2026", "", "3390", "(−5,8%)", "", "", "", ""], "note": "Bilirrubina: 7,2", "hand": 1, "read": { "weightKg": 3.39 }, "source": "12/01/2026 3390 (−5,8%)" },
+    { "date": "2026-01-19", "cells": ["19/01/2026", "9D", "3,650", "52", "36", "", "", ""], "hand": 1, "read": { "weightKg": 3.65, "statureCm": 52, "headCm": 36 }, "source": "19/01/2026 9D 3,650 52 36" },
+    { "date": "2026-02-10", "cells": ["10/02/2026", "1M", "4,520", "55,5", "37,8", "14,67", "50-85", ""], "hand": 1, "read": { "weightKg": 4.52, "statureCm": 55.5, "headCm": 37.8 }, "source": "10/02/2026 1M 4,520 55,5 37,8" },
+    { "date": "2026-03-10", "cells": ["10/03/2026", "2M", "5,610", "59", "39,5", "16,12", "50-85", ""], "hand": 1, "read": { "weightKg": 5.61, "statureCm": 59, "headCm": 39.5 }, "source": "10/03/2026 2M 5,610 59 39,5" },
+    { "date": "2026-04-13", "cells": ["13/04/2026", "3M 3D", "6,480", "62", "41", "16,86", "50-85", ""], "hand": 1, "read": { "weightKg": 6.48, "statureCm": 62, "headCm": 41 }, "source": "13/04/2026 3M 3D 6,480 62 41" },
+    { "date": "2026-05-12", "cells": ["12/05/2026", "4M 2D", "7,050", "64,5", "42", "16,95", "50-85", ""], "hand": 1, "read": { "weightKg": 7.05, "statureCm": 64.5, "headCm": 42 }, "source": "12/05/2026 4M 2D 7,050 64,5 42" },
+    { "date": "2026-06-05", "cells": ["05.06.26", "4m26d", "7.4", "66", "42.6", "", "", ""], "hand": 2, "read": { "weightKg": 7.4, "statureCm": 66, "headCm": 42.6 }, "source": "05.06.26 4m26d 7.4 66 42.6", "confidence": "medium" }
+  ]
+}
