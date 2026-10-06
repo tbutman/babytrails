@@ -4,6 +4,7 @@ import { useChildren } from '../data'
 import { formatAge } from '../format'
 import { today } from '../types'
 import { BackupNudge } from './Settings'
+import { InstallHint } from '../InstallHint'
 
 export function Home() {
   const children = useChildren()
@@ -14,7 +15,12 @@ export function Home() {
   return (
     <Page title={children.length ? 'Your children' : 'Welcome'}>
       <BackupNudge />
-      {children.length === 0 && <p>Start by adding your baby. You can add more children later.</p>}
+      {children.length === 0 && (
+        <>
+          <p>Start by adding your baby. You can add more children later.</p>
+          <InstallHint />
+        </>
+      )}
       <ul className="child-list">
         {children.map((c) => (
           <li key={c.id} className="card">

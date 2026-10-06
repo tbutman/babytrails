@@ -4,6 +4,7 @@ import { MIN_PASSPHRASE_LENGTH, WrongPassphraseError } from '../../core'
 import type { Theme } from '../../core/settings/settings'
 import { ApiKeySettings } from '../../core/ai/ApiKeySettings'
 import { Field, Page } from '../components'
+import { InstallHint } from '../InstallHint'
 import { useSession } from '../sessionContext'
 import { ExportBackup, RestoreBackup } from './Backup'
 
@@ -93,6 +94,7 @@ export function Settings() {
       <h2 id="backup">Backup</h2>
       <ExportBackup />
       <StorageStatus />
+      <InstallHint />
       <details>
         <summary>Restore from a backup</summary>
         <RestoreBackup />
