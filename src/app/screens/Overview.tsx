@@ -77,7 +77,7 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
               <Link className="button primary" to={childPath(child.id, 'measurements/new')}>
                 <Plus size={16} aria-hidden /> Add a measurement
               </Link>
-              <Link className="button" to={childPath(child.id, 'documents/new')}>
+              <Link className="button" to={childPath(child.id, 'documents/import')}>
                 <FilePlus2 size={16} aria-hidden /> Add a growth report
               </Link>
             </div>

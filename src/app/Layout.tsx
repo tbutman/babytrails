@@ -115,3 +115,9 @@ export function LegacyChild() {
     .replace(/^report$/, 'share')
   return <Navigate to={childPath(id, mapped)} replace />
 }
+
+/** The old one-document reading screen now opens the import with that document. */
+export function ReadLegacy() {
+  const { id = '', docId = '' } = useParams()
+  return <Navigate to={childPath(id, `documents/import?documents=${docId}`)} replace />
+}
