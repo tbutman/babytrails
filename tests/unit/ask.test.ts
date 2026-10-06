@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { askQuestion } from '../../src/core/ask/ask'
-import { checkAnswer, historyText, measurementNumbers, resolveFact, type Answer } from '../../src/core/ask/model'
+import { checkAnswer, GROWTH_UNITS, historyText, measurementNumbers, resolveFact, type Answer } from '../../src/core/ask/model'
 import { askFacts } from '../../src/app/askFacts'
 import { DEMO_ANSWERS, demoData } from '../../src/app/demo'
 import { ASK_BANNED, askSuggestions } from '../../src/app/prompts/ask'
@@ -89,6 +89,30 @@ describe('checking an answer', () => {
       { role: 'parent', text: 'Q2', createdAt: '' },
       { role: 'ai', kind: 'unchecked', text: '', createdAt: '' },
     ])).toBe('Parent: Q1\n\nAnswer: A1\n\nParent: Q2')
+  })
+})
+
+describe('the numbers check for other apps (LabTrails, request 15)', () => {
+  // Made-up lab facts: a value stored in mg/dL and shown in mmol/L, with its lab's own range.
+  const lab = { glucose: { value: 97, unit: 'mg/dL', shown: { value: 5.4, unit: 'mmol/L' }, range: { low: 70, high: 110 } } }
+  const LAB_UNITS = [...GROWTH_UNITS, 'mg/dL', 'mmol/L', 'g/L', 'µIU/mL']
+
+  it('finds numbers in the units the app passes, longest unit first', () => {
+    expect(measurementNumbers('97 mg/dL, 5,4 mmol/L and 13 g/L', LAB_UNITS).map((t) => [t.value, t.raw])).toEqual([[97, '97 mg/dL'], [5.4, '5,4 mmol/L'], [13, '13 g/L']])
+    // Growth units alone don't see lab units, so a lab app must pass its own.
+    expect(measurementNumbers('97 mg/dL', GROWTH_UNITS)).toEqual([])
+  })
+
+  it('accepts a value as the app shows it in another unit, with a decimal comma', () => {
+    const a: Answer = { kind: 'answer', text: 'Glucose was **5,4 mmol/L** (97 mg/dL).', numbers: [{ text: '5,4 mmol/L', fact: 'glucose.shown.value' }, { text: '97 mg/dL', fact: 'glucose.value' }] }
+    expect(checkAnswer(a, lab, [], LAB_UNITS)).toEqual({ ok: true, problems: [] })
+    const undeclared = { ...a, text: `${a.text} It was 6,1 mmol/L before.` }
+    expect(checkAnswer(undeclared, lab, [], LAB_UNITS).problems.join()).toMatch(/"6,1 mmol\/L" isn't one of the declared numbers/)
+  })
+
+  it("accepts the lab's own range as a fact", () => {
+    const a: Answer = { kind: 'answer', text: 'The range on that report was 70 to 110 mg/dL.', numbers: [{ text: '70', fact: 'glucose.range.low' }, { text: '110 mg/dL', fact: 'glucose.range.high' }] }
+    expect(checkAnswer(a, lab, [], LAB_UNITS).ok).toBe(true)
   })
 })
 
