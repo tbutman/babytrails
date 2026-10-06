@@ -2,7 +2,7 @@
 // store and settings that go with it. Screens read it through useSession().
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { MemoryStore, openTrails, type RecordStore, type Trails } from '../core'
+import type { MemoryStore, RecordStore, Trails } from '../core'
 import { startAutoLock } from '../core/vault/autoLock'
 import {
   DEFAULT_CORE_SETTINGS,
@@ -13,7 +13,6 @@ import {
   type CoreSettings,
 } from '../core/settings/settings'
 import { APP_COLLECTIONS, APP_ID, DEFAULT_APP_SETTINGS, type AppSettings } from './types'
-import { loadDemo } from './demo'
 import { SessionContext, type Mode, type Session } from './sessionContext'
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -31,7 +30,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let live = true
-    void openTrails({ appId: APP_ID, collections: APP_COLLECTIONS }).then(async (t) => {
+    // The vault (and its key derivation, the largest part of it) loads after the first render, so the
+    // landing page shows without waiting for it.
+    void import('../core').then(async ({ openTrails }) => {
+      const t = await openTrails({ appId: APP_ID, collections: APP_COLLECTIONS })
       const exists = await t.vault.exists()
       if (!live) return
       setTrails(t)
@@ -87,7 +89,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       lock: () => trails?.vault.lock(),
       startDemo: async () => {
-        setDemo(await loadDemo())
+        setDemo(await (await import('./demo')).loadDemo())
         setApp(DEFAULT_APP_SETTINGS)
         setMode('demo')
       },

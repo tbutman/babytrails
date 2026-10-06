@@ -11,7 +11,7 @@ import { formatPercentile } from '../../growth/lms'
 import { Chip, MetricCard, Sparkline } from '../../core/ui/components'
 import { CtaBand, Faq, FeatureGrid, Hero, LandingNav, PrivacyPanel, Section, Showcase, SiteFooter, Steps } from '../../core/ui/landing'
 import { APP, BRAND, childPath } from '../brand'
-import { DEMO_CHILD_ID, demoData } from '../demo'
+import { DEMO_CHILD_ID, demoData } from '../demoData'
 import { formatAge, formatDate } from '../format'
 import { growthFor, useTables } from '../growthData'
 import { useSession } from '../sessionContext'
@@ -101,7 +101,7 @@ export function Landing() {
         }
       />
 
-      <main>
+      <main id="main">
         <Hero
           eyebrow="Private by design · Free and open source"
           title={

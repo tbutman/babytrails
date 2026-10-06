@@ -75,3 +75,9 @@ with real records.
 - A refreshed case study and screenshots (landing page, overview and gains, the booklet review, the
   import queue, the report card, Ask about the numbers, and a dark chart on a phone), taken from
   the demo by `scripts/screenshots.mjs`, which now captures close-ups without the app bar over them.
+- Accessibility: a "Skip to content" link; after each screen change, focus moves to the new screen's
+  heading and the tab's title names it. A browser test runs axe (WCAG 2.1 AA) on every screen in
+  both themes at phone and desktop widths, and checks nothing scrolls sideways. The landing page's
+  footer no longer skips heading levels.
+- A lighter first load: app screens load when first opened, the vault after the first paint, and
+  the Inter font is preloaded. The landing page needs 139 kB of compressed JS and CSS instead of 186.

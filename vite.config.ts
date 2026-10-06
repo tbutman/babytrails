@@ -28,10 +28,24 @@ function cspMeta(): Plugin {
   }
 }
 
+// The Latin subset of Inter is needed for the first text on every page. Preloading it from the HTML
+// starts the download with the scripts instead of after the stylesheet has been parsed (as LabTrails).
+function preloadFont(): Plugin {
+  return {
+    name: 'preload-inter-latin',
+    apply: 'build',
+    transformIndexHtml: (_html, ctx) => {
+      const font = Object.keys(ctx.bundle ?? {}).find((f) => /inter-latin-wght-normal-.*\.woff2$/.test(f))
+      return font ? [{ tag: 'link', attrs: { rel: 'preload', href: `/${font}`, as: 'font', type: 'font/woff2', crossorigin: '' }, injectTo: 'head' }] : []
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
     cspMeta(),
+    preloadFont(),
     // Installable and offline. The service worker precaches the app, the WHO tables and pdf.js; the
     // pdf.js support files (decoders, fonts, character maps) are cached the first time a PDF needs them.
     VitePWA({

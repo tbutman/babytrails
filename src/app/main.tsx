@@ -3,54 +3,48 @@ import '../core/ui/components.css'
 import './accent.css'
 import './app.css'
 
-import { StrictMode } from 'react'
+import { StrictMode, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
+import { createBrowserRouter, Navigate, RouterProvider, type LazyRouteFunction, type RouteObject } from 'react-router'
 import { ChildLayout, LegacyChild, ReadLegacy, Root } from './Layout'
 import { SessionProvider } from './session'
-import { Charts } from './screens/Charts'
-import { ChildForm } from './screens/ChildForm'
-import { DocumentPage, Documents } from './screens/Documents'
-import { Home } from './screens/Home'
 import { Landing } from './screens/Landing'
-import { MeasurementForm } from './screens/MeasurementForm'
-import { Measurements } from './screens/Measurements'
-import { Overview } from './screens/Overview'
-import { ImportDocuments } from './screens/ImportDocuments'
-import { Ask } from './screens/Ask'
-import { Report } from './screens/Report'
-import { About, Settings } from './screens/Settings'
-import { DocumentSummary, GrowthSummary } from './screens/Summaries'
+
+// The landing page loads first and alone; each screen of the app is fetched when it's first opened
+// (and precached by the service worker, so it works offline once the app has been visited).
+const screen =
+  <M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M): LazyRouteFunction<RouteObject> =>
+  async () => ({ Component: (await load())[name] as ComponentType })
 
 const router = createBrowserRouter([
   {
     element: <Root />,
     children: [
       { path: '/', element: <Landing /> },
-      { path: '/app', element: <Home /> },
-      { path: '/app/settings', element: <Settings /> },
-      { path: '/app/about', element: <About /> },
-      { path: '/app/child/new', element: <ChildForm /> },
+      { path: '/app', lazy: screen(() => import('./screens/Home'), 'Home') },
+      { path: '/app/settings', lazy: screen(() => import('./screens/Settings'), 'Settings') },
+      { path: '/app/about', lazy: screen(() => import('./screens/Settings'), 'About') },
+      { path: '/app/child/new', lazy: screen(() => import('./screens/ChildForm'), 'ChildForm') },
       {
         path: '/app/child/:id',
         element: <ChildLayout />,
         children: [
-          { index: true, element: <Overview /> },
-          { path: 'edit', element: <ChildForm /> },
-          { path: 'charts', element: <Charts /> },
-          { path: 'measurements', element: <Measurements /> },
-          { path: 'measurements/new', element: <MeasurementForm /> },
-          { path: 'measurements/:mid', element: <MeasurementForm /> },
-          { path: 'documents', element: <Documents /> },
-          { path: 'documents/import', element: <ImportDocuments /> },
+          { index: true, lazy: screen(() => import('./screens/Overview'), 'Overview') },
+          { path: 'edit', lazy: screen(() => import('./screens/ChildForm'), 'ChildForm') },
+          { path: 'charts', lazy: screen(() => import('./screens/Charts'), 'Charts') },
+          { path: 'measurements', lazy: screen(() => import('./screens/Measurements'), 'Measurements') },
+          { path: 'measurements/new', lazy: screen(() => import('./screens/MeasurementForm'), 'MeasurementForm') },
+          { path: 'measurements/:mid', lazy: screen(() => import('./screens/MeasurementForm'), 'MeasurementForm') },
+          { path: 'documents', lazy: screen(() => import('./screens/Documents'), 'Documents') },
+          { path: 'documents/import', lazy: screen(() => import('./screens/ImportDocuments'), 'ImportDocuments') },
           // The single-document screens before the shared import; their addresses still work.
           { path: 'documents/new', element: <Navigate to="../import" relative="path" replace /> },
-          { path: 'documents/:docId', element: <DocumentPage /> },
+          { path: 'documents/:docId', lazy: screen(() => import('./screens/Documents'), 'DocumentPage') },
           { path: 'documents/:docId/read', element: <ReadLegacy /> },
-          { path: 'documents/:docId/summary', element: <DocumentSummary /> },
-          { path: 'summary', element: <GrowthSummary /> },
-          { path: 'ask', element: <Ask /> },
-          { path: 'share', element: <Report /> },
+          { path: 'documents/:docId/summary', lazy: screen(() => import('./screens/Summaries'), 'DocumentSummary') },
+          { path: 'summary', lazy: screen(() => import('./screens/Summaries'), 'GrowthSummary') },
+          { path: 'ask', lazy: screen(() => import('./screens/Ask'), 'Ask') },
+          { path: 'share', lazy: screen(() => import('./screens/Report'), 'Report') },
         ],
       },
       // Addresses from before the landing page moved the app under /app.
