@@ -5,6 +5,7 @@ import { FileText, LayoutDashboard, LineChart, Lock, LogOut, Ruler, Settings, Sh
 import type { ReactNode } from 'react'
 import { Link, Navigate, Outlet, ScrollRestoration, useNavigate, useParams } from 'react-router'
 import { AppBar, Callout, type NavItem } from '../core/ui/components'
+import { PageChange, SkipLink } from '../core/ui/navigation'
 import { UpdatePrompt } from '../core/ui/UpdatePrompt'
 import { APP, BRAND, childPath } from './brand'
 import { useChild } from './data'
@@ -15,9 +16,11 @@ export function Root() {
   const { mode } = useSession()
   return (
     <>
+      <SkipLink />
       <UpdatePrompt appName="BabyTrails" locksVault={mode === 'unlocked'} />
       <Outlet />
       <ScrollRestoration />
+      <PageChange appName="BabyTrails" />
     </>
   )
 }
@@ -49,7 +52,7 @@ export function Shell({ children, nav, narrow }: { children: ReactNode; nav?: Na
   return (
     <div className={nav?.length ? 'has-tab-bar' : undefined}>
       <AppBar brand={BRAND} home={APP} nav={nav} actions={actions} />
-      <main className="app-main">
+      <main id="main" className="app-main">
         <div className={`container${narrow ? ' narrow' : ''}`}>
           {mode === 'demo' && (
             <div className="no-print">
