@@ -2,6 +2,8 @@ import { ChevronRight, FileClock, FileHeart, FileImage, FilePlus2, FileText, Fil
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { deleteDocument } from '../../core'
+import { pagesOf } from '../../core/documents/documents'
+import { DocumentPages } from '../../core/documents/DocumentPages'
 import { DocumentViewer } from '../../core/documents/DocumentViewer'
 import { Callout, EmptyState, PageHeader, SelectField, TextField } from '../../core/ui/components'
 import { childPath } from '../brand'
@@ -20,7 +22,11 @@ export function Documents() {
   const docs = useDocuments(id)
   const measurements = useMeasurements(id)
   if (!child || docs === null || measurements === null) return null
-  const unread = notReadYet(docs, measurements)
+  // Pages of one document (photos grouped in the import) are listed once, as their first page.
+  const firstPages = docs.filter((d) => !d.group || d.group.page === 1)
+  const pageCount = (d: (typeof docs)[number]) => pagesOf(d, docs).length
+  const idsOf = (list: typeof docs) => list.flatMap((d) => pagesOf(d, docs).map((p) => p.id))
+  const unread = notReadYet(firstPages, measurements)
   const importLink = (ids?: string[]) => childPath(child.id, `documents/import${ids?.length ? `?documents=${ids.join(',')}` : ''}`)
   const add = (
     <Link className="button primary" to={importLink()}>
@@ -48,10 +54,11 @@ export function Documents() {
                     <span className="list-row-main">
                       <span className="list-row-title">{d.title}</span>
                       <span className="list-row-sub">
-                        {kindLabel(d.kind)} · added {formatDate(d.createdAt.slice(0, 10))}
+                        {kindLabel(d.kind)}
+                        {pageCount(d) > 1 && ` · ${pageCount(d)} pages`} · added {formatDate(d.createdAt.slice(0, 10))}
                       </span>
                     </span>
-                    <Link className="button small" to={importLink([d.id])}>
+                    <Link className="button small" to={importLink(idsOf([d]))}>
                       <ScanText size={14} aria-hidden /> Read
                     </Link>
                   </div>
@@ -59,7 +66,7 @@ export function Documents() {
               </div>
               {unread.length > 1 && (
                 <p className="row unread-all">
-                  <Link className="button small primary" to={importLink(unread.map((d) => d.id))}>
+                  <Link className="button small primary" to={importLink(idsOf(unread))}>
                     Read all {unread.length}
                   </Link>
                 </p>
@@ -67,10 +74,10 @@ export function Documents() {
             </>
           )}
           <h2 className="section-title">
-            <FileText size={14} aria-hidden /> All documents · {docs.length}
+            <FileText size={14} aria-hidden /> All documents · {firstPages.length}
           </h2>
           <div className="card padless list">
-            {docs.map((d) => {
+            {firstPages.map((d) => {
               const Icon = kindIcon(d)
               return (
                 <Link key={d.id} to={childPath(child.id, `documents/${d.id}`)} className="list-row">
@@ -78,7 +85,8 @@ export function Documents() {
                   <span className="list-row-main">
                     <span className="list-row-title">{d.title}</span>
                     <span className="list-row-sub">
-                      {kindLabel(d.kind)} · {formatDate(d.date)}
+                      {kindLabel(d.kind)}
+                      {pageCount(d) > 1 && ` · ${pageCount(d)} pages`} · {formatDate(d.date)}
                     </span>
                   </span>
                   <ChevronRight size={18} aria-hidden />
@@ -103,10 +111,12 @@ export function DocumentPage() {
   if (!child || docs === null) return null
   const doc = docs.find((d) => d.id === docId)
   if (!doc) return <p>This document isn't in your records.</p>
+  const pages = pagesOf(doc, docs)
 
   async function remove(d: BabyDocument) {
-    if (!window.confirm(`Delete "${d.title}"? This can't be undone. Measurements read from it stay.`)) return
-    await deleteDocument(store, d)
+    const what = pages.length > 1 ? `all ${pages.length} pages of "${d.title}"` : `"${d.title}"`
+    if (!window.confirm(`Delete ${what}? This can't be undone. Measurements read from it stay.`)) return
+    for (const p of pages) await deleteDocument(store, p)
     changed()
     navigate(childPath(child!.id, 'documents'))
   }
@@ -115,7 +125,7 @@ export function DocumentPage() {
     <>
       <PageHeader
         title={doc.title}
-        subtitle={`${kindLabel(doc.kind)} · ${formatDate(doc.date)}`}
+        subtitle={`${kindLabel(doc.kind)}${pages.length > 1 ? ` · ${pages.length} pages` : ''} · ${formatDate(doc.date)}`}
         back={{ to: childPath(child.id, 'documents'), label: 'Documents' }}
         actions={
           <>
@@ -123,7 +133,7 @@ export function DocumentPage() {
               <Pencil size={14} aria-hidden /> Edit details
             </button>
             {EXTRACTABLE.has(doc.kind) && (
-              <Link className="button primary" to={childPath(child.id, `documents/import?documents=${doc.id}`)}>
+              <Link className="button primary" to={childPath(child.id, `documents/import?documents=${pages.map((p) => p.id).join(',')}`)}>
                 <ScanText size={16} aria-hidden /> Read measurements with AI
               </Link>
             )}
@@ -135,22 +145,20 @@ export function DocumentPage() {
           </>
         }
       />
-      {editing && <EditDetails doc={doc} onDone={() => setEditing(false)} />}
+      {editing && <EditDetails doc={doc} pages={pages} onDone={() => setEditing(false)} />}
       {doc.kind === 'ultrasound' && (
         <Callout icon={FileHeart}>Ultrasound images are stored and shown only. BabyTrails never sends them to the AI or interprets them.</Callout>
       )}
-      <div className="doc-frame">
-        <DocumentViewer store={store} doc={doc} />
-      </div>
+      <div className="doc-frame">{pages.length > 1 ? <DocumentPages store={store} pages={pages} /> : <DocumentViewer store={store} doc={doc} />}</div>
       <button type="button" className="button ghost danger" onClick={() => void remove(doc)}>
-        <Trash2 size={16} aria-hidden /> Delete this document
+        <Trash2 size={16} aria-hidden /> Delete this document{pages.length > 1 ? ` (all ${pages.length} pages)` : ''}
       </button>
     </>
   )
 }
 
 /** Title, date and kind: imports name documents after their files and date them on the day added. */
-function EditDetails({ doc, onDone }: { doc: BabyDocument; onDone: () => void }) {
+function EditDetails({ doc, pages, onDone }: { doc: BabyDocument; pages: BabyDocument[]; onDone: () => void }) {
   const store = useStore()
   const { changed } = useSession()
   const [title, setTitle] = useState(doc.title)
@@ -162,7 +170,8 @@ function EditDetails({ doc, onDone }: { doc: BabyDocument; onDone: () => void })
     e.preventDefault()
     if (!title.trim()) return setError('Give it a title.')
     if (!date || date > today()) return setError("The date can't be empty or in the future.")
-    await store.put('documents', { ...doc, title: title.trim(), date, kind })
+    // The date and kind belong to the whole document; the title is this page's.
+    for (const p of pages) await store.put('documents', p.id === doc.id ? { ...p, title: title.trim(), date, kind } : { ...p, date, kind })
     changed()
     onDone()
   }

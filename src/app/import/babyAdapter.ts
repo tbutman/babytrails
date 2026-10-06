@@ -11,7 +11,7 @@ import type { ConfirmedRow, ProposedRow } from '../../core/review/model'
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { DEMO_DOCUMENT_TITLE, DEMO_PAGE_URL, DEMO_PROPOSALS, SAMPLE_IMPORT_TITLE } from '../demo'
 import { formatDate } from '../format'
-import { EXTRACTION_PROMPT, EXTRACTION_SCHEMA, EXTRACTION_SYSTEM, toProposedRows } from '../prompts/extraction'
+import { EXTRACTION_PROMPT, EXTRACTION_SCHEMA, EXTRACTION_SYSTEM, extractionPagesPrompt, toProposedRows } from '../prompts/extraction'
 import { counted, nowIso, type Child, type DocumentKind, type Measurement } from '../types'
 import { measurementChecks } from '../checks'
 import type { Tables } from '../../growth/tables'
@@ -59,6 +59,27 @@ export function babyAdapter(deps: {
   // The measurements saved so far, loaded at each document's check, for the review's second looks.
   let known: Measurement[] = []
 
+  async function block(doc: StoredDoc, bytes: Uint8Array<ArrayBuffer>): Promise<ContentBlock> {
+    if (doc.mimeType === 'application/pdf') return pdfBlock(bytes)
+    const small = await shrinkImage(bytes, doc.mimeType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif')
+    return imageBlock(small.bytes, small.mediaType)
+  }
+
+  async function extract(blocks: ContentBlock[], prompt: string): Promise<{ rows: ProposedRow[]; meta: BabyMeta; dropped: number }> {
+    if (!deps.apiKey) throw new Error('Add your Anthropic API key in Settings to read documents.')
+    const { value } = await askJson(
+      { apiKey: deps.apiKey, model: deps.model, system: EXTRACTION_SYSTEM, content: [...blocks, { type: 'text', text: prompt }], maxTokens: 4000 + 2000 * (blocks.length - 1) },
+      EXTRACTION_SCHEMA,
+      (v) => {
+        const total = Array.isArray((v as { measurements?: unknown[] })?.measurements) ? (v as { measurements: unknown[] }).measurements.length : 0
+        return { rows: toProposedRows(v), total }
+      },
+    )
+    const dropped = Math.max(0, value.total - value.rows.length)
+    if (value.rows.length === 0 && dropped === 0) throw new AiError('output', "No measurements could be read from this document. If it's a photo, try a sharper one.")
+    return { rows: value.rows, meta: {}, dropped }
+  }
+
   return {
     appName: 'BabyTrails',
     documentKind: 'growth-report',
@@ -77,32 +98,20 @@ export function babyAdapter(deps: {
 
     async read(doc: StoredDoc, bytes) {
       if (!readable(doc.kind)) throw new Error("Only growth reports and booklet pages are read. Doctor's notes are summarised from their own page.")
-      let rows: ProposedRow[]
-      let dropped = 0
       if (deps.demo) {
         if (doc.title !== SAMPLE_IMPORT_TITLE && doc.title !== DEMO_DOCUMENT_TITLE) throw new Error('In the demo, only the sample growth report can be read.')
-        rows = DEMO_PROPOSALS
-      } else {
-        if (!deps.apiKey) throw new Error('Add your Anthropic API key in Settings to read documents.')
-        let block: ContentBlock
-        if (doc.mimeType === 'application/pdf') block = pdfBlock(bytes)
-        else {
-          const small = await shrinkImage(bytes, doc.mimeType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif')
-          block = imageBlock(small.bytes, small.mediaType)
-        }
-        const { value } = await askJson(
-          { apiKey: deps.apiKey, model: deps.model, system: EXTRACTION_SYSTEM, content: [block, { type: 'text', text: EXTRACTION_PROMPT }], maxTokens: 4000 },
-          EXTRACTION_SCHEMA,
-          (v) => {
-            const total = Array.isArray((v as { measurements?: unknown[] })?.measurements) ? (v as { measurements: unknown[] }).measurements.length : 0
-            return { rows: toProposedRows(v), total }
-          },
-        )
-        rows = value.rows
-        dropped = Math.max(0, value.total - value.rows.length)
-        if (rows.length === 0 && dropped === 0) throw new AiError('output', "No measurements could be read from this document. If it's a photo, try a sharper one.")
+        return { rows: DEMO_PROPOSALS, meta: {}, dropped: 0 }
       }
-      return { rows, meta: {}, dropped }
+      return extract([await block(doc, bytes)], EXTRACTION_PROMPT)
+    },
+
+    // Photos of one booklet spread or report, read together so a table across pages is one answer.
+    async readPages(pages) {
+      if (!readable(pages[0].doc.kind)) throw new Error("Only growth reports and booklet pages are read. Doctor's notes are summarised from their own page.")
+      if (deps.demo) throw new Error('In the demo, only the sample growth report can be read.')
+      const blocks: ContentBlock[] = []
+      for (const p of pages) blocks.push(await block(p.doc, p.bytes))
+      return extract(blocks, extractionPagesPrompt(pages.length))
     },
 
     // Measurements already saved are left out, and the rest go to review. There's deliberately no

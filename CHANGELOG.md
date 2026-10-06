@@ -81,3 +81,6 @@ with real records.
   footer no longer skips heading levels.
 - A lighter first load: app screens load when first opened, the vault after the first paint, and
   the Inter font is preloaded. The landing page needs 139 kB of compressed JS and CSS instead of 186.
+- Pages of one document: photos of a booklet spread or a long report can be grouped in the import,
+  in page order, read together in one request, checked once and kept as one document with all its
+  pages. In the review, the previous and next page buttons now work for multi-page PDFs too.
