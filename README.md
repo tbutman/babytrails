@@ -4,8 +4,9 @@
 baby's measurements on WHO growth charts, storing documents like growth reports and doctor's notes,
 and getting plain-language summaries of what's changed.
 
-**Status: early development.** Nothing here is ready to use yet. The plan and its reasoning will be
-in `SPEC.md` once it's written.
+**Status: early development.** Nothing here is ready to use yet. The plan and its reasoning are in
+[SPEC.md](SPEC.md), and what it protects against (and what it can't) is in the
+[threat model](THREAT_MODEL.md).
 
 ## The idea
 
@@ -16,6 +17,10 @@ in `SPEC.md` once it's written.
   request straight to the AI provider with your own API key. Nothing goes through our server.
 - **Not medical advice.** BabyTrails keeps records, draws charts and explains numbers. It doesn't
   diagnose anything; that's your paediatrician's job.
+
+## Security
+
+Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 
 ## Licence
 
