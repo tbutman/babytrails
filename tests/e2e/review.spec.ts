@@ -11,7 +11,9 @@ test('demo: reading a document not read yet saves only the values the user confi
   await page.getByRole('link', { name: 'Read', exact: true }).click()
   await page.getByRole('button', { name: 'Read 1 document' }).click()
   await expect(page.getByRole('heading', { name: 'Check document 1 of 1' })).toBeVisible()
-  await expect(page.getByRole('img', { name: /page 1 of 1/ })).toBeVisible()
+  // The demo's page is a photo: shown beside the rows, with the check-ups already saved left out.
+  await expect(page.getByRole('img', { name: 'The document' })).toBeVisible()
+  await expect(page.getByText('8 rows already saved, left out')).toBeVisible()
 
   const save = page.getByRole('button', { name: /^Save \d+ row/ })
   await expect(save).toBeDisabled()

@@ -54,3 +54,10 @@ with real records.
   WHO's implausible limits need a second tap.
 - Leave a measurement out of charts, gains, summaries and reports without deleting it; it stays in
   the list, marked "Left out", with an optional reason.
+- The demo's document is now a photo of a made-up health booklet page in English, with every
+  check-up on it and one new visit: reading it shows the saved rows left out and only the new one
+  to check. The demo baby's dates are fixed (born 20 March 2026) so the page matches. Look-alike
+  pages are drawn by `scripts/make-booklet.mjs`, with Portuguese copies photographed three times for
+  the tests.
+- The review works out whether a document's dates are day first from all its rows, including the
+  ones already saved, so a page with only one new row doesn't ask.

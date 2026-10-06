@@ -41,7 +41,13 @@ files).
 - `node scripts/make-images.mjs` renders the app icons and the Open Graph image with local Chrome.
 - `node scripts/screenshots.mjs` takes the demo screenshots in `docs/screenshots/` and the landing
   page's images in `public/landing/` from a running build (`npx vite preview --port 4190`).
-- `node scripts/make-sample-pdf.mjs` writes the made-up growth report used by the demo and tests.
+- `node scripts/make-sample-pdf.mjs` writes the made-up growth report PDF used by the tests.
+- `node scripts/make-booklet.mjs` draws made-up health booklet pages as photos: the demo's English
+  page (`public/demo/booklet-page.jpg`, rows in `src/app/demoBooklet.json`) and a Portuguese page
+  photographed three times as rows were added (`tests/fixtures/booklet/`, rows in `rows-pt.json`).
+  Real booklet pages never go into the repository, screenshots or the demo; these stand in for them,
+  with the same hard cases (grams and kilograms, a decimal comma, a note in the wrong column, a
+  two-digit year, a covered date). The handwriting fonts are dev dependencies only.
 
 All three are run by hand and their output is committed. Screenshots and fixtures use made-up data
 only.

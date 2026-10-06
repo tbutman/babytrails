@@ -215,7 +215,7 @@ export function Landing() {
         <Section>
           <CtaBand
             title="See it with a made-up baby first"
-            text="The demo has six months of measurements and a sample growth report. No passphrase, no key."
+            text="The demo has six months of measurements and a photo of a made-up health booklet page to read. No passphrase, no key."
             actions={
               <>
                 <button className="button primary large" onClick={() => void tryDemo()}>
