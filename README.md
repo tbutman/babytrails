@@ -25,7 +25,8 @@ with your own key.
 - **The first weeks.** Birth weight, how much was lost in the first days and when it was regained,
   with charts in weeks for the first three months.
 - **Gain over time.** Grams a week (or ounces) between every pair of weighings, and centimetres a
-  month for length and head, each next to the gain that would have kept the same percentile.
+  month for length and head, each next to the gain that would have kept the same percentile, and,
+  when the dates line up, compared with WHO's standards for weight gain at that age.
 - **Quick entry at the doctor's.** Type the numbers on your phone; you see the percentile as you
   type. Metric or imperial, and "7,25" works as well as "7.25".
 - **A second look at odd numbers.** A value far off the chart, or a length smaller than last time,

@@ -6,7 +6,8 @@ import { useState } from 'react'
 import type { Units } from '../growth/units'
 import { Segmented } from '../core/ui/components'
 import { formatDate, formatShortDate } from './format'
-import { formatRate, sameLineSentence, type Interval, type Measure } from './gains'
+import { formatRate, sameLineSentence, whoSentence, type Interval, type Measure } from './gains'
+import { formatPercentile } from '../growth/lms'
 
 const LABELS: Record<Measure, string> = { weight: 'Weight', length: 'Length', head: 'Head' }
 const MAX_BARS = 8
@@ -40,7 +41,10 @@ export function GainCard({ series, units }: { series: Record<Measure, Interval[]
       {latest.short ? (
         <p className="hint">Only {latest.days} days apart: differences between scales or measurers can matter more than the change itself.</p>
       ) : (
-        sentence && <p className="hint">{sentence}</p>
+        <>
+          {sentence && <p className="hint">{sentence}</p>}
+          {whoSentence(latest) && <p className="hint">{whoSentence(latest)}</p>}
+        </>
       )}
       {list.length > 1 && <GainBars list={list.slice(-MAX_BARS)} units={units} />}
       <details className="disclosure">
@@ -54,6 +58,7 @@ export function GainCard({ series, units }: { series: Record<Measure, Interval[]
                 <th scope="col">Days</th>
                 <th scope="col">Gain</th>
                 <th scope="col">Same line</th>
+                {shown === 'weight' && <th scope="col">WHO gains</th>}
               </tr>
             </thead>
             <tbody>
@@ -64,11 +69,15 @@ export function GainCard({ series, units }: { series: Record<Measure, Interval[]
                   <td className="num">{i.days}</td>
                   <td className="num">{formatRate(i, i.rate, units)}</td>
                   <td className="num">{i.sameLine === undefined ? '—' : formatRate(i, i.sameLine, units)}</td>
+                  {shown === 'weight' && <td className="num">{i.who ? `${formatPercentile(i.who.z)} pct` : '—'}</td>}
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="hint">"Same line" is the gain that would have kept the same WHO percentile over the same days. Faded rows are too close together to say much.</p>
+          <p className="hint">
+            "Same line" is the gain that would have kept the same WHO percentile over the same days. "WHO gains" places a weight gain among WHO's standards for weight gain in that month (or two months) of age, when both
+            measurements were within 3 days of the interval. Faded rows are too close together to say much.
+          </p>
         </div>
       </details>
     </section>

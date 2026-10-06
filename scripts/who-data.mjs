@@ -32,6 +32,15 @@ const FILES = [
   ['bfa', 'female', 'body-mass-index-for-age/expanded-tables/bfa-girls-zscore-expanded-tables.xlsx?sfvrsn=ae4cb8d1_12', 'd3817262a383cdd02553b004f1c6110527d30b729c70501d032e71caadc17529'],
 ]
 
+// WHO's weight velocity standards: increments over 1-month (birth to 12 months) and 2-month (birth to
+// 24 months) intervals, with L, M, S and a Delta added before the transformation. Same terms as above.
+const VELOCITY = [
+  ['wv1', 'male', 'weight-velocity/ttt-weight-boys-1mon-z.xlsx?sfvrsn=96b0a570_7', '191b598cfb762c1a8a57e534235ff1048ff1e20c7a039728ea60d89b8b9a957e'],
+  ['wv1', 'female', 'weight-velocity/ttt-weight-girls-1mon-z.xlsx?sfvrsn=d2c6d0df_5', 'ed310f13f46890b857045254adc50d2c86526932ed08a7991564c8f41fe90170'],
+  ['wv2', 'male', 'weight-velocity/ttt-weight-boys-2mon-z.xlsx?sfvrsn=f46e16da_7', 'cd69ce7b699c712dc23f3ac6d7fac6fa09dfbfb1ab8580243a23eaf4a153d524'],
+  ['wv2', 'female', 'weight-velocity/ttt-weight-girls-2mon-z.xlsx?sfvrsn=fc163d74_7', '856c5a5da7ef30d43ba04dbd89ee255b6d92fd6dbecf1d5570fb65fd37901c5e'],
+]
+
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 
 async function load([indicator, sex, path, expected]) {
@@ -50,8 +59,7 @@ async function load([indicator, sex, path, expected]) {
   return bytes
 }
 
-// Reads the first sheet: a header row (Day or Length/Height, L, M, S, SD columns) then numbers.
-function parseSheet(bytes) {
+function sheetRows(bytes) {
   const files = unzipSync(new Uint8Array(bytes))
   const strings = [...strFromU8(files['xl/sharedStrings.xml']).matchAll(/<t[^>]*>([^<]*)<\/t>/g)].map((m) => m[1])
   const rows = []
@@ -62,7 +70,12 @@ function parseSheet(bytes) {
     }
     rows.push(cells)
   }
-  const [header, ...data] = rows
+  return rows
+}
+
+// Reads the first sheet: a header row (Day or Length/Height, L, M, S, SD columns) then numbers.
+function parseSheet(bytes) {
+  const [header, ...data] = sheetRows(bytes)
   const column = (name) => Object.keys(header).find((key) => header[key] === name)
   const xCol = column('Day') ?? column('Length') ?? column('Height')
   const [lCol, mCol, sCol] = ['L', 'M', 'S'].map(column)
@@ -90,4 +103,28 @@ for (const entry of FILES) {
 for (const [indicator, table] of Object.entries(tables)) {
   writeFileSync(join(outDir, `${indicator}.json`), JSON.stringify(table))
 }
-console.log(`WHO tables ready: ${Object.keys(tables).join(', ')}`)
+
+// "0 – 4 wks", "4 wks – 2 mo", "5 – 6 mo", "0-2 mo": the interval's start and end, in days.
+const DAYS = { wks: 7, mo: 30.4375 }
+function intervalDays(label) {
+  const m = /^(\d+)\s*(wks|mo)?\s*[–-]\s*(\d+)\s*(wks|mo)$/.exec(String(label).trim())
+  if (!m) throw new Error(`Unexpected velocity interval: ${label}`)
+  return [Number(m[1]) * DAYS[m[2] ?? m[4]], Number(m[3]) * DAYS[m[4]]]
+}
+
+const velocity = { wv1: {}, wv2: {} }
+for (const entry of VELOCITY) {
+  const [name, sex] = entry
+  const [header, ...data] = sheetRows(await load(entry))
+  const col = (title) => Object.keys(header).find((key) => header[key] === title)
+  const cols = ['Interval', 'L', 'M', 'S', 'Delta'].map(col)
+  if (cols.some((c) => !c)) throw new Error(`Unexpected velocity columns: ${JSON.stringify(header)}`)
+  velocity[name][sex] = data
+    .filter((row) => row[cols[0]] !== undefined)
+    .map((row) => {
+      const [from, to] = intervalDays(row[cols[0]])
+      return { from, to, L: row[cols[1]], M: row[cols[2]], S: row[cols[3]], delta: row[cols[4]] }
+    })
+}
+writeFileSync(join(outDir, 'velocity.json'), JSON.stringify({ weight1: velocity.wv1, weight2: velocity.wv2 }))
+console.log(`WHO tables ready: ${Object.keys(tables).join(', ')}, weight velocity`)

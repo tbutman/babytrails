@@ -8,6 +8,7 @@ import type { Indicator, Tables } from '../../growth/tables'
 import { formatLength, formatWeight, KG_PER_LB, type Units } from '../../growth/units'
 import { formatAge, formatDate, formatShortDate } from '../format'
 import { allIntervals, formatRate, versusSameLine, type Interval } from '../gains'
+import { incrementLabel } from '../../growth/velocity'
 import { chartPoints, growthFor, type ChartChoice } from '../growthData'
 import type { Child, Measurement } from '../types'
 
@@ -154,6 +155,7 @@ export function buildCardData(tables: Tables, child: Child, measurements: Measur
     const hi = formatPercentile(Math.max(...zs))
     highlights.push(lo === hi ? `${label}: ${lo} percentile, last ${zs.length}` : `${label}: ${lo}–${hi} percentile, last ${zs.length}`)
   }
+  if (latestGain?.who) highlights.push(`Weight gain ${incrementLabel(latestGain.who)}: ${formatPercentile(latestGain.who.z)} percentile of WHO's gains`)
   range('Weight', 'wfa', (m) => m.weightKg)
   range(toddler ? 'Height' : 'Length', 'lhfa', (m) => m.lengthCm ?? m.heightCm)
   if (opts.includeHead) range('Head', 'hcfa', (m) => m.headCm)

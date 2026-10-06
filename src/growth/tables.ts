@@ -2,13 +2,15 @@
 // Loaded lazily so the first screen doesn't wait for them.
 
 import type { Lms } from './lms'
+import type { VelocityTables } from './velocity'
 
 export type Sex = 'female' | 'male'
 export type Indicator = 'wfa' | 'lhfa' | 'wfl' | 'wfh' | 'hcfa' | 'bfa'
 
 type Columns = { L: number[]; M: number[]; S: number[] }
 export type Table = { x: 'day' | 'cm'; start: number; step: number; male: Columns; female: Columns }
-export type Tables = Record<Indicator, Table>
+// The attained-growth tables, and WHO's weight velocity tables alongside them.
+export type Tables = Record<Indicator, Table> & { velocity?: VelocityTables }
 
 let loading: Promise<Tables> | undefined
 
@@ -20,13 +22,15 @@ export function loadTables(): Promise<Tables> {
     import('./data/wfh.json'),
     import('./data/hcfa.json'),
     import('./data/bfa.json'),
-  ]).then(([wfa, lhfa, wfl, wfh, hcfa, bfa]) => ({
+    import('./data/velocity.json'),
+  ]).then(([wfa, lhfa, wfl, wfh, hcfa, bfa, velocity]) => ({
     wfa: wfa.default as Table,
     lhfa: lhfa.default as Table,
     wfl: wfl.default as Table,
     wfh: wfh.default as Table,
     hcfa: hcfa.default as Table,
     bfa: bfa.default as Table,
+    velocity: velocity.default as VelocityTables,
   }))
   return loading
 }

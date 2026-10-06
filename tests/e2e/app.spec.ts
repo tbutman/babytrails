@@ -32,6 +32,7 @@ test('the demo works without a passphrase or key', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Gain over time' })).toBeVisible()
   await expect(page.getByText(/Staying on the same percentile line would have meant about \d+ g a week/)).toBeVisible()
   await expect(page.getByRole('img', { name: /Gain per interval, oldest first/ })).toBeVisible()
+  await expect(page.getByText("Against WHO's standards for weight gain from 5–6 months, that's about the 50th percentile.")).toBeVisible()
   await tab(page, 'Measurements').click()
   await expect(page.getByText(/weight \+\d+ g a week since/).first()).toBeVisible()
   await tab(page, 'Charts').click()
