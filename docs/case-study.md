@@ -203,7 +203,7 @@ log. Going live surfaced real problems, each now guarded:
   signs, undeclared numbers, banned phrases, retries, the demo's prepared answers); the AI client,
   refusals and offline errors; summary facts without names or dates; zips, duplicates and file
   kinds; and color contrast.
-- **37 browser tests** against the production build with its CSP, every one failing if the app
+- **38 browser tests** against the production build with its CSP, every one failing if the app
   contacts any site other than itself: the demo, a full vault flow, changing the passphrase,
   restoring a backup, erasing the vault, tabs locking together, returning to the same screen after a
   lock or reload, installing and opening offline, the Reload banner, a newborn's first weeks,
