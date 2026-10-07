@@ -37,7 +37,7 @@ export function Charts() {
           <p>{pretermNotice(child, today())}</p>
         </Callout>
       )}
-      <div className="no-print">
+      <div className="no-print chart-choice">
       <Segmented
         legend="Chart"
         name="chart"

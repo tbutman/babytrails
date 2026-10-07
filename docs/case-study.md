@@ -195,18 +195,23 @@ log. Going live surfaced real problems, each now guarded:
 
 ## What was tested
 
-- **154 unit tests**: WHO maths against published values and table edges, including the velocity
-  tables; encryption round trips, wrong passphrases and tampering; backups; the review rules; gains
-  and their references; the newborn rules; the second looks; the report card's numbers matching the
-  app's; the answer check (matching facts, undeclared numbers, banned phrases, retries, the demo's
-  prepared answers); the AI client; summary facts without names or dates of birth; zips, duplicates
-  and file kinds; and color contrast.
-- **18 browser tests** against the production build with its CSP, every one failing if the app
-  contacts any site other than itself: the demo, a full vault flow, installing and opening offline,
-  the Reload banner, a newborn's first weeks, doubtful measurements, the report card in both formats,
-  the same booklet page imported three times, and, with a mocked Anthropic API, that nothing is sent
-  before the parent agrees, the name never appears in a request, only ticked values are saved, a
-  planted value can't be saved, and an answer with unchecked numbers is withheld.
+- **198 unit tests in 25 files**: WHO maths against published values and table edges, including the
+  velocity tables; encryption round trips, wrong passphrases and tampering; passphrase rules, the
+  PBKDF2 fallback, tabs locking together and erasing the vault; backups; the review rules; gains and
+  their references; the newborn rules and NICE's flags; babies born early; what's worth mentioning;
+  the second looks; the report card's numbers matching the app's; the answer check (matching facts,
+  signs, undeclared numbers, banned phrases, retries, the demo's prepared answers); the AI client,
+  refusals and offline errors; summary facts without names or dates; zips, duplicates and file
+  kinds; and color contrast.
+- **37 browser tests** against the production build with its CSP, every one failing if the app
+  contacts any site other than itself: the demo, a full vault flow, changing the passphrase,
+  restoring a backup, erasing the vault, tabs locking together, returning to the same screen after a
+  lock or reload, installing and opening offline, the Reload banner, a newborn's first weeks,
+  doubtful measurements, typed units, the report card in both formats, charts as a table, axe
+  accessibility checks, the same booklet page imported three times, and, with a mocked Anthropic API,
+  that nothing is sent before the parent agrees, the name and dates never appear in a request, only
+  ticked values are saved, a planted value can't be saved, and an answer with unchecked numbers is
+  withheld.
 - **CI** runs lint, typecheck, the tests, the build and the nginx check on every pull request and
   every push to `main`.
 

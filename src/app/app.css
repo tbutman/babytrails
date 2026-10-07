@@ -263,3 +263,15 @@ fieldset + .chart-card {
 .chart-latest {
   margin: var(--space-3) 0 var(--space-2);
 }
+
+/* The chart picker: labels at their own width, flowing onto a second row on phones rather than
+   squeezing "Weight for length" onto three lines. */
+.chart-choice .segmented {
+  flex-wrap: wrap;
+}
+.chart-choice .segmented label {
+  flex: 1 1 auto;
+}
+.chart-choice .segmented span {
+  white-space: nowrap;
+}
