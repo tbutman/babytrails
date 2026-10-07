@@ -1,7 +1,7 @@
 # BabyTrails threat model
 
-Last updated 6 October 2026, before the first version is built. It describes the design in
-[SPEC.md](SPEC.md); when the code and this file disagree, that's a bug in one of them.
+Last updated October 7, 2026. It describes the app as built and live (the design is in
+[SPEC.md](SPEC.md)); when the code and this file disagree, that's a bug in one of them.
 
 This is written for anyone who wants to know how safe their baby's records are, and for reviewers
 who want to check. Plain answers first, details after.
@@ -21,7 +21,7 @@ who want to check. Plain answers first, details after.
 
 | Asset | Where it lives |
 | --- | --- |
-| Profiles, measurements, visits, summaries | Encrypted records in the browser's IndexedDB |
+| Children, measurements, visits, summaries, Ask conversations (`askThreads`), document records, settings | Encrypted records in the browser's IndexedDB |
 | Documents and photos (growth reports, doctor's notes, ultrasound images) | Encrypted blobs in IndexedDB |
 | The user's Anthropic API key | Inside the encrypted vault |
 | The passphrase | Only in the user's head; never stored |
@@ -31,10 +31,13 @@ who want to check. Plain answers first, details after.
 
 - **Encryption at rest.** Each record and blob is encrypted with AES-256-GCM under a random data
   key. The data key is wrapped by a key derived from the passphrase with Argon2id (19 MiB memory,
-  2 passes, OWASP's recommended setting), or PBKDF2-SHA256 with 600,000 iterations if Argon2id
-  can't run. Each record's encryption is bound to its collection and ID, so records can't be swapped.
+  2 passes, OWASP's recommended setting) or, in a browser that can't run WebAssembly (iOS Lockdown
+  Mode, for example), PBKDF2-SHA256 with 600,000 iterations; Settings says when a vault uses PBKDF2.
+  Each record's encryption is bound to its collection and ID, so records can't be swapped.
 - **Locking.** The vault locks after 5 minutes of inactivity by default, and when the page has been
-  hidden that long. Locking drops the keys from memory.
+  hidden that long. Locking drops the keys from memory. With the app open in several tabs, locking
+  one (by hand or automatically) locks them all, and tabs tell each other that something changed
+  (never what), so none shows stale records.
 - **No server data.** There are no accounts, no database, no analytics, no cookies and no
   third-party scripts. The web server keeps no access log.
 - **A strict Content-Security-Policy.** The page may only load its own files and talk to itself and
@@ -52,11 +55,12 @@ who want to check. Plain answers first, details after.
 ### Someone gets the device while the vault is locked
 
 - **Mitigation:** everything is encrypted, and the passphrase has to go through a deliberately
-  slow key derivation before each guess. Setup requires at least 12 characters and suggests four
-  or more random words.
+  slow key derivation before each guess. A new passphrase needs at least 12 characters and 4
+  different ones, can't be one word repeated or built from the app's name, and gets a weak, OK or
+  strong hint that suggests four random words.
 - **Limit:** anyone can copy the browser's database and guess offline, with no lockout. A short or
-  common passphrase can be guessed. What isn't hidden: how many records and blobs there are, their
-  approximate sizes, and the names of the collections.
+  common passphrase can be guessed. Not hidden: the number of records in each collection and their
+  names, file sizes, and when the vault was created.
 
 ### Someone gets the device while the vault is unlocked
 
@@ -70,7 +74,14 @@ who want to check. Plain answers first, details after.
 
 ### A lost passphrase
 
-- **Mitigation:** a clear warning at setup, and encrypted backups.
+- **Mitigation:** a clear warning at setup, and encrypted backups. Changing the passphrase asks for
+  the new one twice. Under the Unlock form, "Forgot your passphrase?" says nobody can reset it, and
+  offers to restore a backup or to erase the vault and start again.
+- **Erasing:** "Erase this vault" (also in Settings) deletes everything BabyTrails keeps in this
+  browser: the database with every record, document and setting (the AI key included), the cached
+  app files, the service worker and the site's local storage. It needs no passphrase, because it
+  only destroys, and asks for "BabyTrails" to be typed to confirm. Other open tabs reload. Backups
+  already downloaded aren't affected.
 - **Limit:** by design there's no recovery. A backup needs the same passphrase.
 
 ### The browser deletes the data
@@ -89,7 +100,7 @@ or when the user clears site data.
   text prompts use a placeholder instead of the name, leave dates out and send ages in days; the
   app recommends a dedicated API key with a spending limit.
 - **Limit:** Anthropic receives the documents and numbers the user approves, under the user's own
-  account and Anthropic's terms. As of 6 October 2026, Anthropic's
+  account and Anthropic's terms. As of October 6, 2026, Anthropic's
   [Commercial Terms](https://www.anthropic.com/legal/commercial-terms) say it may not train models on
   API content, and its
   [Privacy Center](https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data)
@@ -100,8 +111,9 @@ or when the user clears site data.
 
 - **Mitigation:** the AI has no tools and can't change data; extracted values are validated
   against a schema and each one is confirmed by the user; output is never rendered as HTML.
-- **Limit:** a crafted document could still make a summary misleading. Summaries are labelled as AI
-  output with a short disclaimer.
+- **Limit:** a crafted document could still make a summary misleading. Summaries are labeled as AI
+  output with a short disclaimer, are withheld if they use judging or reassuring words, and say
+  their numbers weren't checked by the app (Ask's answers are).
 
 ### Cross-site scripting
 
@@ -118,34 +130,38 @@ that ship their own key to every visitor. Here each user brings their own key, w
 encrypted in their own vault and sent only to Anthropic.
 - **Limit:** while the vault is unlocked, anything that can run code in the page (see the next
   section) could read the key. A dedicated key with a spending limit caps the damage.
-- Organisations with zero data retention can't use browser calls; Anthropic doesn't support CORS
-  for them.
+- Organizations with zero data retention can't use browser calls; Anthropic doesn't support CORS
+  for them. Settings says so.
 
 ### A malicious version of the app
 
 The app's code comes from GitHub (source and builds), npm (dependencies), the home server, and
 Cloudflare (which carries the traffic). If any of them were compromised, they could serve code that
 reads the records after the user unlocks them.
-- **Mitigation:** the code is public; every build is made by GitHub Actions from a public commit,
-  with a checksum the server verifies; dependencies are few and locked; the CSP is set by the
+- **Mitigation:** the code is public; every build is made by GitHub Actions from a public commit;
+  dependencies are few and locked; the CSP is set by the
   server's configuration, not by the build, so a bad build can't widen it; Cloudflare features that
   inject scripts are turned off.
 - **Limit:** this is the biggest limit of any web app. The CSP doesn't stop determined malicious
   code: even the one allowed AI endpoint could carry data out under an attacker's own API key. The
-  CSP limits mistakes and injected content, not a compromised deployment.
+  CSP limits mistakes and injected content, not a compromised deployment. The server checks each
+  build's checksum, but the checksum is published in the same GitHub release as the build, so it
+  catches a damaged download, not a malicious release.
 
 ### The network
 
 - **Mitigation:** HTTPS only (`.app` domains are HTTPS-only in browsers), HSTS, and no health data
   ever goes to BabyTrails' server. `Referrer-Policy: no-referrer`.
 - **Limit:** Cloudflare terminates TLS for the app's files, as it does for most websites. It sees
-  which pages are requested, not the records.
+  which pages are requested, not the records. The CDN may receive reports of failed page loads,
+  without any health data.
 
 ### The home server
 
 - **Mitigation:** it serves static files only, through an outbound-only Cloudflare Tunnel; nothing
   on the internet can connect to it directly; it pulls builds published by GitHub Actions and
-  checks their checksums rather than accepting pushes, and no workflow holds server credentials.
+  checks their checksums (against damaged downloads) rather than accepting pushes, and no workflow
+  holds server credentials.
 - **Limit:** whoever controls the server controls the code it serves (see "A malicious version of
   the app").
 

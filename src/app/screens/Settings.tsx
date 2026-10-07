@@ -184,6 +184,12 @@ export function About() {
           Percentiles are worked out on this device with WHO's own formulas (the LMS method). A percentile describes where a measurement sits compared with WHO's
           reference children; it isn't a diagnosis. Your pediatrician looks at much more than one number.
         </p>
+        <p>
+          <strong>Worth mentioning.</strong> BabyTrails marks a measurement as worth mentioning at the next check-up using the WHO chart's own
+          lines: below the 3rd or above the 97th percentile, a move of about one of the chart's percentile lines since the previous
+          measurement, or weight going down after the first two weeks. For the first weeks it uses NICE's guideline NG75: a loss of more
+          than 10% of birth weight, or not being back to birth weight by 3 weeks. These mark questions to ask, not diagnoses.
+        </p>
         <p>BabyTrails is open source under the MIT license. The WHO data is not covered by that license.</p>
       </div>
     </Shell>

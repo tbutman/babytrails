@@ -80,11 +80,11 @@ npm run test:e2e   # browser tests (Playwright) against the production build
   Reload switches to the new version.
 
 What the tests can't prove: how real growth reports read (that needs Thomas's own documents, in his
-own browser), and behaviour on real phones (iPhone Safari, Android Chrome).
+own browser), and behavior on real phones (iPhone Safari, Android Chrome).
 
 ## Releases and deploys
 
 Every push to `main` runs CI and publishes a build as a GitHub release (`site-<run>-<sha>`); the
-server installs it within a few minutes once hosting is live. See
-[deploy/README.md](../deploy/README.md). Version numbers are plain git tags (`v1.0.0`) with a
+server installs it within a few minutes. See
+[deploy/README.md](../deploy/README.md). Version numbers are plain git tags (`v0.1.0`) with a
 `CHANGELOG.md` section, not GitHub releases, because the server deploys the newest GitHub release.
