@@ -36,7 +36,7 @@ export function formatWeeklyGain(kgPerWeek: number, units: Units): string {
     : `${sign}${(Math.abs(kgPerWeek) / KG_PER_LB * 16).toFixed(1)} oz a week`
 }
 
-// Centimetres (or inches) per month between two lengths or head circumferences.
+// Centimeters (or inches) per month between two lengths or head circumferences.
 export function formatMonthlyGain(cmPerMonth: number, units: Units): string {
   const sign = cmPerMonth < 0 ? '−' : ''
   return units === 'metric' ? `${sign}${Math.abs(cmPerMonth).toFixed(1)} cm a month` : `${sign}${cmToIn(Math.abs(cmPerMonth)).toFixed(2)} in a month`
@@ -48,3 +48,23 @@ export function parseDecimal(text: string): number | undefined {
   if (!/^\d+(\.\d+)?$/.test(cleaned)) return undefined
   return Number(cleaned)
 }
+
+/**
+ * A number with an optional unit after it, in the field's own unit (BABY-04): "6.1 kg", "6100 g" and
+ * "6,1" in a kilograms field all give 6.1. `factors` says what each accepted unit is worth in the
+ * field's unit. Returns undefined for anything else, so the form can say it isn't a number.
+ */
+export function parseAmount(text: string, factors: Record<string, number>): number | undefined {
+  const m = /^\s*(\d+(?:[.,]\d+)?)\s*([a-zA-Z"']*)\.?\s*$/.exec(text)
+  if (!m) return undefined
+  const value = Number(m[1].replace(',', '.'))
+  if (!m[2]) return value
+  const factor = factors[m[2].toLowerCase()]
+  return factor === undefined ? undefined : value * factor
+}
+
+export const KG_FIELD = { kg: 1, kgs: 1, g: 0.001, gr: 0.001 }
+export const CM_FIELD = { cm: 1, mm: 0.1, in: CM_PER_IN, '"': CM_PER_IN }
+export const IN_FIELD = { in: 1, '"': 1, cm: 1 / CM_PER_IN }
+export const LB_FIELD = { lb: 1, lbs: 1 }
+export const OZ_FIELD = { oz: 1 }

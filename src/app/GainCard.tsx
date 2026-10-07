@@ -12,7 +12,7 @@ import { formatPercentile } from '../growth/lms'
 const LABELS: Record<Measure, string> = { weight: 'Weight', length: 'Length', head: 'Head' }
 const MAX_BARS = 8
 
-export function GainCard({ series, units }: { series: Record<Measure, Interval[]>; units: Units }) {
+export function GainCard({ series, units, firstWeeks = false }: { series: Record<Measure, Interval[]>; units: Units; firstWeeks?: boolean }) {
   const available = (Object.keys(series) as Measure[]).filter((k) => series[k].length >= (k === 'weight' ? 1 : 2))
   const [measure, setMeasure] = useState<Measure>('weight')
   if (available.length === 0) return null
@@ -38,7 +38,9 @@ export function GainCard({ series, units }: { series: Record<Measure, Interval[]
           since {formatDate(latest.from.date)}, over {latest.days} days
         </span>
       </p>
-      {latest.short ? (
+      {shown === 'weight' && firstWeeks ? (
+        <p className="hint">In the first weeks, compare with birth weight instead; see The first weeks.</p>
+      ) : latest.short ? (
         <p className="hint">Only {latest.days} days apart: differences between scales or measurers can matter more than the change itself.</p>
       ) : (
         <>
@@ -57,8 +59,8 @@ export function GainCard({ series, units }: { series: Record<Measure, Interval[]
                 <th scope="col">To</th>
                 <th scope="col">Days</th>
                 <th scope="col">Gain</th>
-                <th scope="col">Same line</th>
-                {shown === 'weight' && <th scope="col">WHO gains</th>}
+                <th scope="col">Same percentile</th>
+                {shown === 'weight' && <th scope="col">Against WHO's gains</th>}
               </tr>
             </thead>
             <tbody>
@@ -69,13 +71,13 @@ export function GainCard({ series, units }: { series: Record<Measure, Interval[]
                   <td className="num">{i.days}</td>
                   <td className="num">{formatRate(i, i.rate, units)}</td>
                   <td className="num">{i.sameLine === undefined ? '—' : formatRate(i, i.sameLine, units)}</td>
-                  {shown === 'weight' && <td className="num">{i.who ? `${formatPercentile(i.who.z)} pct` : '—'}</td>}
+                  {shown === 'weight' && <td className="num">{i.who ? `${formatPercentile(i.who.z)} percentile` : '—'}</td>}
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="hint">
-            "Same line" is the gain that would have kept the same WHO percentile over the same days. "WHO gains" places a weight gain among WHO's standards for weight gain in that month (or two months) of age, when both
+            "Same percentile" is the gain that would have kept the same WHO percentile over the same days. "Against WHO's gains" places a weight gain among WHO's standards for weight gain in that month (or two months) of age, when both
             measurements were within 3 days of the interval. Faded rows are too close together to say much.
           </p>
         </div>

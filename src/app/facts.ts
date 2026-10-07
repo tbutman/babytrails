@@ -8,6 +8,7 @@ import type { Indicator, Tables } from '../growth/tables'
 import { allIntervals, versusSameLine, type Interval, type Measure } from './gains'
 import { incrementLabel } from '../growth/velocity'
 import { LOSS_THRESHOLD_PERCENT, newborn } from './newborn'
+import { bornEarly } from './preterm'
 import type { Child, Measurement } from './types'
 
 type Score = { z: number; percentile: number }
@@ -23,7 +24,16 @@ export type Snapshot = {
   scores: Partial<Record<Indicator, Score>>
 }
 
-export type Flag = { indicator: Indicator; reason: string }
+// What the code found worth mentioning. `reason` is for the AI; the rest lets the app write its own
+// card (mention.ts).
+export type Flag = {
+  indicator: Indicator
+  reason: string
+  kind: 'outside' | 'move' | 'down' | 'newborn-loss' | 'not-regained'
+  side?: 'above the 97th' | 'below the 3rd'
+  fromPercentile?: number
+  toPercentile?: number
+}
 
 // One interval between consecutive measurements of a kind, as the AI sees it: ages, not dates of
 // birth. Weight in grams per week, length and head in cm per month.
@@ -58,9 +68,10 @@ export type Facts = {
   gains: Partial<Record<Measure, GainFact[]>>
   // The first weeks, while the latest measurement is under 3 months: weight change from birth weight.
   newborn?: { birthWeightKg: number; lowestPercentFromBirth?: number; lowestAtAgeDays?: number; backToBirthWeightByAgeDays?: number }
-  // Set by the code, never the AI: things worth mentioning to the paediatrician. A measurement
+  // Set by the code, never the AI: things worth mentioning to the pediatrician. A measurement
   // outside the 3rd–97th band is flagged when it gets there; while it stays there, it's listed in
-  // stillOutside instead, as context.
+  // stillOutside instead, as context. For a baby born early, low percentiles aren't flagged (they
+  // use age from birth; see preterm.ts).
   worthMentioning: Flag[]
   stillOutside: { indicator: Indicator; side: 'above the 97th' | 'below the 3rd' }[]
   indicatorNames: Partial<Record<Indicator, string>>
@@ -75,9 +86,11 @@ const NAMES: Record<Indicator, string> = {
   bfa: 'BMI for age',
 }
 
-// Neutral thresholds for "worth mentioning to your paediatrician". They aren't diagnoses: they mark
-// numbers a parent may want to ask about. A z-score change of 1 is roughly crossing two of the WHO
-// chart's percentile lines (3rd, 15th, 50th, 85th, 97th).
+// Neutral thresholds for "worth mentioning to your pediatrician", on the WHO chart's lines (Thomas,
+// October 7, 2026, Q8): below the 3rd or above the 97th percentile, and a move of about one of the
+// chart's percentile lines (3rd, 15th, 50th, 85th, 97th, about 0.85 to 1 z apart) since the previous
+// measurement. They aren't diagnoses: they mark numbers a parent may want to ask about. NICE NG75 is
+// used only for the first weeks (newborn.ts).
 const BIG_MOVE_Z = 1
 const OUTER_Z = 1.881 // outside the 3rd–97th percentile band
 
@@ -129,14 +142,17 @@ export function buildFacts(tables: Tables, child: Child, measurements: Measureme
     indicatorNames: {},
   }
 
+  // Under 2 years, a baby born early sits low on charts by age from birth: that isn't flagged.
+  const early = bornEarly(child) && latest.ageDays < 731
   for (const [key, s] of Object.entries(latest.scores) as [Indicator, Score][]) {
     facts.indicatorNames[key] = NAMES[key]
     if (Math.abs(s.z) > OUTER_Z) {
       const side = s.z < 0 ? 'below the 3rd' : 'above the 97th'
       const before = previous?.scores[key]
       const wasOutsideSameSide = !!before && Math.abs(before.z) > OUTER_Z && Math.sign(before.z) === Math.sign(s.z)
+      if (s.z < 0 && early) continue
       if (wasOutsideSameSide) facts.stillOutside.push({ indicator: key, side })
-      else facts.worthMentioning.push({ indicator: key, reason: `${NAMES[key]} is ${side} percentile` })
+      else facts.worthMentioning.push({ indicator: key, kind: 'outside', side, reason: `${NAMES[key]} is ${side} percentile` })
     }
   }
 
@@ -149,7 +165,13 @@ export function buildFacts(tables: Tables, child: Child, measurements: Measureme
       const zChange = round(s.z - before.z, 2)
       moves.push({ indicator: key, fromPercentile: before.percentile, toPercentile: s.percentile, zChange })
       if (Math.abs(zChange) >= BIG_MOVE_Z) {
-        facts.worthMentioning.push({ indicator: key, reason: `${NAMES[key]} moved from about the ${before.percentile} to the ${s.percentile} percentile since the previous measurement` })
+        facts.worthMentioning.push({
+          indicator: key,
+          kind: 'move',
+          fromPercentile: before.percentile,
+          toPercentile: s.percentile,
+          reason: `${NAMES[key]} moved from about the ${before.percentile} to the ${s.percentile} percentile since the previous measurement`,
+        })
       }
     }
     const diff = (a?: number, b?: number) => (a !== undefined && b !== undefined ? a - b : undefined)
@@ -163,7 +185,7 @@ export function buildFacts(tables: Tables, child: Child, measurements: Measureme
     }
     // Losing weight after the first two weeks is worth a mention (the first days are covered below).
     if (weightDiff !== undefined && weightDiff < 0 && latest.ageDays > 14) {
-      facts.worthMentioning.push({ indicator: 'wfa', reason: 'weight went down since the previous measurement' })
+      facts.worthMentioning.push({ indicator: 'wfa', kind: 'down', reason: 'weight went down since the previous measurement' })
     }
   }
   // The first weeks (NICE NG75, see newborn.ts).
@@ -177,9 +199,9 @@ export function buildFacts(tables: Tables, child: Child, measurements: Measureme
     }
     if (latest.ageDays <= 42) {
       if (nb.lostMoreThan10) {
-        facts.worthMentioning.push({ indicator: 'wfa', reason: `weight was more than ${LOSS_THRESHOLD_PERCENT}% below birth weight in the first two weeks` })
+        facts.worthMentioning.push({ indicator: 'wfa', kind: 'newborn-loss', reason: `weight was more than ${LOSS_THRESHOLD_PERCENT}% below birth weight in the first two weeks` })
       }
-      if (nb.notRegainedBy3Weeks) facts.worthMentioning.push({ indicator: 'wfa', reason: 'weight was not back to birth weight by 3 weeks of age' })
+      if (nb.notRegainedBy3Weeks) facts.worthMentioning.push({ indicator: 'wfa', kind: 'not-regained', reason: 'weight was not back to birth weight by 3 weeks of age' })
     }
   }
   return facts
@@ -215,6 +237,17 @@ function gainFacts(series: Record<Measure, Interval[]>, child: Child): Facts['ga
     })
   }
   return out
+}
+
+/**
+ * The facts as a summary sends them (BABY-06): the same, without the measurement dates, which with
+ * the ages would give away the date of birth. Ages stay in days. Ask leaves dates out the same way
+ * (askFacts.ts).
+ */
+export function sentFacts(facts: Facts) {
+  const { date: _l, ...latest } = facts.latest
+  const previous = facts.previous ? (({ date: _p, ...rest }) => rest)(facts.previous) : undefined
+  return { ...facts, latest, previous }
 }
 
 // A digest of the facts, so the app can tell when a saved summary is out of date.

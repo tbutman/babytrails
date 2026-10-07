@@ -1,8 +1,9 @@
 # BabyTrails: a baby's growth records, private by design
 
-*Case study, October 2026. BabyTrails is live at [babytrails.app](https://babytrails.app) and in
-active development. Code: [github.com/tbutman/babytrails](https://github.com/tbutman/babytrails).
-Screenshots show the demo; every name, value and document in them is made up.*
+*Case study, October 2026, by [Thomas Butman](https://tbutman.com). BabyTrails is live at
+[babytrails.app](https://babytrails.app) and in active development. Free and open source (MIT).
+Code: [github.com/tbutman/babytrails](https://github.com/tbutman/babytrails). Screenshots show the
+demo; every name, value and document in them is made up.*
 
 <p>
   <img src="screenshots/landing.png" width="720" alt="The BabyTrails landing page: every check-up, on the growth charts">
@@ -21,12 +22,12 @@ question, and a report worth sending to family. So were the fragile parts. The m
 numbers itself and sometimes got them wrong, a length I'd only floated as a what-if later
 appeared as a recorded measurement, its charts were drawn by an image model and didn't match
 the data, and "is this normal?" got reassurance rather than a reference. BabyTrails keeps the first
-list and designs out the second. It is deliberately not a judgement on whether a baby is healthy:
-that's the paediatrician's job.
+list and designs out the second. It is deliberately not a judgment on whether a baby is healthy:
+that's the pediatrician's job.
 
 ## The decisions that shaped it
 
-**Local-first, bring your own key.** The app is static files. Everything a parent enters or uploads is
+**Private by design, bring your own key.** The app is static files. Everything a parent enters or uploads is
 encrypted in their own browser and never reaches my server: no accounts, no database, no analytics, no
 cookies. AI is optional; when a parent uses it, their browser sends that one request straight to
 Anthropic with their own API key, after a screen that lists what will and won't be sent. In the EU,
@@ -39,23 +40,23 @@ The trade-offs, stated in the app as plainly as here:
 - **Browser storage can disappear.** Safari deletes a site's data after 7 days without a visit unless
   it's on the Home Screen. The app asks for persistent storage, nudges iPhone users to install it, and
   reminds everyone to make an encrypted backup.
-- **One device per vault.** Two parents can't share live records yet; encrypted sync is the likely paid
-  feature, if there is one.
+- **One device per vault.** Two parents can't share live records yet. Next, if people want it:
+  encrypted sync between devices.
 - **Bring your own key** is friction. The demo needs no key, and the AI features cost about one or two
   US cents each at current prices.
 
 **The code computes; the AI explains; the parent confirms.**
 - **The code computes.** Percentiles and z-scores come from WHO's LMS method, including WHO's
   adjustment beyond ±3 SD, tested against WHO's published values. Gains, references and the "worth
-  mentioning to your paediatrician" notes are all computed before the AI sees anything.
+  mentioning to your pediatrician" notes are all computed before the AI sees anything.
 - **The AI explains.** Summaries and answers are written from a facts object the code builds, with no
-  name, no date of birth and, for questions, no dates at all.
+  name, no date of birth and no dates at all: ages are in days.
 - **The parent confirms.** Reading a document, the AI only copies values as printed into a strict
   schema, with the text it read and a confidence level. Every value is shown next to the page, and
   nothing is saved until the parent ticks it. Units are converted by code, not the model.
 
 It never says whether a baby is healthy, never interprets ultrasound images (they're stored and shown
-only), and every AI output is labelled.
+only), and every AI output is labeled.
 
 <p>
   <img src="screenshots/overview-desktop.png" width="720" alt="A made-up baby's overview: latest weight, length and head circumference with percentiles, and gain over time">
@@ -71,11 +72,13 @@ around it:
 - **A kind for each file,** guessed from its name in English or Portuguese ("ecografia" is an
   ultrasound, "boletim" a booklet page). Ultrasound images and doctor's notes are kept without being
   read.
-- **Duplicates caught at every level.** The same file is recognised by its SHA-256 fingerprint before
+- **Duplicates caught at every level.** The same file is recognized by its SHA-256 fingerprint before
   anything is sent to the AI. After reading, rows already saved are left out, and only the new ones
   go to review. An early version called a re-photographed page "a report you already added" and
   offered to skip it, which would have dropped the new rows; walking through a real booklet page
   photographed three times caught it.
+- **Photos of one document,** such as both pages of a booklet spread, grouped in page order, read
+  together and checked once, so a table that runs across pages comes back as one.
 - **The page's own dates decide the date order.** A single new row dated "02.10.26" is read day first
   because the saved rows on the same page show it, so the parent isn't asked.
 
@@ -104,9 +107,8 @@ conversations. The rule is that answers use only numbers the code computed. The 
 number it writes, with the path of the fact it came from (`gains.weight[5].perWeekGrams`); the code
 resolves each one, compares the value at the precision written, rejects any other measurement number
 in the text and any reassurance ("healthy", "normal"), and retries once with the problems before
-withholding the answer. Questions about illness get a fixed pointer to the paediatrician. A typed
-name is replaced before anything is sent. The module is generic and proposed to LabTrails as part of
-the shared core.
+withholding the answer. Questions about illness get a fixed pointer to the pediatrician. A typed
+name is replaced before anything is sent. The module is generic, and LabTrails uses it too.
 
 **Second looks and doubt.** A value far off the chart for the age, a length smaller than last time or
 a big jump in a short time gets a gentle "measure again?", and values beyond WHO's own implausible
@@ -117,7 +119,7 @@ thresholds (more than 10% lost, or not back by 3 weeks) flagged as worth mention
 weeks for the first three months.
 
 <p>
-  <img src="screenshots/ask.png" width="300" alt="A question about the weight percentile, answered from the app's own numbers, labelled as prepared in advance for the demo">
+  <img src="screenshots/ask.png" width="300" alt="A question about the weight percentile, answered from the app's own numbers, labeled as prepared in advance for the demo">
   <img src="screenshots/gains.png" width="560" alt="Gain over time: the latest weekly gain, the same-line reference, WHO's weight gain percentile, and a bar for each interval">
 </p>
 
@@ -137,7 +139,7 @@ phone-sized image for messaging apps or an A4 PDF, with the name, a nickname or 
 ## Security design
 
 - **Encryption:** a random 256-bit data key encrypts every record and file with AES-256-GCM. It's
-  wrapped by a key derived from the passphrase with Argon2id, and exists in memory only as a
+  wrapped by a key derived from the passphrase with Argon2id (PBKDF2 where WebAssembly can't run), and exists in memory only as a
   non-extractable WebCrypto key while unlocked. Each record is bound to its collection and ID, and each
   file chunk to its position, so tampered or shuffled data fails to decrypt instead of showing
   something wrong.
@@ -147,7 +149,7 @@ phone-sized image for messaging apps or an A4 PDF, with the name, a nickname or 
 - **AI output is untrusted:** it's rendered as a small Markdown subset by my own code, never as HTML,
   and a test feeds it `<script>` and `<img onerror>` to prove it.
 - **The WHO data stays out of the repository.** WHO's growth and velocity tables are downloaded at
-  build time and checked against pinned SHA-256 checksums, because their licence doesn't fit the
+  build time and checked against pinned SHA-256 checksums, because their license doesn't fit the
   MIT-licensed code.
 - **Honest limits** are in the [threat model](../THREAT_MODEL.md): a compromised device, a malicious
   deployment (the CSP limits mistakes, not someone who controls the code), and the AI provider seeing
@@ -166,7 +168,7 @@ log, with me deciding anything that affected both apps.
 
 **A design system, not a theme.** Both apps use one kit: Inter throughout, Lucide icons, one accent
 per app (honey for BabyTrails), a tab bar on phones, metric cards with sparklines, and a landing page
-each from the same template. A unit test checks every colour pairing against WCAG 2.1 in both themes;
+each from the same template. A unit test checks every color pairing against WCAG 2.1 in both themes;
 it ruled out the honey text first proposed, at 4.47:1 on one surface, below the 4.5:1 minimum.
 
 ## Shipping and what broke
@@ -193,18 +195,23 @@ log. Going live surfaced real problems, each now guarded:
 
 ## What was tested
 
-- **154 unit tests**: WHO maths against published values and table edges, including the velocity
-  tables; encryption round trips, wrong passphrases and tampering; backups; the review rules; gains
-  and their references; the newborn rules; the second looks; the report card's numbers matching the
-  app's; the answer check (matching facts, undeclared numbers, banned phrases, retries, the demo's
-  prepared answers); the AI client; summary facts without names or dates of birth; zips, duplicates
-  and file kinds; and colour contrast.
-- **18 browser tests** against the production build with its CSP, every one failing if the app
-  contacts any site other than itself: the demo, a full vault flow, installing and opening offline,
-  the Reload banner, a newborn's first weeks, doubtful measurements, the report card in both formats,
-  the same booklet page imported three times, and, with a mocked Anthropic API, that nothing is sent
-  before the parent agrees, the name never appears in a request, only ticked values are saved, a
-  planted value can't be saved, and an answer with unchecked numbers is withheld.
+- **198 unit tests in 25 files**: WHO maths against published values and table edges, including the
+  velocity tables; encryption round trips, wrong passphrases and tampering; passphrase rules, the
+  PBKDF2 fallback, tabs locking together and erasing the vault; backups; the review rules; gains and
+  their references; the newborn rules and NICE's flags; babies born early; what's worth mentioning;
+  the second looks; the report card's numbers matching the app's; the answer check (matching facts,
+  signs, undeclared numbers, banned phrases, retries, the demo's prepared answers); the AI client,
+  refusals and offline errors; summary facts without names or dates; zips, duplicates and file
+  kinds; and color contrast.
+- **38 browser tests** against the production build with its CSP, every one failing if the app
+  contacts any site other than itself: the demo, a full vault flow, changing the passphrase,
+  restoring a backup, erasing the vault, tabs locking together, returning to the same screen after a
+  lock or reload, installing and opening offline, the Reload banner, a newborn's first weeks,
+  doubtful measurements, typed units, the report card in both formats, charts as a table, axe
+  accessibility checks, the same booklet page imported three times, and, with a mocked Anthropic API,
+  that nothing is sent before the parent agrees, the name and dates never appear in a request, only
+  ticked values are saved, a planted value can't be saved, and an answer with unchecked numbers is
+  withheld.
 - **CI** runs lint, typecheck, the tests, the build and the nginx check on every pull request and
   every push to `main`.
 
@@ -213,10 +220,10 @@ do, with my son's records in my own browser.
 
 ## What's next
 
+- Corrected age for babies born early, until 24 months. For now the weeks of pregnancy at birth are
+  recorded, and the app says its percentiles use age from birth.
 - Testing with our own records.
-- Grouping several photos as the pages of one document.
-- Corrected age for babies born early (the weeks of pregnancy at birth are already recorded), CDC
-  charts from 2 years, and WHO's length and head increments.
+- CDC charts from 2 years, and WHO's length and head increments.
 - Later: visits and vaccinations, a Portuguese interface and, if it's worth building, encrypted sync
   between parents' devices.
 
@@ -227,4 +234,4 @@ code, then in steps I approved one by one, each a pull request: the first versio
 system, the shared import, and a second spec, written after comparing the app with the chat that
 inspired it, which added gains and references, the report card, the first weeks, second looks, the
 look-alike booklet pages and "Ask about the numbers". All of it was started and went live on
-6 October 2026. The commits say so.
+October 6, 2026. The commits say so.

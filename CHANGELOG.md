@@ -1,9 +1,36 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (October 8, 2026)
 
-The first version, not yet tagged. Version 1.0.0 is Thomas's call, after it's live and he has used it
-with real records.
+Changes from the product review of October 7, 2026. Tagged `v0.2.0`.
+
+- **Safety.** For a baby born before 37 weeks, a note on the overview, the charts and the report card
+  says the percentiles use age from birth (corrected age is the next feature), and the second looks
+  around birth expect small numbers. The first weeks spell out NICE's two flags and link NICE NG75.
+  What the code finds worth mentioning (below the 3rd or above the 97th percentile, about one WHO
+  line crossed, weight going down) is a card on the overview and a line on the report card. Second
+  looks say what to do if the number is right.
+- **The vault.** "Erase this vault", in Settings and under "Forgot your passphrase?" on the Unlock
+  form. Changing the passphrase asks for the new one twice. New passphrases need 4 different
+  characters, can't repeat one word or use the app's name, and get a weak, OK or strong hint. A
+  restore checks the passphrase before anything changes, then shows the Unlock form. Tabs lock
+  together and see each other's changes. PBKDF2 where Argon2id can't run.
+- **AI.** Summaries send no dates; summaries and answers share one list of words the app withholds;
+  answers' numbers are checked with their sign; refusals and offline errors have their own
+  messages; photos are always re-encoded, so their location details aren't sent.
+- **Fixes.** A weight typed with its unit is read; "Add a child" while locked no longer crashes, and
+  any screen that fails shows a calm message; close measurements and same-day entries; the backup
+  reminder counts from setup; the installed app opens the app; a title and date at import; lock or
+  reload returns to where you were.
+- **Report card and charts.** The highlights show the direction; the card shows Girl or Boy, weeks at
+  birth and a legend; charts label their lines, can be read as a table, and say why measurements
+  after 5 years aren't charted.
+- **Words.** US English and US dates ("Sep 19, 2026") in the app, the prompts and the docs; plainer
+  labels; "report card" throughout; the WHO wording in About and DATA-NOTICE.
+
+## 0.1.0 (live since October 6, 2026)
+
+The first version, live at babytrails.app. Tagged `v0.1.0` (`599fb03`).
 
 - A passphrase-protected, encrypted vault in the browser, with auto-lock, persistent-storage
   request, and encrypted backup export and import.

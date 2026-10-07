@@ -1,17 +1,21 @@
 import { Baby, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Checkbox, PageHeader, Segmented, TextField } from '../../core/ui/components'
 import { APP, childPath } from '../brand'
 import { deleteChild, useChild, useMeasurements } from '../data'
 import { birthMeasurement } from '../newborn'
 import { Shell } from '../Layout'
 import { useSession, useStore } from '../sessionContext'
+import { useLeaveWarning } from '../useLeaveWarning'
 import { today, type Child } from '../types'
 
 export function ChildForm() {
   const { id } = useParams()
+  const { store } = useSession()
   const existing = useChild(id)
+  // Locked, or opened in a fresh browser: there's nowhere to save, so go to the start (BABY-05).
+  if (!store) return <Navigate to={APP} replace />
   if (id && existing === undefined) return null
   if (id && existing === null) return <p>This child isn't in your records.</p>
   const form = <ChildFormInner key={id ?? 'new'} existing={existing ?? undefined} />
@@ -30,6 +34,9 @@ function ChildFormInner({ existing }: { existing?: Child }) {
   const [weeks, setWeeks] = useState(existing?.gestationalAge ? String(existing.gestationalAge.weeks) : '')
   const [days, setDays] = useState(existing?.gestationalAge ? String(existing.gestationalAge.days) : '')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [initial] = useState(() => [name, nickname, dateOfBirth, sex, weeks, days].join('|'))
+  const [saving, setSaving] = useState(false)
+  useLeaveWarning(!saving && [name, nickname, dateOfBirth, sex, weeks, days].join('|') !== initial)
   const [addBirth, setAddBirth] = useState(true)
   const measurements = useMeasurements(existing?.id)
   const birth = existing && measurements ? birthMeasurement(existing, measurements) : undefined
@@ -43,10 +50,16 @@ function ChildFormInner({ existing }: { existing?: Child }) {
     if (!sex) next.sex = 'Choose one. The WHO charts are different for girls and boys.'
     const w = weeks ? Number(weeks) : undefined
     const d = days ? Number(days) : 0
-    if (weeks && (!Number.isInteger(w) || w! < 22 || w! > 44)) next.gestation = 'Weeks should be between 22 and 44.'
-    if (days && (!Number.isInteger(d) || d < 0 || d > 6)) next.gestation = 'Days should be between 0 and 6.'
+    // Both problems at once, if both are there (BABY-20).
+    const gestation = [
+      weeks && (!Number.isInteger(w) || w! < 22 || w! > 44) ? 'Weeks should be between 22 and 44.' : '',
+      days && (!Number.isInteger(d) || d < 0 || d > 6) ? 'Days should be between 0 and 6.' : '',
+      days && !weeks ? 'Enter the weeks too.' : '',
+    ].filter(Boolean)
+    if (gestation.length) next.gestation = gestation.join(' ')
     setErrors(next)
     if (Object.keys(next).length) return
+    setSaving(true)
     const child: Child = {
       id: existing?.id ?? crypto.randomUUID(),
       name: name.trim(),
@@ -83,7 +96,7 @@ function ChildFormInner({ existing }: { existing?: Child }) {
         <TextField label="Nickname (optional)" value={nickname} onChange={(e) => setNickname(e.target.value)} autoComplete="off" hint="Shown instead of the name, and on shared reports if you like." />
         <TextField label="Date of birth" type="date" max={today()} value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} error={errors.dateOfBirth} />
         <Segmented
-          legend="Sex"
+          legend="Sex for the growth charts"
           name="sex"
           options={[
             { value: 'female', label: 'Girl' },
@@ -91,7 +104,7 @@ function ChildFormInner({ existing }: { existing?: Child }) {
           ]}
           value={sex}
           onChange={setSex}
-          hint="The WHO charts are different for girls and boys."
+          hint="Choose the charts your baby's doctor uses."
         />
         {errors.sex && (
           <p className="error form-error" role="alert">
@@ -109,7 +122,7 @@ function ChildFormInner({ existing }: { existing?: Child }) {
               {errors.gestation}
             </p>
           ) : (
-            <p className="hint">Recorded for now; charts by corrected age for babies born early come later.</p>
+            <p className="hint">For babies born before 37 weeks, BabyTrails says that its percentiles use age from birth. Charts by corrected age are the next feature.</p>
           )}
         </fieldset>
         {existing ? (

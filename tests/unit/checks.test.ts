@@ -35,13 +35,13 @@ describe('second looks', () => {
   it('notices a length or head smaller than last time', () => {
     const c = measurementChecks(tables, child, saved, { date: '2026-06-15', lengthCm: 55.5, headCm: 38.4 })
     expect(c.map((x) => x.field)).toEqual(['stature'])
-    expect(c[0].text).toMatch(/1\.5 cm less than on 15 May/)
+    expect(c[0].text).toMatch(/1\.5 cm less than on May 15/)
   })
 
   it('notices a big jump in a short time', () => {
     const c = measurementChecks(tables, child, saved, { date: '2026-06-01', weightKg: 6.6 })
     expect(c[0]).toMatchObject({ field: 'weight', level: 'check' })
-    expect(c[0].text).toMatch(/big change since 15 May, 17 days ago/)
+    expect(c[0].text).toMatch(/big change since May 15, 17 days ago/)
   })
 
   it("ignores the measurement being edited, and counts only what isn't left out", () => {
@@ -55,7 +55,7 @@ describe('second looks on the review screen', () => {
   it('shows a warning that does not block the row', () => {
     const columns = measurementColumns(child, (c) => measurementChecks(tables, child, saved, c))
     const [row] = initRows([{ values: { date: '01/06/2026', weightKg: '6,6' }, confidence: 'high' }], columns)
-    expect(rowWarnings({ ...row, status: 'accepted' }, columns, 'dmy').weightKg).toMatch(/big change since 15 May/)
+    expect(rowWarnings({ ...row, status: 'accepted' }, columns, 'dmy').weightKg).toMatch(/big change since May 15/)
   })
 
   it('uses the measurements saved so far, loaded when each document is checked', async () => {

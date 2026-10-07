@@ -13,12 +13,12 @@ test('the report card exports as a phone image and an A4 PDF, and the simple rep
   // The report card is the default: charts, gain over time, highlights and history.
   await expect.poll(() => previewSvg(page)).toContain('Gain over time')
   const card = await previewSvg(page)
-  for (const text of ['Highlights', 'History', 'Weight for length', 'percentile', 'A record, not medical advice']) expect(card).toContain(text)
+  for (const text of ['Highlights', 'History', 'Weight for length', 'percentile', 'A record, not medical advice', 'Shaded: 3rd–97th and 15th–85th percentiles. Dashed: 50th.', 'Girl']) expect(card).toContain(text)
 
   // "No name" keeps the name off it; leaving out head circumference removes its chart and column.
   await page.getByLabel('No name').check()
   await expect.poll(() => previewSvg(page)).not.toContain('Robin')
-  expect(await previewSvg(page)).toContain('Growth report')
+  expect(await previewSvg(page)).toContain('Report card')
   await page.getByLabel('Include head circumference').uncheck()
   await expect.poll(() => previewSvg(page)).not.toContain('Head circumference for age')
 
@@ -36,7 +36,7 @@ test('the report card exports as a phone image and an A4 PDF, and the simple rep
   expect(pdfFile.toString('latin1')).toMatch(/\/Width 1860 \/Height 2631 .*\/Filter \/DCTDecode/)
 
   // The simple one-page report.
-  await page.getByLabel('Simple').check()
+  await page.getByLabel('One page').check()
   await expect.poll(() => previewSvg(page)).not.toContain('Gain over time')
   const simple = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Save image' }).click()

@@ -29,10 +29,15 @@ describe('the facts sent with a question', () => {
     expect(text).not.toMatch(/Alexandra|Lexi|2026-/)
   })
 
+  it('asks about a loss neutrally too (BABY-19)', () => {
+    const losing = askFacts(tables, child, [m('2026-07-01', 6.4), m('2026-08-01', 6.3)], '2026-08-10')!
+    expect(askSuggestions(losing, 'metric')[0].text).toMatch(/^How does losing \d+ g a week compare with WHO's weight gains at this age\?$/)
+  })
+
   it('suggests questions that fit the data', () => {
     const s = askSuggestions(facts, 'metric')
     expect(s.map((x) => x.id)).toEqual(['gain', 'percentile', 'length'])
-    expect(s[0].text).toBe(`Is ${facts.gains.weight!.at(-1)!.perWeekGrams} g a week a usual weight gain at this age?`)
+    expect(s[0].text).toBe(`How does ${facts.gains.weight!.at(-1)!.perWeekGrams} g a week compare with WHO's weight gains at this age?`)
   })
 })
 

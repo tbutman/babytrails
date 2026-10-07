@@ -67,7 +67,9 @@ test('a vault: create, add a child and a measurement, lock, unlock', async ({ pa
   await page.reload()
   await page.getByLabel('Passphrase').fill(PASS)
   await page.getByRole('button', { name: 'Unlock' }).click()
-  await expect(page.getByRole('heading', { name: 'Sam Example' })).toBeVisible()
+  // Back on the screen where it was locked (X-05), with the records there.
+  await expect(page.getByRole('heading', { name: 'Measurements' })).toBeVisible()
+  await expect(page.getByText('7.25 kg').first()).toBeVisible()
 
   // Nothing readable is stored in IndexedDB.
   const raw = await page.evaluate(async () => {

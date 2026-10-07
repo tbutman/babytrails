@@ -1,25 +1,28 @@
-import { Archive, Bot, HardDrive, KeyRound, Palette, Ruler, Timer } from 'lucide-react'
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Archive, Bot, HardDrive, KeyRound, Palette, Ruler, Timer, Trash2 } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate } from 'react-router'
-import { MIN_PASSPHRASE_LENGTH, WrongPassphraseError } from '../../core'
 import { ApiKeySettings } from '../../core/ai/ApiKeySettings'
+import { ExportBackup, RestoreBackup } from '../../core/backup/BackupForms'
+import { ChangePassphrase, EraseVault } from '../../core/vault/VaultForms'
 import type { Theme } from '../../core/settings/settings'
-import { Callout, PageHeader, Segmented, SelectField, TextField, type Icon } from '../../core/ui/components'
+import { Callout, PageHeader, Segmented, SelectField, type Icon } from '../../core/ui/components'
 import { APP } from '../brand'
 import { InstallHint } from '../InstallHint'
 import { Shell } from '../Layout'
 import { useSession } from '../sessionContext'
-import { ExportBackup, RestoreBackup } from './Backup'
+import { forgetPlace } from '../place'
+import { APP_ID } from '../types'
 
 const TWO_WEEKS = 14 * 86_400_000
 
 // Reminds people to back up: browser storage can be cleared, and a backup is the only copy that
 // survives that.
 export function BackupNudge() {
-  const { core, mode, saveCore } = useSession()
+  const { core, mode, saveCore, vaultCreatedAt } = useSession()
   const [now] = useState(() => Date.now())
   if (mode !== 'unlocked') return null
-  const last = core.lastBackupAt ? Date.parse(core.lastBackupAt) : 0
+  // Never backed up: count from when the vault was set up, not from 1970 (BABY-14).
+  const last = Date.parse(core.lastBackupAt ?? vaultCreatedAt ?? '') || now
   const dismissed = core.backupNudgeDismissedAt ? Date.parse(core.backupNudgeDismissedAt) : 0
   const due = core.changesSinceBackup >= 5 || (core.changesSinceBackup > 0 && now - last > TWO_WEEKS)
   if (!due || now - dismissed < 86_400_000) return null
@@ -69,8 +72,8 @@ function SettingsCard({ id, icon: I, title, children }: { id?: string; icon: Ico
 }
 
 export function Settings() {
-  const { core, app, saveCore, saveApp, mode } = useSession()
-  if (mode !== 'unlocked') return <Navigate to={APP} replace />
+  const { core, app, saveCore, saveApp, mode, trails, reload, setNotice } = useSession()
+  if (mode !== 'unlocked' || !trails) return <Navigate to={APP} replace />
 
   return (
     <Shell narrow>
@@ -114,65 +117,51 @@ export function Settings() {
         </SettingsCard>
 
         <SettingsCard id="ai" icon={Bot} title="AI (optional)">
-          <ApiKeySettings apiKey={core.ai.apiKey} model={core.ai.model} onSave={({ apiKey, model }) => saveCore({ ...core, ai: { ...core.ai, apiKey, model } })} />
+          <ApiKeySettings appName="BabyTrails" apiKey={core.ai.apiKey} model={core.ai.model} onSave={({ apiKey, model }) => saveCore({ ...core, ai: { ...core.ai, apiKey, model } })} />
         </SettingsCard>
 
         <SettingsCard id="backup" icon={HardDrive} title="Backup">
-          <ExportBackup />
+          <ExportBackup
+            db={trails.db}
+            appId={APP_ID}
+            lastBackupAt={core.lastBackupAt}
+            onExported={() => saveCore({ ...core, lastBackupAt: new Date().toISOString(), changesSinceBackup: 0 })}
+          />
           <StorageStatus />
           <InstallHint />
           <details className="disclosure">
             <summary>Restore from a backup</summary>
             <div className="disclosure-body">
-              <RestoreBackup />
+              <RestoreBackup
+                db={trails.db}
+                vault={trails.vault}
+                appId={APP_ID}
+                appName="BabyTrails"
+                onRestored={() => {
+                  forgetPlace()
+                  setNotice('restored')
+                  void reload()
+                }}
+              />
             </div>
           </details>
         </SettingsCard>
 
         <SettingsCard icon={KeyRound} title="Passphrase">
-          <ChangePassphrase />
+          <ChangePassphrase vault={trails.vault} appName="BabyTrails" />
+        </SettingsCard>
+
+        <SettingsCard id="erase" icon={Trash2} title="Erase this vault">
+          <p className="hint">Deletes everything BabyTrails keeps in this browser, so you can start again. Backups you downloaded aren't affected.</p>
+          <EraseVault appId={APP_ID} appName="BabyTrails" db={trails.db} vault={trails.vault} channel={trails.channel} home={APP} />
         </SettingsCard>
 
         <p className="hint">
-          BabyTrails is free and open source. Your records are encrypted on this device and never sent to BabyTrails' server.{' '}
+          BabyTrails is free and open source. Your records are encrypted on this device, in this browser, and never reach the BabyTrails server.{' '}
           <Link to={`${APP}/about`}>About the data and charts</Link>.
         </p>
       </div>
     </Shell>
-  )
-}
-
-function ChangePassphrase() {
-  const { trails } = useSession()
-  const [current, setCurrent] = useState('')
-  const [next, setNext] = useState('')
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
-
-  async function submit(e: FormEvent) {
-    e.preventDefault()
-    setMessage('')
-    setError('')
-    if (next.length < MIN_PASSPHRASE_LENGTH) return setError(`Use at least ${MIN_PASSPHRASE_LENGTH} characters.`)
-    try {
-      await trails?.vault.changePassphrase(current, next)
-      setCurrent('')
-      setNext('')
-      setMessage('Passphrase changed. Older backups still need the old passphrase.')
-    } catch (err) {
-      setError(err instanceof WrongPassphraseError ? "Your current passphrase isn't right." : 'Something went wrong.')
-    }
-  }
-
-  return (
-    <form onSubmit={submit} noValidate>
-      <TextField label="Current passphrase" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
-      <TextField label="New passphrase" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} error={error} />
-      <button className="button" type="submit" disabled={!current || !next}>
-        Change passphrase
-      </button>
-      {message && <p role="status">{message}</p>}
-    </form>
   )
 }
 
@@ -182,20 +171,26 @@ export function About() {
       <PageHeader title="About the data and charts" back={{ to: APP, label: 'Back' }} />
       <div className="card">
         <p>
-          The charts and percentiles use the <strong>WHO Child Growth Standards</strong> (birth to 5 years), © World Health Organization, used
-          unmodified for non-commercial purposes. WHO doesn't endorse this app. Source:{' '}
+          The charts and percentiles use the <strong>WHO Child Growth Standards</strong> (birth to 5 years). © World Health Organization. Used
+          with acknowledgment in a free, non-commercial app, as WHO's terms of use allow. WHO doesn't endorse BabyTrails. Source:{' '}
           <a href="https://www.who.int/tools/child-growth-standards">who.int/tools/child-growth-standards</a>.
         </p>
         <p>
-          In the United States, the CDC recommends the WHO charts from birth to 2 years. In Portugal, the national child health programme
+          In the United States, the CDC recommends the WHO charts from birth to 2 years. In Portugal, the national child health program
           uses the WHO curves (weight, length or height and BMI to 5 years; head circumference to 2 years). CDC charts for children over 2
           aren't in BabyTrails yet.
         </p>
         <p>
-          Percentiles are computed with WHO's LMS method on this device. A percentile describes where a measurement sits compared with WHO's
-          reference children; it isn't a diagnosis. Your paediatrician looks at much more than one number.
+          Percentiles are worked out on this device with WHO's own formulas (the LMS method). A percentile describes where a measurement sits compared with WHO's
+          reference children; it isn't a diagnosis. Your pediatrician looks at much more than one number.
         </p>
-        <p>BabyTrails is open source under the MIT licence. The WHO data is not covered by that licence.</p>
+        <p>
+          <strong>Worth mentioning.</strong> BabyTrails marks a measurement as worth mentioning at the next check-up using the WHO chart's own
+          lines: below the 3rd or above the 97th percentile, a move of about one of the chart's percentile lines since the previous
+          measurement, or weight going down after the first two weeks. For the first weeks it uses NICE's guideline NG75: a loss of more
+          than 10% of birth weight, or not being back to birth weight by 3 weeks. These mark questions to ask, not diagnoses.
+        </p>
+        <p>BabyTrails is open source under the MIT license. The WHO data is not covered by that license.</p>
       </div>
     </Shell>
   )

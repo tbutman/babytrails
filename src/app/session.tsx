@@ -13,7 +13,8 @@ import {
   type CoreSettings,
 } from '../core/settings/settings'
 import { APP_COLLECTIONS, APP_ID, DEFAULT_APP_SETTINGS, type AppSettings } from './types'
-import { SessionContext, type Mode, type Session } from './sessionContext'
+import { markDemo } from './place'
+import { SessionContext, type Mode, type Notice, type Session } from './sessionContext'
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [trails, setTrails] = useState<Trails | null>(null)
@@ -22,6 +23,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [core, setCore] = useState<CoreSettings>(DEFAULT_CORE_SETTINGS)
   const [app, setApp] = useState<AppSettings>(DEFAULT_APP_SETTINGS)
   const [version, setVersion] = useState(0)
+  const [notice, setNotice] = useState<Notice>(null)
+  const [vaultCreatedAt, setVaultCreatedAt] = useState<string>()
 
   const reload = useCallback(async () => {
     if (!trails) return
@@ -61,9 +64,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return startAutoLock(trails.vault, core.autoLockMinutes)
   }, [mode, trails, core.autoLockMinutes])
 
+  // Another tab saved something: reload lists and settings here too (CORE-09).
+  useEffect(() => {
+    if (!trails) return
+    return trails.channel.subscribe((message) => {
+      if (message.type !== 'changed' || !trails.vault.isUnlocked) return
+      setVersion((v) => v + 1)
+      void loadCoreSettings(trails.store).then(setCore)
+      void loadAppSettings(trails.store, DEFAULT_APP_SETTINGS).then(setApp)
+    })
+  }, [trails])
+
   const loadSettings = useCallback(async (t: Trails) => {
     setCore(await loadCoreSettings(t.store))
     setApp(await loadAppSettings(t.store, DEFAULT_APP_SETTINGS))
+    setVaultCreatedAt((await t.vault.header())?.createdAt)
   }, [])
 
   const value = useMemo<Session>(() => {
@@ -74,26 +89,31 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       store,
       core,
       app,
+      vaultCreatedAt,
       version,
       changed: () => setVersion((v) => v + 1),
       createVault: async (passphrase) => {
         if (!trails) return
         await trails.vault.create(passphrase)
         await loadSettings(trails)
+        setNotice('created')
         void navigator.storage?.persist?.()
       },
       unlock: async (passphrase) => {
         if (!trails) return
         await trails.vault.unlock(passphrase)
         await loadSettings(trails)
+        setNotice(null)
       },
       lock: () => trails?.vault.lock(),
       startDemo: async () => {
         setDemo(await (await import('./demo')).loadDemo())
         setApp(DEFAULT_APP_SETTINGS)
         setMode('demo')
+        markDemo(true)
       },
       exitDemo: () => {
+        markDemo(false)
         setDemo(null)
         void reload()
       },
@@ -106,8 +126,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setApp(next)
       },
       reload,
+      notice,
+      setNotice,
     }
-  }, [mode, trails, demo, core, app, version, loadSettings, reload])
+  }, [mode, trails, demo, core, app, vaultCreatedAt, version, notice, loadSettings, reload])
 
   useEffect(() => {
     document.documentElement.dataset.theme = core.theme === 'system' ? '' : core.theme

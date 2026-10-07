@@ -40,6 +40,8 @@ function HeroPreview() {
             </div>
           )}
         </div>
+        {/* Above the chart, where the floating card can't cover it (BABY-21). */}
+        <div className="metric-foot preview-caption">WHO weight-for-age: shaded 3rd–97th and 15th–85th percentiles · made-up data</div>
         {tables ? (
           <GrowthChart
             tables={tables}
@@ -53,7 +55,6 @@ function HeroPreview() {
         ) : (
           <div className="skeleton loading-card" />
         )}
-        <div className="metric-foot">WHO weight-for-age: shaded 3rd–97th and 15th–85th percentiles · made-up data</div>
       </div>
       <div className="preview-float">
         <MetricCard
@@ -96,7 +97,7 @@ export function Landing() {
         ]}
         actions={
           <Link className="button small" to={APP}>
-            Open app
+            Open the app
           </Link>
         }
       />
@@ -130,7 +131,7 @@ export function Landing() {
           visual={<HeroPreview />}
         />
 
-        <Section id="features" kicker="Features" title="Growth records you can actually read" lead="Weights, lengths and head sizes from every check-up, on the charts paediatricians use.">
+        <Section id="features" kicker="Features" title="Growth records you can actually read" lead="Weights, lengths and head sizes from every check-up, on the charts pediatricians use.">
           <FeatureGrid
             items={[
               { icon: LineChart, title: 'WHO growth charts', text: "Weight, length or height, head circumference, weight for length and BMI, from birth to 5 years, with percentiles worked out by WHO's own method." },
@@ -182,9 +183,9 @@ export function Landing() {
           <PrivacyPanel
             checkIcon={Check}
             title="Your baby's records never reach our server"
-            text="BabyTrails is a website that runs entirely in your browser. Everything you enter or upload is encrypted with a key made from your passphrase, and stays on your device."
+            text="BabyTrails is a website that runs entirely in your browser. Everything you enter or upload is encrypted with a key made from your passphrase and kept on this device, in this browser."
             points={[
-              'Encrypted at rest with AES-256-GCM; the key comes from your passphrase with Argon2id',
+              "Encrypted on your device with a key made from your passphrase (AES-256 and Argon2id, if you're curious)",
               'No account, no server database, no analytics, no cookies',
               'AI is optional and uses your own key; you see what is sent before it goes',
               'Open source, with a public threat model that explains the limits',
@@ -200,14 +201,14 @@ export function Landing() {
         <Section id="faq" kicker="FAQ" title="Questions">
           <Faq
             items={[
-              { q: 'Is this medical advice?', a: "No. BabyTrails keeps records, draws charts and explains numbers. It never says whether a baby is healthy and doesn't interpret images. Talk to your paediatrician about anything that worries you." },
+              { q: 'Is this medical advice?', a: "No. BabyTrails keeps records, draws charts and explains numbers. It never says whether a baby is healthy and doesn't interpret images. Talk to your pediatrician about anything that worries you." },
               { q: 'Where are the records stored?', a: "Only in your browser, encrypted. There's no account and no copy on our server. To move them to another device, or keep them safe, download an encrypted backup." },
               { q: 'What if I forget my passphrase?', a: "Nobody can reset it, including us, so the records can't be recovered without a backup. Keep a backup somewhere other than your phone." },
-              { q: 'Which charts does it use?', a: "The WHO Child Growth Standards, from birth to 5 years. The US CDC recommends them from birth to 2 years, and Portugal's national child health programme uses them. CDC charts for children over 2 aren't in BabyTrails yet." },
+              { q: 'Which charts does it use?', a: "The WHO Child Growth Standards, from birth to 5 years. The US CDC recommends them from birth to 2 years, and Portugal's national child health program uses them. CDC charts for children over 2 aren't in BabyTrails yet." },
               { q: 'What does it cost?', a: 'BabyTrails is free. The AI features use your own Anthropic account: about 1 US cent for a summary and about 2 cents to read a two-page growth report, at current prices. Everything else works without a key.' },
               { q: 'Can both parents use it?', a: "Each phone has its own vault for now. You can export a backup on one phone and import it on another, but changes don't sync between them yet." },
               { q: 'Does it work on my phone?', a: 'Yes. It installs like an app and works offline. On iPhone, add it to your Home Screen so Safari keeps its data.' },
-              { q: 'Who made it?', a: <>Thomas Butman, as an open-source project alongside its sister app, <a href={BRAND.sister.url}>{BRAND.sister.name}</a>. The code is on <a href={BRAND.repo}>GitHub</a>.</> },
+              { q: 'Who made it?', a: <>Thomas Butman, as an open-source project alongside its sister app, <a href={BRAND.sister.url}>{BRAND.sister.name}</a>. The code is on <a href={BRAND.repo}>GitHub</a>. Live and in active development; corrected age (BabyTrails) and more markers (LabTrails) are next.</> },
             ]}
           />
         </Section>

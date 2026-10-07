@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildFacts, factsDigest } from '../../src/app/facts'
+import { buildFacts, factsDigest, sentFacts } from '../../src/app/facts'
 import { loadTables } from '../../src/growth/tables'
 import type { Child, Measurement } from '../../src/app/types'
 
@@ -20,6 +20,13 @@ describe('summary facts', () => {
     const text = JSON.stringify(facts)
     expect(text).not.toContain('Alexandra')
     expect(text).not.toContain('2026-03-01')
+  })
+
+  it('sends no dates at all, only ages in days (BABY-06)', () => {
+    const facts = buildFacts(tables, child, [m('2026-08-01', 6.4, 63), m('2026-09-01', 6.8, 65)], '2026-09-10')!
+    const sent = JSON.stringify(sentFacts(facts))
+    expect(sent).not.toMatch(/2026-/)
+    expect(sentFacts(facts).latest.ageDays).toBe(184)
   })
 
   it('flags big percentile moves, weight loss and values outside the 3rd–97th band', () => {

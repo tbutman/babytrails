@@ -8,10 +8,11 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { AiError } from '../../core/ai/client'
 import { redactNames } from '../../core/ai/redact'
 import { SendSheet } from '../../core/ai/SendSheet'
-import { askQuestion } from '../../core/ask/ask'
+import { askQuestion, FOLLOW_UP_NOTE } from '../../core/ask/ask'
 import { AskThreadView } from '../../core/ask/AskThreadView'
 import type { AskThread, AskTurn } from '../../core/ask/model'
 import { PageHeader, TextAreaField } from '../../core/ui/components'
+import { demoNote } from '../../core/ui/copy'
 import { askFacts } from '../askFacts'
 import { APP, childPath } from '../brand'
 import { Disclaimer } from '../components'
@@ -20,12 +21,12 @@ import { DEMO_ANSWERS } from '../demo'
 import { factsDigest } from '../facts'
 import { formatDate } from '../format'
 import { useTables } from '../growthData'
-import { ASK_BANNED, ASK_SYSTEM, askSuggestions, OUT_OF_SCOPE } from '../prompts/ask'
+import { ASK_SYSTEM, askSuggestions, OUT_OF_SCOPE } from '../prompts/ask'
 import { factsMessage } from '../prompts/summaries'
 import { useSession, useStore } from '../sessionContext'
 import { nowIso, today } from '../types'
 
-const PREPARED_NOTE = 'Demo: prepared in advance for this made-up baby, in the style of the AI answers. No AI was called.'
+const PREPARED_NOTE = demoNote('baby')
 
 export function Ask() {
   const { id = '' } = useParams()
@@ -106,7 +107,6 @@ export function Ask() {
         facts,
         history: (thread?.turns ?? []).map((t) => ({ ...t, text: hide(t.text) })),
         question: hide(text),
-        banned: ASK_BANNED,
         subject: 'the baby',
       })
       const ai: AskTurn =
@@ -160,7 +160,10 @@ export function Ask() {
               ...(thread ? ['The earlier questions and answers in this conversation'] : []),
             ]}
             notSending={["Your baby's name and date of birth", 'The dates of the measurements', 'Your documents and notes']}
-            notes={["If your question includes your baby's name or nickname, BabyTrails replaces it with “your baby” before sending."]}
+            notes={[
+              "If your question includes your baby's name or nickname, BabyTrails replaces it with “your baby” before sending.",
+              ...(thread ? [FOLLOW_UP_NOTE] : []),
+            ]}
             model={core.ai.model}
             estimate={estimate}
             busy={busy}

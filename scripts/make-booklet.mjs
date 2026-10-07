@@ -3,7 +3,7 @@
 // tests/fixtures/booklet/rows-pt.json (Portuguese, a test baby). Each page is drawn several times as
 // rows are added, the way a parent photographs the same page at every check-up.
 //
-// The handwriting fonts (Caveat and Kalam, SIL Open Font Licence) are dev dependencies used only
+// The handwriting fonts (Caveat and Kalam, SIL Open Font License) are dev dependencies used only
 // here; the app never ships them.
 //
 //   node scripts/make-booklet.mjs

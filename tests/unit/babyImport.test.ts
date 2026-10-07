@@ -113,7 +113,7 @@ describe('the BabyTrails adapter', () => {
       ],
       {},
     )
-    expect(outcome).toBe('2 measurements, 15 Jul 2026 to 14 Aug 2026')
+    expect(outcome).toBe('2 measurements, Jul 15, 2026 to Aug 14, 2026')
     expect(saved).toBe(2)
     const ms = await store.list<Measurement>('measurements')
     expect(ms.map((x) => [x.date, x.lengthCm, x.heightCm, x.documentId, x.source])).toEqual([

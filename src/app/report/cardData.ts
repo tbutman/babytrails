@@ -1,6 +1,6 @@
 // The report card's content, worked out by the code from the saved measurements: the latest
 // numbers, the charts to draw, gain over time, a short history and a few highlights written from
-// templates. No AI is needed; an AI summary is added only if the parent chooses, and labelled.
+// templates. No AI is needed; an AI summary is added only if the parent chooses, and labeled.
 
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { formatPercentile } from '../../growth/lms'
@@ -10,6 +10,9 @@ import { formatAge, formatDate, formatShortDate } from '../format'
 import { allIntervals, formatRate, versusSameLine, type Interval } from '../gains'
 import { incrementLabel } from '../../growth/velocity'
 import { chartPoints, growthFor, type ChartChoice } from '../growthData'
+import { buildFacts } from '../facts'
+import { mentionClauses } from '../mention'
+import { bornAt, pretermNotice } from '../preterm'
 import type { Child, Measurement } from '../types'
 
 export type CardTile = { label: string; value: string; percentile?: string; change?: string }
@@ -37,6 +40,9 @@ export type CardOptions = {
   /** The latest AI summary, if the parent chose to include it. */
   ai?: { text: string; date: string; prepared?: boolean }
 }
+
+/** "above the 99.9th" is too long for a pill on the card: "> 99.9th", "< 0.1st" (BABY-09). */
+export const cardPercentile = (p: string) => p.replace(/^above the /, '> ').replace(/^below the /, '< ')
 
 const latestWith = (ms: Measurement[], pick: (m: Measurement) => number | undefined) => [...ms].reverse().find((m) => pick(m) !== undefined)
 
@@ -90,7 +96,7 @@ export function buildCardData(tables: Tables, child: Child, measurements: Measur
     return {
       label,
       value: show(pick(m)!),
-      percentile: z !== undefined ? `${formatPercentile(z)} percentile` : undefined,
+      percentile: z !== undefined ? `${cardPercentile(formatPercentile(z))} percentile` : undefined,
       change: last && last.to.id === m.id ? `${signed(change(last.change), last.change)} since ${formatShortDate(last.from.date)}` : undefined,
     }
   }
@@ -144,17 +150,24 @@ export function buildCardData(tables: Tables, child: Child, measurements: Measur
   // Highlights, written by the code: where each measure has been lately. Neutral: no "good",
   // "normal" or "healthy". Gain over time has its own block, so it isn't repeated here.
   const highlights: string[] = []
+  // The last few in order, so the direction shows (BABY-08): "Weight: 88th → 59th → 2nd percentile".
   const range = (label: string, indicator: Indicator, pick: (m: Measurement) => number | undefined) => {
     const zs = sorted
       .filter((m) => pick(m) !== undefined)
-      .slice(-4)
+      .slice(-3)
       .map((m) => growthFor(tables, child, m)[indicator]?.z)
       .filter((z): z is number => z !== undefined)
     if (zs.length < 2) return
-    const lo = formatPercentile(Math.min(...zs))
-    const hi = formatPercentile(Math.max(...zs))
-    highlights.push(lo === hi ? `${label}: ${lo} percentile, last ${zs.length}` : `${label}: ${lo}–${hi} percentile, last ${zs.length}`)
+    const shown = zs.map((z) => cardPercentile(formatPercentile(z)))
+    const same = shown.every((p) => p === shown[0])
+    highlights.push(`${label}: ${same ? shown[0] : shown.join(' → ')} percentile (last ${zs.length} measurements)`)
   }
+  // First, what the code found worth mentioning (BABY-03) and, for a baby born early, how the
+  // percentiles are counted (BABY-01): short versions of the overview's notes.
+  const facts = buildFacts(tables, child, sorted, now)
+  const mention = facts && mentionClauses(facts)
+  if (mention) highlights.push(`Worth mentioning at the next check-up: ${mention}. Not a diagnosis.`)
+  if (pretermNotice(child, now)) highlights.push(`Born at ${bornAt(child)}: these percentiles use age from birth, not corrected age.`)
   if (latestGain?.who) highlights.push(`Weight gain ${incrementLabel(latestGain.who)}: ${formatPercentile(latestGain.who.z)} percentile of WHO's gains`)
   range('Weight', 'wfa', (m) => m.weightKg)
   range(toddler ? 'Height' : 'Length', 'lhfa', (m) => m.lengthCm ?? m.heightCm)
@@ -163,12 +176,14 @@ export function buildCardData(tables: Tables, child: Child, measurements: Measur
   if (both) {
     const g = growthFor(tables, child, both)
     const wfl = g.wfl ?? g.wfh
-    if (wfl) highlights.push(`${toddler ? 'Weight for height' : 'Weight for length'}: ${formatPercentile(wfl.z)} percentile`)
+    if (wfl) highlights.push(`${toddler ? 'Weight for height' : 'Weight for length'}: ${cardPercentile(formatPercentile(wfl.z))} percentile`)
   }
 
+  // Girl or Boy (the charts are sex-specific) and weeks at birth, under the age (BABY-09).
+  const born = bornAt(child)
   return {
     title: opts.title,
-    subtitle: opts.subtitle,
+    subtitle: [opts.subtitle, child.sex === 'female' ? 'Girl' : 'Boy', born && `born at ${born}`].filter(Boolean).join(' · '),
     generatedOn: formatDate(now),
     tiles,
     charts,

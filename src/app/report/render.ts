@@ -34,7 +34,7 @@ export async function reportPng(svg: string, size: PageSize = SIMPLE): Promise<B
   return toBlob(await svgToCanvas(svg, size), 'image/png')
 }
 
-// A minimal, valid PDF: one A4 page with the report as a JPEG image (DCTDecode), centred and as large
+// A minimal, valid PDF: one A4 page with the report as a JPEG image (DCTDecode), centered and as large
 // as the margins allow.
 export async function reportPdf(svg: string, size: PageSize = SIMPLE): Promise<Blob> {
   const canvas = await svgToCanvas(svg, size, size.w > 1100 ? 1.5 : 2)

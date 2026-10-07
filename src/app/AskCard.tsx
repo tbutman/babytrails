@@ -12,7 +12,7 @@ import { today, type Child, type Measurement } from './types'
 
 export function AskCard({ child, measurements }: { child: Child; measurements: Measurement[] }) {
   const tables = useTables()
-  const { app } = useSession()
+  const { app, core, mode } = useSession()
   const facts = tables ? askFacts(tables, child, measurements, today()) : null
   if (!facts) return null
   const ask = childPath(child.id, 'ask')
@@ -31,7 +31,10 @@ export function AskCard({ child, measurements }: { child: Child; measurements: M
           Ask your own question
         </Link>
       </div>
-      <p className="hint">Answers explain the numbers BabyTrails calculated, and every number is checked against your records before you see it.</p>
+      <p className="hint">
+        {mode !== 'demo' && !core.ai.apiKey && <strong>Needs your own AI key. </strong>}
+        Answers explain the numbers BabyTrails calculated, and every number is checked against your records before you see it.
+      </p>
     </section>
   )
 }

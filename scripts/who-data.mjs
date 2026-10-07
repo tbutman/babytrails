@@ -1,6 +1,6 @@
 // Downloads WHO's Child Growth Standards tables and converts them to JSON for the app.
 //
-// The tables are © World Health Organization and are not covered by this repository's MIT licence,
+// The tables are © World Health Organization and are not covered by this repository's MIT license,
 // so they're never committed (see DATA-NOTICE.md). Each file is pinned to a URL and a SHA-256
 // checksum: if WHO re-uploads a file, the build stops instead of silently changing the data.
 // Downloads are cached in .cache/who/; the output goes to src/growth/data/ (both git-ignored).

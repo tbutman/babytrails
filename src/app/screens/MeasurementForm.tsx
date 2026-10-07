@@ -2,16 +2,17 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { formatPercentile } from '../../growth/lms'
-import { cmToIn, inToCm, kgToLbOz, lbOzToKg, parseDecimal, type Units } from '../../growth/units'
+import { CM_FIELD, cmToIn, IN_FIELD, inToCm, KG_FIELD, kgToLbOz, LB_FIELD, lbOzToKg, OZ_FIELD, parseAmount, type Units } from '../../growth/units'
 import { Trash2 } from 'lucide-react'
 import { Checkbox, PageHeader, Segmented, TextField } from '../../core/ui/components'
 import { measurementChecks, type Check, type Field } from '../checks'
 import { childPath } from '../brand'
 import { useChild, useMeasurements } from '../data'
-import { formatAge, formatDate } from '../format'
+import { atAge, formatDate } from '../format'
 import { birthMeasurement } from '../newborn'
 import { growthFor, useTables } from '../growthData'
 import { useSession, useStore } from '../sessionContext'
+import { useLeaveWarning } from '../useLeaveWarning'
 import { counted, nowIso, PLACES, today, type Child, type Measurement, type Place } from '../types'
 
 // Plausible ranges for typing mistakes, not for judging a child: values outside are almost
@@ -58,22 +59,31 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
   const [excluded, setExcluded] = useState(!!existing?.excluded)
   const [excludedReason, setExcludedReason] = useState(existing?.excludedReason ?? '')
   const [confirmUnlikely, setConfirmUnlikely] = useState(false)
+  const [confirmSameDay, setConfirmSameDay] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [initial] = useState(() => [kg, lb, oz, statureText, headText, note].join('|'))
+  const [saving, setSaving] = useState(false)
+  useLeaveWarning(!saving && [kg, lb, oz, statureText, headText, note].join('|') !== initial)
 
   // What the form currently holds, in metric. Fields left empty are undefined.
   const parsed = (() => {
+    // Anything typed that isn't a number (with an optional unit) is NaN, so the form says so instead of
+    // dropping it (BABY-04).
     let weightKg: number | undefined
-    if (units === 'metric') weightKg = kg ? parseDecimal(kg) : undefined
-    else if (lb || oz) {
-      const l = lb ? parseDecimal(lb) : 0
-      const o = oz ? parseDecimal(oz) : 0
+    let ounces: number | undefined
+    if (units === 'metric') weightKg = kg.trim() ? (parseAmount(kg, KG_FIELD) ?? NaN) : undefined
+    else if (lb.trim() || oz.trim()) {
+      const l = lb.trim() ? parseAmount(lb, LB_FIELD) : 0
+      const o = oz.trim() ? parseAmount(oz, OZ_FIELD) : 0
+      ounces = o
       weightKg = l === undefined || o === undefined ? NaN : lbOzToKg(l, o)
     }
-    const len = statureText ? parseDecimal(statureText) : undefined
-    const statureCm = statureText ? (len === undefined ? NaN : units === 'metric' ? len : inToCm(len)) : undefined
-    const head = headText ? parseDecimal(headText) : undefined
-    const headCm = headText ? (head === undefined ? NaN : units === 'metric' ? head : inToCm(head)) : undefined
-    return { weightKg, statureCm, headCm }
+    const lengthField = units === 'metric' ? CM_FIELD : IN_FIELD
+    const len = statureText.trim() ? parseAmount(statureText, lengthField) : undefined
+    const statureCm = statureText.trim() ? (len === undefined ? NaN : units === 'metric' ? len : inToCm(len)) : undefined
+    const head = headText.trim() ? parseAmount(headText, lengthField) : undefined
+    const headCm = headText.trim() ? (head === undefined ? NaN : units === 'metric' ? head : inToCm(head)) : undefined
+    return { weightKg, statureCm, headCm, ounces }
   })()
 
   const preview = tables && date && ageDays >= 0
@@ -121,7 +131,8 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
       if (v < lo || v > hi) return `That ${name} looks unusual. Check the number and the unit.`
       return undefined
     }
-    const w = outOf(parsed.weightKg, RANGES.weightKg, 'weight')
+    const w =
+      parsed.ounces !== undefined && (parsed.ounces < 0 || parsed.ounces >= 16) ? 'Ounces should be between 0 and 15.9.' : outOf(parsed.weightKg, RANGES.weightKg, 'weight')
     const s = outOf(parsed.statureCm, RANGES.statureCm, standing ? 'height' : 'length')
     const h = outOf(parsed.headCm, RANGES.headCm, 'head circumference')
     if (w) next.weight = w
@@ -136,13 +147,19 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
   async function submit(e: FormEvent) {
     e.preventDefault()
     const next = check()
-    if (!Object.keys(next).length && unlikely && !confirmUnlikely) {
+    // A second entry on the same day is usually a slip; ask once (BABY-13).
+    const sameDay = !existing && !birth && others.some((o) => o.date === date)
+    if (!Object.keys(next).length && sameDay && !confirmSameDay) {
+      next.form = `You already have a measurement on ${formatDate(date)}. Add another?`
+      setConfirmSameDay(true)
+    } else if (!Object.keys(next).length && unlikely && !confirmUnlikely) {
       next.form = 'One of these values is very unlikely. Check it, then tap "Save anyway" if it\'s right.'
       setConfirmUnlikely(true)
     }
     setErrors(next)
     if (Object.keys(next).length) return
     const now = nowIso()
+    setSaving(true)
     const m: Measurement = {
       id: existing?.id ?? crypto.randomUUID(),
       childId: child.id,
@@ -185,14 +202,17 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
     <>
       <PageHeader
         title={birth ? 'Measurements at birth' : existing ? 'Edit measurement' : 'Add a measurement'}
-        subtitle={birth ? `${child.nickname || child.name}, born ${formatDate(child.dateOfBirth)}` : date && ageDays >= 0 ? `${child.nickname || child.name} at ${formatAge(child.dateOfBirth, date)}` : undefined}
+        subtitle={birth ? `${child.nickname || child.name}, born ${formatDate(child.dateOfBirth)}` : date && ageDays >= 0 ? `${child.nickname || child.name} ${atAge(child.dateOfBirth, date)}` : undefined}
         back={{ to: childPath(child.id, existing ? 'measurements' : ''), label: existing ? 'Measurements' : 'Overview' }}
       />
       <form onSubmit={submit} noValidate className="card">
         {birth ? (
           <p className="hint">From the birth record or the health booklet: any of weight, length and head circumference.</p>
         ) : (
-          <TextField label="Date" type="date" min={child.dateOfBirth} max={today()} value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} />
+          <TextField label="Date" type="date" min={child.dateOfBirth} max={today()} value={date} onChange={(e) => {
+              setDate(e.target.value)
+              setConfirmSameDay(false)
+            }} error={errors.date} />
         )}
 
         {units === 'metric' ? (
@@ -226,7 +246,7 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
         />
         {!errors.stature && warning('stature')}
         <Checkbox checked={standing} onChange={setStanding}>
-          Measured standing up <span className="muted">(WHO uses lying length under 2 years and standing height from 2; the charts adjust by 0.7 cm if needed)</span>
+          Measured standing up <span className="muted">(WHO uses lying length under 2 years and standing height from 2; the charts adjust by {units === 'metric' ? '0.7 cm' : '0.3 in'} if needed)</span>
         </Checkbox>
 
         <TextField label={`Head circumference (${lenUnit})`} inputMode="decimal" autoComplete="off" value={headText} onChange={(e) => setHeadText(e.target.value)} error={errors.head} hint={pct('hcfa')} />
@@ -250,7 +270,7 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
         )}
         <div className="row">
           <button className="button primary" type="submit">
-            {confirmUnlikely && unlikely ? 'Save anyway' : 'Save'}
+            {confirmUnlikely && unlikely ? 'Save anyway' : confirmSameDay && !existing && others.some((o) => o.date === date) ? 'Add another' : 'Save'}
           </button>
           {existing && (
             <button className="button ghost danger" type="button" onClick={() => void remove()}>

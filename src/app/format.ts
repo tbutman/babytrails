@@ -6,7 +6,7 @@ export function formatAge(dateOfBirth: string, on: string): string {
   const [y, m, d] = on.split('-').map(Number)
   const target = Date.UTC(y, m - 1, d)
   if (target < Date.UTC(by, bm - 1, bd)) return 'before birth'
-  // The birth date moved on by n months, clamped to the end of shorter months (31 Jan → 28 Feb).
+  // The birth date moved on by n months, clamped to the end of shorter months (Jan 31 → Feb 28).
   const monthsOn = (n: number) => {
     const last = new Date(Date.UTC(by, bm - 1 + n + 1, 0)).getUTCDate()
     return Date.UTC(by, bm - 1 + n, Math.min(bd, last))
@@ -22,11 +22,11 @@ export function formatAge(dateOfBirth: string, on: string): string {
   return rest ? `${plural(years, 'year')}, ${plural(rest, 'month')}` : plural(years, 'year')
 }
 
-export function formatDate(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+/** "at birth" on the day of birth, else "at 3 months, 2 days" (BABY-20). */
+export function atAge(dateOfBirth: string, on: string): string {
+  return on === dateOfBirth ? 'at birth' : `at ${formatAge(dateOfBirth, on)}`
 }
 
-// "15 Aug": for chart labels and compact tables.
-export function formatShortDate(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
+// US short dates, "Sep 19, 2026" and "Sep 19" (Thomas, October 7, 2026): the core's formatter, so
+// both apps write dates the same way.
+export { formatDate, formatShortDate } from '../core/format'

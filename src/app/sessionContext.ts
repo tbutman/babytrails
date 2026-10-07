@@ -7,12 +7,18 @@ import type { AppSettings } from './types'
 
 export type Mode = 'loading' | 'welcome' | 'locked' | 'unlocked' | 'demo'
 
+/** A one-off message for the start screen: after a restore, the Unlock form says so; after setup,
+ * the first screen says where the records live. */
+export type Notice = 'restored' | 'created' | null
+
 export type Session = {
   mode: Mode
   trails: Trails | null
   store: RecordStore | null
   core: CoreSettings
   app: AppSettings
+  /** When this vault was set up, for the backup reminder. */
+  vaultCreatedAt?: string
   // Bumped after every write, so lists reload.
   version: number
   changed: () => void
@@ -24,6 +30,8 @@ export type Session = {
   saveCore: (next: CoreSettings) => Promise<void>
   saveApp: (next: AppSettings) => Promise<void>
   reload: () => Promise<void>
+  notice: Notice
+  setNotice: (notice: Notice) => void
 }
 
 export const SessionContext = createContext<Session | null>(null)

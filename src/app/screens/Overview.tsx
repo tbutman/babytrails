@@ -1,25 +1,31 @@
 // A child's overview: the latest measurements with their percentiles, gain over time, and the
 // plain-language summaries.
 
-import { FilePlus2, Pencil, Plus, Ruler, Sparkles } from 'lucide-react'
+import { CircleAlert, FilePlus2, Info, Pencil, Plus, Ruler, Sparkles } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { formatPercentile } from '../../growth/lms'
 import type { Indicator } from '../../growth/tables'
 import { cmToIn, kgToLbOz, KG_PER_LB, type Units } from '../../growth/units'
-import { Chip, EmptyState, MetricCard, PageHeader, Sparkline } from '../../core/ui/components'
+import { Callout, Chip, EmptyState, MetricCard, PageHeader, Sparkline } from '../../core/ui/components'
 import { childPath } from '../brand'
 import { Disclaimer } from '../components'
 import { useChild, useCountedMeasurements } from '../data'
-import { formatAge, formatDate } from '../format'
+import { atAge, formatAge, formatDate } from '../format'
 import { allIntervals } from '../gains'
 import { FirstWeeks } from '../FirstWeeks'
+import { firstWeeksNote } from '../newborn'
 import { GainCard } from '../GainCard'
-import { growthFor, useTables } from '../growthData'
+import { growthFor, notChartedNote, useTables } from '../growthData'
+import { buildFacts } from '../facts'
+import { mentionText } from '../mention'
+import { pretermNotice } from '../preterm'
 import { useSession } from '../sessionContext'
 import { today, type Child, type Measurement } from '../types'
 import { BackupNudge } from './Settings'
 import { SummaryCard } from './Summaries'
 import { AskCard } from '../AskCard'
+
+const OUTER_Z = 1.881 // the 3rd and 97th percentiles
 
 type Metric = { label: string; indicator: Indicator; pick: (m: Measurement) => number | undefined; show: (v: number, u: Units) => { value: string; unit?: string } }
 
@@ -53,6 +59,9 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
   const units = app.units
   const now = today()
   const series = tables ? allIntervals(tables, child, measurements) : null
+  const facts = tables ? buildFacts(tables, child, measurements, now) : null
+  const mention = facts ? mentionText(facts) : undefined
+  const early = pretermNotice(child, now)
 
   return (
     <>
@@ -91,6 +100,17 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
         </EmptyState>
       ) : (
         <>
+          {early && (
+            <Callout icon={Info} tone="accent">
+              <p>{early}</p>
+            </Callout>
+          )}
+          {mention && (
+            <div className="mention" role="note">
+              <CircleAlert size={18} aria-hidden />
+              <p>{mention}</p>
+            </div>
+          )}
           <div className="metric-grid overview-metrics">
             {METRICS.map((metric) => {
               const series = measurements.filter((m) => metric.pick(m) !== undefined)
@@ -108,8 +128,18 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
                   label={metric.label}
                   value={shown.value}
                   unit={shown.unit}
-                  chips={z !== undefined && <Chip tone="accent">{formatPercentile(z)} percentile</Chip>}
-                  foot={`${formatDate(latest.date)} · at ${formatAge(child.dateOfBirth, latest.date)}`}
+                  chips={
+                    z !== undefined &&
+                    // Outside the 3rd–97th band: marked by an icon and the ring, not by color alone.
+                    (Math.abs(z) > OUTER_Z ? (
+                      <Chip tone="flag" icon={CircleAlert}>
+                        {formatPercentile(z)} percentile
+                      </Chip>
+                    ) : (
+                      <Chip tone="accent">{formatPercentile(z)} percentile</Chip>
+                    ))
+                  }
+                  foot={`${formatDate(latest.date)} · ${atAge(child.dateOfBirth, latest.date)}`}
                 >
                   {series.length > 1 && <Sparkline points={series.slice(-8).map((m) => ({ value: toDisplay(metric.pick(m)!) }))} label={`${metric.label}, last ${Math.min(series.length, 8)} measurements`} />}
                 </MetricCard>
@@ -117,8 +147,9 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
             })}
           </div>
 
+          {notChartedNote(child, measurements, 'wfa') && <p className="hint">{notChartedNote(child, measurements, 'wfa')}</p>}
           <FirstWeeks child={child} measurements={measurements} units={units} />
-          {series && <GainCard series={series} units={units} />}
+          {series && <GainCard series={series} units={units} firstWeeks={firstWeeksNote(child, measurements)} />}
 
           <h2 className="section-title">
             <Sparkles size={18} aria-hidden /> In plain words

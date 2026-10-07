@@ -8,7 +8,7 @@ test('demo: a prepared summary, labelled honestly', async ({ page }) => {
   await page.getByRole('button', { name: 'Show it' }).click()
   const card = page.getByRole('region', { name: 'What changed' })
   await expect(card).toContainText('90 g a week')
-  await expect(card).toContainText('No AI was called')
+  await expect(card).toContainText('no AI was called')
 })
 
 test.describe('with a mocked Anthropic API', () => {
@@ -44,7 +44,7 @@ test.describe('with a mocked Anthropic API', () => {
     expect(await page.title()).not.toMatch(/^[12]$/)
 
     expect(bodies).toHaveLength(1)
-    for (const secret of ['Ines', 'Exemplo', 'Nini', '2026-03-01', 'zebra']) expect(bodies[0]).not.toContain(secret)
+    for (const secret of ['Ines', 'Exemplo', 'Nini', '2026-03-01', '2026-08-01', '2026-09-01', 'zebra']) expect(bodies[0]).not.toContain(secret)
     expect(bodies[0]).toContain('weightGramsPerWeek')
   })
 })

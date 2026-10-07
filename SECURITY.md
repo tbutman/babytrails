@@ -16,5 +16,7 @@ Please don't include real health records in a report. Use made-up data.
 
 ## What's in scope
 
-The app's code, its build and release workflow, and the server configuration in this repository.
-The [threat model](THREAT_MODEL.md) explains what BabyTrails protects against and its known limits.
+The app's code, its build and release workflow, the server configuration in this repository
+(`deploy/`), and the shared core in `src/core/` (which [LabTrails](https://github.com/tbutman/labtrails)
+copies; a problem there likely affects both apps). The [threat model](THREAT_MODEL.md) explains what
+BabyTrails protects against and its known limits.
