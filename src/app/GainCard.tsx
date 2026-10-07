@@ -12,7 +12,7 @@ import { formatPercentile } from '../growth/lms'
 const LABELS: Record<Measure, string> = { weight: 'Weight', length: 'Length', head: 'Head' }
 const MAX_BARS = 8
 
-export function GainCard({ series, units }: { series: Record<Measure, Interval[]>; units: Units }) {
+export function GainCard({ series, units, firstWeeks = false }: { series: Record<Measure, Interval[]>; units: Units; firstWeeks?: boolean }) {
   const available = (Object.keys(series) as Measure[]).filter((k) => series[k].length >= (k === 'weight' ? 1 : 2))
   const [measure, setMeasure] = useState<Measure>('weight')
   if (available.length === 0) return null
@@ -38,7 +38,9 @@ export function GainCard({ series, units }: { series: Record<Measure, Interval[]
           since {formatDate(latest.from.date)}, over {latest.days} days
         </span>
       </p>
-      {latest.short ? (
+      {shown === 'weight' && firstWeeks ? (
+        <p className="hint">In the first weeks, compare with birth weight instead; see The first weeks.</p>
+      ) : latest.short ? (
         <p className="hint">Only {latest.days} days apart: differences between scales or measurers can matter more than the change itself.</p>
       ) : (
         <>

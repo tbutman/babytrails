@@ -219,3 +219,23 @@ fieldset + .chart-card {
   margin-left: auto;
   margin-bottom: var(--space-3);
 }
+
+/* Something the code found worth mentioning (BABY-02, BABY-03): a ring, an icon and words, never
+   color alone. */
+.mention {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 2px solid var(--flag);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.mention svg {
+  flex: none;
+  margin-top: 2px;
+}
+.mention p {
+  margin: 0;
+}

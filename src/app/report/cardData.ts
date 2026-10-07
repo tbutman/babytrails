@@ -10,6 +10,9 @@ import { formatAge, formatDate, formatShortDate } from '../format'
 import { allIntervals, formatRate, versusSameLine, type Interval } from '../gains'
 import { incrementLabel } from '../../growth/velocity'
 import { chartPoints, growthFor, type ChartChoice } from '../growthData'
+import { buildFacts } from '../facts'
+import { mentionClauses } from '../mention'
+import { bornAt, pretermNotice } from '../preterm'
 import type { Child, Measurement } from '../types'
 
 export type CardTile = { label: string; value: string; percentile?: string; change?: string }
@@ -155,6 +158,12 @@ export function buildCardData(tables: Tables, child: Child, measurements: Measur
     const hi = formatPercentile(Math.max(...zs))
     highlights.push(lo === hi ? `${label}: ${lo} percentile, last ${zs.length}` : `${label}: ${lo}–${hi} percentile, last ${zs.length}`)
   }
+  // First, what the code found worth mentioning (BABY-03) and, for a baby born early, how the
+  // percentiles are counted (BABY-01): short versions of the overview's notes.
+  const facts = buildFacts(tables, child, sorted, now)
+  const mention = facts && mentionClauses(facts)
+  if (mention) highlights.push(`Worth mentioning at the next check-up: ${mention}. Not a diagnosis.`)
+  if (pretermNotice(child, now)) highlights.push(`Born at ${bornAt(child)}: these percentiles use age from birth, not corrected age.`)
   if (latestGain?.who) highlights.push(`Weight gain ${incrementLabel(latestGain.who)}: ${formatPercentile(latestGain.who.z)} percentile of WHO's gains`)
   range('Weight', 'wfa', (m) => m.weightKg)
   range(toddler ? 'Height' : 'Length', 'lhfa', (m) => m.lengthCm ?? m.heightCm)

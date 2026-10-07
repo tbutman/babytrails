@@ -1,13 +1,14 @@
-import { LineChart } from 'lucide-react'
+import { Info, LineChart } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { GrowthChart, type ChartPoint } from '../../growth/GrowthChart'
 import type { Indicator } from '../../growth/tables'
-import { EmptyState, PageHeader, Segmented } from '../../core/ui/components'
+import { Callout, EmptyState, PageHeader, Segmented } from '../../core/ui/components'
 import { Disclaimer } from '../components'
 import { useChild, useCountedMeasurements } from '../data'
 import { chartPoints, useTables, type ChartChoice } from '../growthData'
+import { pretermNotice } from '../preterm'
 import { useSession } from '../sessionContext'
 import { today } from '../types'
 
@@ -29,6 +30,11 @@ export function Charts() {
   return (
     <>
       <PageHeader title="Growth charts" subtitle="Against the WHO Child Growth Standards, birth to 5 years" />
+      {pretermNotice(child, today()) && (
+        <Callout icon={Info} tone="accent">
+          <p>{pretermNotice(child, today())}</p>
+        </Callout>
+      )}
       <Segmented
         legend="Chart"
         name="chart"
