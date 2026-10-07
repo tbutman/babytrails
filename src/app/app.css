@@ -26,11 +26,26 @@
   font-family: var(--font);
   font-variant-numeric: tabular-nums;
 }
+/* The bands, a little stronger than the core's tokens so they read in both modes (BABY-10). */
+:root {
+  --baby-band-outer: rgb(29 35 64 / 0.1);
+  --baby-band-inner: rgb(29 35 64 / 0.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --baby-band-outer: rgb(238 240 247 / 0.1);
+    --baby-band-inner: rgb(238 240 247 / 0.18);
+  }
+}
+:root[data-theme='dark'] {
+  --baby-band-outer: rgb(238 240 247 / 0.1);
+  --baby-band-inner: rgb(238 240 247 / 0.18);
+}
 .chart-band-outer {
-  fill: var(--chart-band-outer);
+  fill: var(--baby-band-outer);
 }
 .chart-band-inner {
-  fill: var(--chart-band-inner);
+  fill: var(--baby-band-inner);
 }
 .chart-median {
   fill: none;
@@ -238,4 +253,13 @@ fieldset + .chart-card {
 }
 .mention p {
   margin: 0;
+}
+
+/* Charts page: the explainer, and the latest percentile over the chart (BABY-10) */
+.chart-explainer {
+  margin: var(--space-3) 0;
+  max-width: 70ch;
+}
+.chart-latest {
+  margin: var(--space-3) 0 var(--space-2);
 }

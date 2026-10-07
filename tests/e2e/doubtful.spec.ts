@@ -40,5 +40,5 @@ test('doubtful measurements: where measured, second looks, and leaving one out',
   await expect(page.getByRole('img', { name: /Weight for age, WHO percentile bands. 0 measurements/ })).toBeVisible()
   await page.getByLabel('Length', { exact: true }).check()
   const length = page.locator('.chart svg[role="img"]')
-  await expect(length).toHaveAttribute('aria-label', /1 measurement; latest 68\.0 cm .*at home/)
+  await expect(length).toHaveAttribute('aria-label', /1 measurement; latest 68\.0 cm, above the 99\.9th percentile .*at home/)
 })

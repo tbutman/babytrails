@@ -38,8 +38,8 @@ export function loadFont() {
 const CHART_STYLES: Record<string, Record<string, string>> = {
   'chart-grid': { stroke: 'rgb(29 35 64 / 0.08)' },
   'chart-tick': { fill: MUTED, 'font-size': '10', 'font-family': 'Inter, Helvetica, Arial, sans-serif' },
-  'chart-band-outer': { fill: 'rgb(29 35 64 / 0.07)' },
-  'chart-band-inner': { fill: 'rgb(29 35 64 / 0.12)' },
+  'chart-band-outer': { fill: 'rgb(29 35 64 / 0.10)' },
+  'chart-band-inner': { fill: 'rgb(29 35 64 / 0.18)' },
   'chart-median': { fill: 'none', stroke: 'rgb(29 35 64 / 0.55)', 'stroke-width': '1', 'stroke-dasharray': '4 3' },
   'chart-child-line': { fill: 'none', stroke: HONEY_TEXT, 'stroke-width': '2' },
   'chart-child-point': { fill: HONEY, stroke: INK, 'stroke-width': '1.5' },

@@ -15,7 +15,7 @@ import { allIntervals } from '../gains'
 import { FirstWeeks } from '../FirstWeeks'
 import { firstWeeksNote } from '../newborn'
 import { GainCard } from '../GainCard'
-import { growthFor, useTables } from '../growthData'
+import { growthFor, notChartedNote, useTables } from '../growthData'
 import { buildFacts } from '../facts'
 import { mentionText } from '../mention'
 import { pretermNotice } from '../preterm'
@@ -147,6 +147,7 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
             })}
           </div>
 
+          {notChartedNote(child, measurements, 'wfa') && <p className="hint">{notChartedNote(child, measurements, 'wfa')}</p>}
           <FirstWeeks child={child} measurements={measurements} units={units} />
           {series && <GainCard series={series} units={units} firstWeeks={firstWeeksNote(child, measurements)} />}
 

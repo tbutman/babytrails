@@ -6,10 +6,19 @@ import { valueAtZ } from './lms'
 import { lmsAt, tableRange, type Indicator, type Sex, type Tables } from './tables'
 import { cmToIn, KG_PER_LB, type Units } from './units'
 
-// hollow: measured at home, drawn as an open circle.
-export type ChartPoint = { x: number; y: number; label: string; hollow?: boolean }
+// hollow: measured at home, drawn as an open circle. percentile: as the app writes it ("59th").
+export type ChartPoint = { x: number; y: number; label: string; hollow?: boolean; percentile?: string }
 
 const Z_BANDS = { p3: -1.881, p15: -1.036, p50: 0, p85: 1.036, p97: 1.881 }
+const BAND_LABELS: [keyof typeof Z_BANDS, string][] = [
+  ['p97', '97th'],
+  ['p85', '85th'],
+  ['p50', '50th'],
+  ['p15', '15th'],
+  ['p3', '3rd'],
+]
+// Beyond this many points, smaller dots, so the line stays readable (BABY-10).
+const MANY_POINTS = 40
 const DAYS_PER_MONTH = 30.4375
 
 
@@ -52,13 +61,15 @@ type Props = {
   units: Units
   // For age charts: the child's age today, so the chart reaches it.
   ageDaysNow?: number
-  // The legend under the chart; off where the page explains the chart itself.
+  // The legend under the chart; off where the page explains the chart itself (the report card has one
+  // for all four).
   caption?: boolean
 }
 
 const W = 360
 const H = 240
-const M = { top: 24, right: 12, bottom: 30, left: 40 }
+// Room on the right for the percentile labels (BABY-10).
+const M = { top: 24, right: 32, bottom: 30, left: 40 }
 
 export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow = 0, caption = true }: Props) {
   const table = tables[indicator]
@@ -126,8 +137,19 @@ export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow 
   const unit = yUnit(indicator, units)
   const last = shown.at(-1)
   const summary = `${CHART_TITLES[indicator]}, WHO percentile bands. ${shown.length} measurement${shown.length === 1 ? '' : 's'}${
-    last ? `; latest ${last.y.toFixed(1)} ${unit} (${last.label})` : ''
+    last ? `; latest ${last.y.toFixed(1)} ${unit}${last.percentile ? `, ${last.percentile} percentile` : ''} (${last.label})` : ''
   }.`
+  // Each line's label at the right edge, nudged apart where lines run close together.
+  const edge = samples.at(-1)
+  const labels: { text: string; y: number }[] = []
+  if (edge) {
+    for (const [key, text] of BAND_LABELS) {
+      const y = sy(edge.v[key]) + 3
+      const prev = labels.at(-1)
+      labels.push({ text, y: prev && y - prev.y < 9 ? prev.y + 9 : y })
+    }
+  }
+  const r = shown.length > MANY_POINTS ? 2.5 : 4
 
   return (
     <figure className="chart">
@@ -156,11 +178,16 @@ export function GrowthChart({ tables, indicator, sex, points, units, ageDaysNow 
         <path className="chart-band-outer" d={band('p3', 'p97')} />
         <path className="chart-band-inner" d={band('p15', 'p85')} />
         <path className="chart-median" d={line('p50')} />
+        {labels.map((l) => (
+          <text key={l.text} className="chart-tick chart-band-label" x={W - M.right + 3} y={l.y} textAnchor="start">
+            {l.text}
+          </text>
+        ))}
         {shown.length > 1 && (
           <path className="chart-child-line" d={shown.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)} ${sy(p.y).toFixed(1)}`).join(' ')} />
         )}
         {shown.map((p) => (
-          <circle key={`${p.x}-${p.label}`} className={p.hollow ? 'chart-child-point hollow' : 'chart-child-point'} cx={sx(p.x)} cy={sy(p.y)} r={4}>
+          <circle key={`${p.x}-${p.label}`} className={p.hollow ? 'chart-child-point hollow' : 'chart-child-point'} cx={sx(p.x)} cy={sy(p.y)} r={r}>
             <title>{p.label}</title>
           </circle>
         ))}

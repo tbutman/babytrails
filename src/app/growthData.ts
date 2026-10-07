@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ageInDays, computeGrowth, HEIGHT_FROM_DAY, type GrowthResult } from '../growth/growth'
 import type { ChartPoint } from '../growth/GrowthChart'
+import { formatPercentile } from '../growth/lms'
 import { loadTables, type Indicator, type Tables } from '../growth/tables'
 import { formatAge, formatDate } from './format'
 import type { Child, Measurement } from './types'
@@ -47,10 +48,23 @@ export function chartPoints(tables: Tables, child: Child, measurements: Measurem
     const hollow = m.place === 'home'
     if (choice === 'wfl') {
       const r = g[indicator]
-      return r && g.statureCm !== undefined ? [{ x: g.statureCm, y: r.value, label, hollow }] : []
+      return r && g.statureCm !== undefined ? [{ x: g.statureCm, y: r.value, label, hollow, percentile: formatPercentile(r.z) }] : []
     }
     const r = g[choice]
-    return r ? [{ x: ageInDays(child.dateOfBirth, m.date), y: r.value, label, hollow }] : []
+    return r ? [{ x: ageInDays(child.dateOfBirth, m.date), y: r.value, label, hollow, percentile: formatPercentile(r.z) }] : []
   })
   return { indicator, points }
+}
+
+/** The WHO tables in BabyTrails end at 5 years (1856 days). */
+export const LAST_TABLE_DAY = 1856
+
+/** Why some measurements aren't on a chart (BABY-11), or undefined when all of them are. */
+export function notChartedNote(child: Child, measurements: Measurement[], choice: ChartChoice): string | undefined {
+  const tooOld = measurements.some((m) => ageInDays(child.dateOfBirth, m.date) > LAST_TABLE_DAY)
+  if (tooOld) return 'No percentile: the WHO charts in BabyTrails end at 5 years, so newer measurements are kept but not charted.'
+  if (choice === 'wfl' && measurements.some((m) => m.weightKg !== undefined && m.lengthCm !== undefined && m.lengthCm < 45)) {
+    return 'No weight-for-length percentile: the WHO chart starts at 45 cm.'
+  }
+  return undefined
 }
