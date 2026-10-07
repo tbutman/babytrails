@@ -191,7 +191,7 @@ export function DocumentSummary() {
   if (mode === 'demo' || !core.ai.apiKey) {
     return (
       <>
-        <PageHeader title="Summarise this document" back={{ to: back, label: 'Document' }} />
+        <PageHeader title="Summarize this document" back={{ to: back, label: 'Document' }} />
         <p>{mode === 'demo' ? "The demo doesn't call the AI." : 'Summaries use AI with your own Anthropic API key. Add one in Settings first.'}</p>
         {mode !== 'demo' && (
           <Link to={`${APP}/settings#ai`} className="button primary">
@@ -212,7 +212,7 @@ export function DocumentSummary() {
         apiKey: core.ai.apiKey!,
         model: core.ai.model,
         system: DOCUMENT_SUMMARY_SYSTEM,
-        content: [block, { type: 'text', text: 'Summarise this document, following the rules.' }],
+        content: [block, { type: 'text', text: 'Summarize this document, following the rules.' }],
         maxTokens: 1000,
       })
       // A document's own words may be quoted ("normal development"); the summary's own voice may not judge.
@@ -230,7 +230,7 @@ export function DocumentSummary() {
   const kb = Math.max(1, Math.round(doc.bytes / 1024))
   return (
     <>
-        <PageHeader title="Summarise this document" back={{ to: back, label: 'Document' }} />
+        <PageHeader title="Summarize this document" back={{ to: back, label: 'Document' }} />
       {error && (
         <p className="error" role="alert">
           {error}

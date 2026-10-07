@@ -1,5 +1,5 @@
 // BabyTrails' plug-in for the shared import (src/core/import): how a growth report or booklet page is
-// read, what counts as already saved, and what saving creates. Doctor's notes are kept and summarised
+// read, what counts as already saved, and what saving creates. Doctor's notes are kept and summarized
 // from their own page; ultrasound images are kept and never read.
 
 import type { RecordStore } from '../../core'
@@ -32,7 +32,7 @@ export const IMPORT_KINDS: (DocumentKindOption & { value: DocumentKind })[] = [
 
 /**
  * A first guess at a file's kind from its name (English and Portuguese), which the user can change in
- * the queue. Anything unrecognised is taken to be a growth report.
+ * the queue. Anything unrecognized is taken to be a growth report.
  */
 export function kindFromName(name: string): DocumentKind {
   const n = name.toLowerCase()

@@ -91,7 +91,7 @@ function ChildFormInner({ existing }: { existing?: Child }) {
         <TextField label="Nickname (optional)" value={nickname} onChange={(e) => setNickname(e.target.value)} autoComplete="off" hint="Shown instead of the name, and on shared reports if you like." />
         <TextField label="Date of birth" type="date" max={today()} value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} error={errors.dateOfBirth} />
         <Segmented
-          legend="Sex"
+          legend="Sex for the growth charts"
           name="sex"
           options={[
             { value: 'female', label: 'Girl' },
@@ -99,7 +99,7 @@ function ChildFormInner({ existing }: { existing?: Child }) {
           ]}
           value={sex}
           onChange={setSex}
-          hint="The WHO charts are different for girls and boys."
+          hint="Choose the charts your baby's doctor uses."
         />
         {errors.sex && (
           <p className="error form-error" role="alert">
@@ -117,7 +117,7 @@ function ChildFormInner({ existing }: { existing?: Child }) {
               {errors.gestation}
             </p>
           ) : (
-            <p className="hint">Recorded for now; charts by corrected age for babies born early come later.</p>
+            <p className="hint">For babies born before 37 weeks, BabyTrails says that its percentiles use age from birth. Charts by corrected age are the next feature.</p>
           )}
         </fieldset>
         {existing ? (

@@ -139,7 +139,7 @@ export function DocumentPage() {
             )}
             {doc.kind === 'doctor-note' && (
               <Link className="button primary" to={childPath(child.id, `documents/${doc.id}/summary`)}>
-                <Sparkles size={16} aria-hidden /> Summarise with AI
+                <Sparkles size={16} aria-hidden /> Summarize with AI
               </Link>
             )}
           </>

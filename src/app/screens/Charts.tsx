@@ -47,7 +47,7 @@ export function Charts() {
           { value: 'wfa', label: 'Weight' },
           { value: 'lhfa', label: toddler ? 'Height' : 'Length' },
           { value: 'hcfa', label: 'Head' },
-          { value: 'wfl', label: toddler ? 'Wt/height' : 'Wt/length' },
+          { value: 'wfl', label: toddler ? 'Weight for height' : 'Weight for length' },
           { value: 'bfa', label: 'BMI' },
         ]}
       />

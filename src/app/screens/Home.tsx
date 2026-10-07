@@ -43,7 +43,7 @@ function Auth() {
                 ? 'Choose a BabyTrails backup and enter the passphrase it was made with. It replaces anything already in this browser.'
                 : mode === 'locked'
                   ? "Unlock to see your baby's records."
-                  : 'Your records are encrypted with a passphrase and stay in this browser.'}
+                  : 'Your vault is the locked, encrypted space in this browser where BabyTrails keeps your records. Choose a passphrase to lock it: a few random words are easiest.'}
             </p>
           </div>
           {erased && !restoring && mode === 'welcome' && (

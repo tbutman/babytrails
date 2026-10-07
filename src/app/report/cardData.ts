@@ -1,6 +1,6 @@
 // The report card's content, worked out by the code from the saved measurements: the latest
 // numbers, the charts to draw, gain over time, a short history and a few highlights written from
-// templates. No AI is needed; an AI summary is added only if the parent chooses, and labelled.
+// templates. No AI is needed; an AI summary is added only if the parent chooses, and labeled.
 
 import { ageInDays, HEIGHT_FROM_DAY } from '../../growth/growth'
 import { formatPercentile } from '../../growth/lms'

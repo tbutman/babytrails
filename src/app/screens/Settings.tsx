@@ -155,7 +155,7 @@ export function Settings() {
         </SettingsCard>
 
         <p className="hint">
-          BabyTrails is free and open source. Your records are encrypted on this device and never sent to BabyTrails' server.{' '}
+          BabyTrails is free and open source. Your records are encrypted on this device, in this browser, and never reach the BabyTrails server.{' '}
           <Link to={`${APP}/about`}>About the data and charts</Link>.
         </p>
       </div>
@@ -174,15 +174,15 @@ export function About() {
           <a href="https://www.who.int/tools/child-growth-standards">who.int/tools/child-growth-standards</a>.
         </p>
         <p>
-          In the United States, the CDC recommends the WHO charts from birth to 2 years. In Portugal, the national child health programme
+          In the United States, the CDC recommends the WHO charts from birth to 2 years. In Portugal, the national child health program
           uses the WHO curves (weight, length or height and BMI to 5 years; head circumference to 2 years). CDC charts for children over 2
           aren't in BabyTrails yet.
         </p>
         <p>
-          Percentiles are computed with WHO's LMS method on this device. A percentile describes where a measurement sits compared with WHO's
-          reference children; it isn't a diagnosis. Your paediatrician looks at much more than one number.
+          Percentiles are worked out on this device with WHO's own formulas (the LMS method). A percentile describes where a measurement sits compared with WHO's
+          reference children; it isn't a diagnosis. Your pediatrician looks at much more than one number.
         </p>
-        <p>BabyTrails is open source under the MIT licence. The WHO data is not covered by that licence.</p>
+        <p>BabyTrails is open source under the MIT license. The WHO data is not covered by that license.</p>
       </div>
     </Shell>
   )

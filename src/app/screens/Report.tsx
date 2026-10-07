@@ -116,7 +116,7 @@ export function Report() {
   if (measurements.length === 0) {
     return (
       <>
-        <PageHeader title="Share a report" />
+        <PageHeader title="Share a report card" />
         <EmptyState
           icon={Ruler}
           title="No measurements yet"
@@ -131,7 +131,7 @@ export function Report() {
       </>
     )
   }
-  const base = `babytrails-report-${now}`
+  const base = `babytrails-report-card-${now}`
   const points: ChartPoint[] = measurements.flatMap((m) => {
     const r = growthFor(tables, child, m).wfa
     return r ? [{ x: ageInDays(child.dateOfBirth, m.date), y: r.value, label: m.date }] : []
@@ -151,13 +151,13 @@ export function Report() {
     }
     const png = await reportPng(svg, size)
     if (kind === 'png') return download(png, `${base}.png`)
-    const result = await shareFile(png, `${base}.png`, 'Growth report')
+    const result = await shareFile(png, `${base}.png`, 'Report card')
     if (result === 'unsupported') setMessage("This browser can't share files. Save the image instead and share it from your photos or files.")
   }
 
   return (
     <>
-      <PageHeader title="Share a report" subtitle="A picture of the latest growth, made on this device. You choose what's on it, and you share the file yourself." />
+      <PageHeader title="Share a report card" subtitle="A picture of the latest growth, made on this device. You choose what's on it, and you share the file yourself." />
       <div className="card no-print">
         <Segmented
           legend="Layout"
@@ -169,7 +169,7 @@ export function Report() {
           }}
           options={[
             { value: 'card', label: 'Report card' },
-            { value: 'simple', label: 'Simple' },
+            { value: 'simple', label: 'One page' },
           ]}
           hint={layout === 'card' ? 'The latest numbers, four charts, gain over time and the history. The image is phone-shaped; the PDF is an A4 page.' : 'The latest numbers and the weight chart on one page.'}
         />
@@ -197,7 +197,7 @@ export function Report() {
             </Checkbox>
             {summary && (
               <Checkbox checked={includeAi} onChange={setIncludeAi}>
-                Include the latest summary in plain words (labelled as written by AI)
+                Include the latest summary in plain words ((labeled as written by AI))
               </Checkbox>
             )}
           </>
@@ -241,5 +241,5 @@ export function Report() {
 }
 
 function shownName(child: Child, mode: NameMode): string {
-  return mode === 'name' ? child.name : mode === 'nickname' ? child.nickname || child.name : 'Growth report'
+  return mode === 'name' ? child.name : mode === 'nickname' ? child.nickname || child.name : 'Report card'
 }

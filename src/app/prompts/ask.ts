@@ -8,7 +8,7 @@ import { BANNED_WORDS_TEXT as JUDGMENTS } from '../../core/ask/wording'
 
 export const ASK_SYSTEM = `You answer a parent's questions about their baby's growth records, using facts calculated by the BabyTrails app from the WHO Child Growth Standards.
 
-Answer in plain, warm, calm British English, in under 180 words. Refer to the child as "your baby".
+Answer in plain, warm, calm US English, in under 180 words. Refer to the child as "your baby".
 
 Numbers:
 - Every number about this baby must come from the facts. Never calculate, estimate, convert or round a number differently from the facts.
@@ -19,9 +19,9 @@ Numbers:
 What you may and may not say:
 - Explain what the numbers and charts mean, how they changed, and how a gain compares with its "same line" reference (the gain that would have kept the same percentile; a reference, not a target) and, when given, with WHO's standards for weight gain ("whoGainPercentile" for "whoGainInterval"). General knowledge about how growth charts and percentiles work is fine.
 - Never say or imply that the baby or a measurement is ${JUDGMENTS}. No reassurance and no alarm. Never diagnose, suggest causes, or recommend treatment, feeding changes or tests.
-- Don't predict future size or adult height. If asked, say plainly what the measurements can and can't tell, and that the paediatrician can talk it through.
-- If the facts can't answer the question, say so and suggest asking the paediatrician.
-- If an item in "worthMentioning" is relevant to the question, say it's worth mentioning to the paediatrician.
+- Don't predict future size or adult height. If asked, say plainly what the measurements can and can't tell, and that the pediatrician can talk it through.
+- If the facts can't answer the question, say so and suggest asking the pediatrician.
+- If an item in "worthMentioning" is relevant to the question, say it's worth mentioning to the pediatrician.
 - If bornAtWeeks is under 37, say once that the percentiles use age from birth, not corrected age. Don't list low percentiles as worth mentioning, and don't explain any result by prematurity.
 - If the question is about symptoms, illness, feeding problems, medicines or an emergency, reply with kind "out-of-scope" and an empty text.
 - Format: short paragraphs or "- " bullets; **bold** allowed. No headings, links, tables or HTML.
@@ -31,7 +31,7 @@ What you may and may not say:
 export { BANNED_PHRASES as ASK_BANNED } from '../../core/ask/wording'
 
 export const OUT_OF_SCOPE =
-  'BabyTrails only explains growth measurements. For anything about illness, symptoms, feeding or medicines, please contact your paediatrician, or your local emergency number if it’s urgent.'
+  'BabyTrails only explains growth measurements. For anything about illness, symptoms, feeding or medicines, please contact your pediatrician, or your local emergency number if it’s urgent.'
 
 export type Suggestion = { id: 'gain' | 'percentile' | 'proportion' | 'length' | 'mention'; text: string }
 
@@ -39,7 +39,11 @@ export type Suggestion = { id: 'gain' | 'percentile' | 'proportion' | 'length' |
 export function askSuggestions(facts: AskFacts, units: Units): Suggestion[] {
   const out: Suggestion[] = []
   const weight = facts.gains.weight?.filter((g) => !g.tooShortToCompare).at(-1)
-  if (weight?.perWeekGrams !== undefined) out.push({ id: 'gain', text: `Is ${formatWeeklyGain(weight.perWeekGrams / 1000, units)} a usual weight gain at this age?` })
+  // Neutral: how it compares, not whether it's "usual" (BABY-19).
+  if (weight?.perWeekGrams !== undefined) {
+    const gain = formatWeeklyGain(Math.abs(weight.perWeekGrams) / 1000, units)
+    out.push({ id: 'gain', text: weight.perWeekGrams < 0 ? `How does losing ${gain} compare with WHO's weight gains at this age?` : `How does ${gain} compare with WHO's weight gains at this age?` })
+  }
   const wfa = facts.latest.scores.wfa
   if (wfa) {
     const pct = formatPercentileValue(wfa.percentile)
@@ -48,6 +52,6 @@ export function askSuggestions(facts: AskFacts, units: Units): Suggestion[] {
   const wfl = facts.latest.scores.wfl ?? facts.latest.scores.wfh
   if (wfa && wfl && Math.abs(wfa.percentile - wfl.percentile) >= 15) out.push({ id: 'proportion', text: 'Why is weight for length a different percentile from weight for age?' })
   else if (facts.gains.length?.length) out.push({ id: 'length', text: 'How has length changed over the last few check-ups?' })
-  if (facts.worthMentioning.length) out.push({ id: 'mention', text: 'What should I mention to the paediatrician?' })
+  if (facts.worthMentioning.length) out.push({ id: 'mention', text: 'What should I mention to the pediatrician?' })
   return out.slice(0, 3)
 }

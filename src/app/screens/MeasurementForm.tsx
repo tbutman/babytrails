@@ -241,7 +241,7 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
         />
         {!errors.stature && warning('stature')}
         <Checkbox checked={standing} onChange={setStanding}>
-          Measured standing up <span className="muted">(WHO uses lying length under 2 years and standing height from 2; the charts adjust by 0.7 cm if needed)</span>
+          Measured standing up <span className="muted">(WHO uses lying length under 2 years and standing height from 2; the charts adjust by {units === 'metric' ? '0.7 cm' : '0.3 in'} if needed)</span>
         </Checkbox>
 
         <TextField label={`Head circumference (${lenUnit})`} inputMode="decimal" autoComplete="off" value={headText} onChange={(e) => setHeadText(e.target.value)} error={errors.head} hint={pct('hcfa')} />
