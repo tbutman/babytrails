@@ -263,9 +263,9 @@ They give L, M and S by day of age (0–1856 days) for weight, length/height, he
 BMI, and by length or height for weight-for-length (45–110 cm) and weight-for-height (65–120 cm).
 The same values are in WHO's own `anthro` R package, which supplies the test vectors.
 
-**Licence: the tables are not committed to this repository.** Checked 6 October 2026:
-- WHO's [terms of use](https://www.who.int/about/policies/terms-of-use) allow reproduction for
-  non-commercial purposes with acknowledgement of WHO and the URL.
+**License: the tables are not committed to this repository.** Checked October 6, 2026:
+- WHO's [terms of use](https://www.who.int/about/policies/terms-of-use) allow educational and other
+  non-commercial use, with acknowledgment of WHO and the source.
 - The 2006 and 2007 technical reports say "All rights reserved". WHO's `anthro` package is GPL-3;
   the UNICEF `igrowup` macros WHO links to are CC BY-NC-SA 3.0 IGO.
 - None of these is compatible with MIT, which allows commercial reuse by anyone who forks the code.
@@ -273,13 +273,12 @@ The same values are in WHO's own `anthro` R package, which supplies the test vec
 So a build script downloads the official files from pinned URLs, checks each file's SHA-256, and
 converts them to JSON in the build output. CI caches the downloads, so a WHO re-upload fails the
 build loudly instead of silently changing the data. A `DATA-NOTICE.md` and the app's About screen
-say the data is © WHO, used unmodified for non-commercial purposes, not covered by the MIT licence,
-and that WHO doesn't endorse the app.
+say the data is © WHO, used with acknowledgment in a free, non-commercial app as WHO's terms of use
+allow, not covered by the MIT license, and that WHO doesn't endorse the app. The app uses the L, M
+and S values from WHO's published tables, unchanged and converted to JSON at build time.
 
-**Thomas, to decide:** the deployed app still redistributes the data to users, which WHO's terms
-allow for non-commercial use. A future paid tier would be commercial use. Writing to
-permissions@who.int now, describing a free, open-source, non-commercial app, would settle it.
-This is a reading of WHO's terms, not legal advice.
+**Confirming with WHO:** Thomas reads this use as non-commercial, as WHO's terms allow, and wrote to
+WHO on October 7, 2026 to confirm it. This is a reading of WHO's terms, not legal advice.
 
 **Method.** WHO's LMS formula, z = ((y/M)^L − 1) / (S·L) (2006 report, chapter 7, pp. 301–304).
 For weight-for-age, weight-for-length/height and BMI-for-age, beyond ±3 SD WHO's restricted

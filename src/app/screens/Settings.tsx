@@ -169,8 +169,8 @@ export function About() {
       <PageHeader title="About the data and charts" back={{ to: APP, label: 'Back' }} />
       <div className="card">
         <p>
-          The charts and percentiles use the <strong>WHO Child Growth Standards</strong> (birth to 5 years), © World Health Organization, used
-          unmodified for non-commercial purposes. WHO doesn't endorse this app. Source:{' '}
+          The charts and percentiles use the <strong>WHO Child Growth Standards</strong> (birth to 5 years). © World Health Organization. Used
+          with acknowledgment in a free, non-commercial app, as WHO's terms of use allow. WHO doesn't endorse BabyTrails. Source:{' '}
           <a href="https://www.who.int/tools/child-growth-standards">who.int/tools/child-growth-standards</a>.
         </p>
         <p>
