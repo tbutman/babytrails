@@ -526,7 +526,7 @@ Differences from the plan above, and why:
 - **Trusted Types aren't enabled.** pdf.js starts a worker and the service worker is registered
   from a script URL; both need a Trusted Types policy written for them. React escapes text, there's
   no `innerHTML`, and the CSP blocks inline and third-party scripts, so this is hardening left for
-  later rather than a gap in the current defences.
+  later rather than a gap in the current defenses.
 - **Visits** exist as a type, but there's no screen for them yet; documents are attached to a date.
 - **A child's photo** isn't supported yet, so the report has no photo to leave out.
 - **Backup reminders** count changes: each measurement counts as one and each document as five, so a

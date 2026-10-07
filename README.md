@@ -94,7 +94,7 @@ AI features are optional and use **your own Anthropic API key**, so Anthropic bi
 - **Before each request, BabyTrails shows what will be sent.** Summaries send your baby's sex, their
   age in days and the measurements with the numbers BabyTrails calculated, never the name, the date
   of birth or the dates of visits. (An age in days still tells the provider roughly when your baby
-  was born.) Reading or summarising a document sends that document, which may show your baby's name.
+  was born.) Reading or summarizing a document sends that document, which may show your baby's name.
 - Anthropic's terms, as of October 6, 2026: it doesn't train models on content sent through its API,
   and deletes it within 30 days (keeping it up to 2 years if its safety systems flag it). See its
   [Commercial Terms](https://www.anthropic.com/legal/commercial-terms) and

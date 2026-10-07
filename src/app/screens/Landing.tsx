@@ -97,7 +97,7 @@ export function Landing() {
         ]}
         actions={
           <Link className="button small" to={APP}>
-            Open app
+            Open the app
           </Link>
         }
       />

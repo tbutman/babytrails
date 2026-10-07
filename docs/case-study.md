@@ -1,9 +1,9 @@
 # BabyTrails: a baby's growth records, private by design
 
-*Case study, October 2026. BabyTrails is live at [babytrails.app](https://babytrails.app) and in
-active development. Free and open source (MIT). Code:
-[github.com/tbutman/babytrails](https://github.com/tbutman/babytrails). Screenshots show the demo;
-every name, value and document in them is made up.*
+*Case study, October 2026, by [Thomas Butman](https://tbutman.com). BabyTrails is live at
+[babytrails.app](https://babytrails.app) and in active development. Free and open source (MIT).
+Code: [github.com/tbutman/babytrails](https://github.com/tbutman/babytrails). Screenshots show the
+demo; every name, value and document in them is made up.*
 
 <p>
   <img src="screenshots/landing.png" width="720" alt="The BabyTrails landing page: every check-up, on the growth charts">
@@ -27,7 +27,7 @@ that's the pediatrician's job.
 
 ## The decisions that shaped it
 
-**Local-first, bring your own key.** The app is static files. Everything a parent enters or uploads is
+**Private by design, bring your own key.** The app is static files. Everything a parent enters or uploads is
 encrypted in their own browser and never reaches my server: no accounts, no database, no analytics, no
 cookies. AI is optional; when a parent uses it, their browser sends that one request straight to
 Anthropic with their own API key, after a screen that lists what will and won't be sent. In the EU,

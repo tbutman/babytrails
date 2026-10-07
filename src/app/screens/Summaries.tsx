@@ -139,8 +139,9 @@ export function GrowthSummary() {
         sending={[
           `Your baby's sex and age in days`,
           `The latest${facts.previous ? ' two measurements' : ' measurement'}, with the percentiles and changes BabyTrails calculated`,
+          ...(Object.values(facts.gains).some((g) => g?.length) ? ['Gains between your recent measurements (ages in days and rates)'] : []),
         ]}
-        notSending={["Your baby's name and date of birth", 'The dates of the measurements', 'Your documents, notes and older measurements']}
+        notSending={["Your baby's name and date of birth", 'The dates of the measurements', 'Your documents and notes']}
         model={core.ai.model}
         estimate={{ inputTokens: 2000, outputTokens: 400 }}
         busy={busy}
