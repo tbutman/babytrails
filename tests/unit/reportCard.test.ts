@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildCardData, compactAge, plainFirstParagraph } from '../../src/app/report/cardData'
-import { wrap } from '../../src/app/report/buildCard'
+import { buildCardData, cardPercentile, compactAge, plainFirstParagraph } from '../../src/app/report/cardData'
+import { fit, wrap } from '../../src/app/report/buildCard'
 import { growthFor } from '../../src/app/growthData'
 import { allIntervals } from '../../src/app/gains'
 import { formatPercentile } from '../../src/growth/lms'
@@ -42,9 +42,22 @@ describe('report card data', () => {
   it('writes neutral highlights from the numbers', () => {
     expect(card.highlights.length).toBeGreaterThanOrEqual(3)
     const text = card.highlights.join(' ')
-    expect(text).toMatch(/Weight: .*percentile, last 4/)
+    expect(text).toMatch(/Weight: \S+ → \S+ → \S+ percentile \(last 3 measurements\)/)
     expect(text).toMatch(/Weight for length: .* percentile/)
     expect(text).not.toMatch(/\b(good|normal|healthy|fine|concern|worry)/i)
+  })
+
+  it('shows the direction, the sex and weeks at birth, and fits long pills (BABY-08, BABY-09)', () => {
+    const fall = [m('2026-02-01', 5.5), m('2026-03-01', 5.6), m('2026-04-01', 5.0)]
+    const early = { ...child, gestationalAge: { weeks: 30, days: 2 } }
+    const card = buildCardData(tables, early, fall, 'metric', '2026-04-10', opts)
+    const weight = card.highlights.find((h) => h.startsWith('Weight:'))!
+    const ps = fall.map((x) => cardPercentile(formatPercentile(growthFor(tables, early, x).wfa!.z)))
+    expect(weight).toBe(`Weight: ${ps.join(' → ')} percentile (last 3 measurements)`)
+    expect(card.subtitle).toBe('3 months old · Girl · born at 30+2 weeks')
+    expect(cardPercentile('above the 99.9th')).toBe('> 99.9th')
+    expect(fit('Alexandrina Maria Example-Longname', 400, 64)).toMatch(/…$/)
+    expect(fit('Tess', 400, 64)).toBe('Tess')
   })
 
   it('leaves out head circumference and the history when asked', () => {

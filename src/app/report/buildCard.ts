@@ -38,12 +38,25 @@ export function wrap(text: string, width: number, size: number, maxLines: number
   return lines
 }
 
+/** Cuts a title that wouldn't fit on one line, with an ellipsis (BABY-09). Bold Inter is about 0.6 em. */
+export function fit(text: string, width: number, size: number): string {
+  const max = Math.floor(width / (size * 0.6))
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`
+}
+
 function header(d: CardData, pad: number, w: number, s: number): string {
   return `<rect width="${w}" height="${Math.round(272 * s)}" fill="${TINT}"/>
 <text x="${pad}" y="${Math.round(96 * s)}" ${DISPLAY} font-size="${Math.round(34 * s)}" fill="${INK}">baby<tspan fill="${HONEY_TEXT}">trails</tspan></text>
 ${t(w - pad, Math.round(96 * s), Math.round(22 * s), MUTED, d.generatedOn, 'text-anchor="end"')}
-<text x="${pad}" y="${Math.round(184 * s)}" ${DISPLAY} font-size="${Math.round(64 * s)}" fill="${INK}">${escapeXml(d.title)}</text>
+<text x="${pad}" y="${Math.round(184 * s)}" ${DISPLAY} font-size="${Math.round(64 * s)}" fill="${INK}">${escapeXml(fit(d.title, w - pad * 2, Math.round(64 * s)))}</text>
 ${t(pad, Math.round(238 * s), Math.round(28 * s), MUTED, d.subtitle)}`
+}
+
+// A percentile pill that always fits its tile: smaller text if it has to be.
+function pill(text: string, room: number): string {
+  const size = Math.min(19, Math.floor((room - 24) / (text.length * 0.56)))
+  const width = Math.min(room, text.length * size * 0.56 + 24)
+  return `<rect x="22" y="100" width="${width}" height="30" rx="15" fill="${TINT}"/>${t(34, 121, size, HONEY_TEXT, text, 'font-weight="600"')}`
 }
 
 function tiles(list: CardTile[], x: number, y: number, w: number, h: number): string {
@@ -56,7 +69,7 @@ function tiles(list: CardTile[], x: number, y: number, w: number, h: number): st
 <rect width="${tw}" height="${h}" rx="20" fill="#ffffff" stroke="${LINE}" stroke-width="2"/>
 ${t(24, 38, 22, MUTED, tile.label)}
 <text x="24" y="82" ${DISPLAY} font-size="40" fill="${INK}">${escapeXml(tile.value)}</text>
-${tile.percentile ? `<rect x="22" y="100" width="${tile.percentile.length * 10.6 + 24}" height="30" rx="15" fill="${TINT}"/>${t(34, 121, 19, HONEY_TEXT, tile.percentile, 'font-weight="600"')}` : ''}
+${tile.percentile ? pill(tile.percentile, tw - 44) : ''}
 ${tile.change ? t(24, h - 10, 18, MUTED, tile.change) : ''}
 </g>`
     })
@@ -170,7 +183,13 @@ export async function buildCard(d: CardData, charts: Partial<Record<string, stri
   const chartW = layout === 'a4' ? 430 : cellW
   const cellH = 36 + (chartW * CHART_H) / CHART_W
   d.charts.forEach((c, i) => parts.push(chartCell(c.title, charts[c.choice], pad + (i % 2) * (cellW + gap), y + Math.floor(i / 2) * (cellH + 16), chartW)))
-  y += Math.ceil(d.charts.length / 2) * (cellH + 16) + 20
+  y += Math.ceil(d.charts.length / 2) * (cellH + 16)
+  // What the bands mean, once for all four charts (BABY-09).
+  if (d.charts.length) {
+    parts.push(t(pad, y + 4, 18, MUTED, 'Shaded: 3rd–97th and 15th–85th percentiles. Dashed: 50th.'))
+    y += 24
+  }
+  y += 20
 
   const footerY = h - 70
   const historyRows = (room: number) => (room < historyHeight(1, false) ? 0 : Math.floor((room - 62 - 42 - 46) / 34) + 1)

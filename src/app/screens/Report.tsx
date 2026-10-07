@@ -8,8 +8,10 @@ import { GrowthChart, type ChartPoint } from '../../growth/GrowthChart'
 import { formatPercentile } from '../../growth/lms'
 import type { Indicator } from '../../growth/tables'
 import { formatLength, formatWeeklyGain, formatWeight } from '../../growth/units'
-import { FileDown, ImageDown, Share2 } from 'lucide-react'
-import { Checkbox, PageHeader, Segmented } from '../../core/ui/components'
+import { FileDown, ImageDown, Plus, Ruler, Share2 } from 'lucide-react'
+import { Link } from 'react-router'
+import { Checkbox, EmptyState, PageHeader, Segmented } from '../../core/ui/components'
+import { childPath } from '../brand'
 import { buildCard, CARD_SIZE, type CardLayout } from '../report/buildCard'
 import { buildCardData } from '../report/cardData'
 import { useLatestSummary } from '../summaries'
@@ -31,7 +33,7 @@ export function Report() {
   const measurements = useCountedMeasurements(id)
   const tables = useTables()
   const { app } = useSession()
-  const [nameMode, setNameMode] = useState<NameMode>('nickname')
+  const [nameMode, setNameMode] = useState<NameMode | null>(null)
   const [showBirthDate, setShowBirthDate] = useState(false)
   const [layout, setLayout] = useState<Layout>('card')
   const [includeHead, setIncludeHead] = useState(true)
@@ -45,6 +47,8 @@ export function Report() {
 
   const now = today()
   const units = app.units
+  // Without a nickname, the choice is the name as given or none: "Baby Sam" stays "Baby Sam" (BABY-09).
+  const names: NameMode = nameMode ?? (child?.nickname ? 'nickname' : 'name')
 
   // The report card, as a function so the PDF can ask for the A4 layout.
   const cardSvg = useCallback(
@@ -56,7 +60,7 @@ export function Report() {
         if (svgEl) charts[el.dataset.choice!] = serialiseChart(svgEl)
       })
       const data = buildCardData(tables, child, measurements, units, now, {
-        title: shownName(child, nameMode),
+        title: shownName(child, names),
         subtitle: showBirthDate ? `Born ${formatDate(child.dateOfBirth)}` : `${formatAge(child.dateOfBirth, now)} old`,
         includeHead,
         includeHistory,
@@ -64,7 +68,7 @@ export function Report() {
       })
       return buildCard(data, charts, cardLayout)
     },
-    [child, measurements, tables, units, now, nameMode, showBirthDate, includeHead, includeHistory, includeAi, summary],
+    [child, measurements, tables, units, now, names, showBirthDate, includeHead, includeHistory, includeAi, summary],
   )
 
   useEffect(() => {
@@ -87,7 +91,7 @@ export function Report() {
     const gain = weeklyGain(measurements)
     const last = measurements.at(-1)
     void buildReport({
-      title: shownName(child, nameMode),
+      title: shownName(child, names),
       subtitle: showBirthDate ? `Born ${formatDate(child.dateOfBirth)}` : `${formatAge(child.dateOfBirth, now)} old`,
       generatedOn: formatDate(now),
       stats: [
@@ -104,10 +108,29 @@ export function Report() {
       chartTitle: 'Weight for age',
       chartSvg: serialiseChart(chartEl),
     }).then(setSvg)
-  }, [layout, child, measurements, tables, nameMode, showBirthDate, units, now])
+  }, [layout, child, measurements, tables, names, showBirthDate, units, now])
 
 
   if (!child || !measurements || !tables) return null
+  // Nothing to put on it yet: say so instead of a card of dashes (BABY-09).
+  if (measurements.length === 0) {
+    return (
+      <>
+        <PageHeader title="Share a report" />
+        <EmptyState
+          icon={Ruler}
+          title="No measurements yet"
+          action={
+            <Link className="button primary" to={childPath(child.id, 'measurements/new')}>
+              <Plus size={16} aria-hidden /> Add a measurement
+            </Link>
+          }
+        >
+          Add a measurement to make a report card.
+        </EmptyState>
+      </>
+    )
+  }
   const base = `babytrails-report-${now}`
   const points: ChartPoint[] = measurements.flatMap((m) => {
     const r = growthFor(tables, child, m).wfa
@@ -153,11 +176,11 @@ export function Report() {
         <Segmented
           legend="Name on the report"
           name="name-mode"
-          value={nameMode}
+          value={names}
           onChange={setNameMode}
           options={[
-            { value: 'nickname', label: child.nickname ? 'Nickname' : 'First name' },
-            { value: 'name', label: 'Full name' },
+            ...(child.nickname ? [{ value: 'nickname' as const, label: 'Nickname' }] : []),
+            { value: 'name', label: child.nickname ? 'Full name' : 'Name' },
             { value: 'none', label: 'No name' },
           ]}
         />
@@ -218,5 +241,5 @@ export function Report() {
 }
 
 function shownName(child: Child, mode: NameMode): string {
-  return mode === 'name' ? child.name : mode === 'nickname' ? child.nickname || child.name.split(' ')[0] : 'Growth report'
+  return mode === 'name' ? child.name : mode === 'nickname' ? child.nickname || child.name : 'Growth report'
 }
