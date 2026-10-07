@@ -16,13 +16,17 @@ import { InstallHint } from '../InstallHint'
 import { Shell } from '../Layout'
 import { useSession } from '../sessionContext'
 import { APP_ID, today } from '../types'
+import { demoEndedByReload, forgetPlace, placeName, resumeAfterUnlock, savedPlace, takeResume } from '../place'
 import { BackupNudge } from './Settings'
 
 export function Home() {
   const { mode } = useSession()
   if (mode === 'loading') return <Shell narrow>{<div className="skeleton loading-card" />}</Shell>
   if (mode === 'demo') return <Navigate to={childPath(DEMO_CHILD_ID)} replace />
-  if (mode === 'unlocked') return <Children />
+  if (mode === 'unlocked') {
+    const resume = takeResume()
+    return resume ? <Navigate to={resume} replace /> : <Children />
+  }
   return <Auth />
 }
 
@@ -31,6 +35,7 @@ function Auth() {
   const navigate = useNavigate()
   const [restoring, setRestoring] = useState(false)
   const [erased] = useState(() => takeErasedNotice(APP_ID))
+  const [demoEnded] = useState(demoEndedByReload)
   return (
     <Shell>
       <div className="auth">
@@ -51,6 +56,22 @@ function Auth() {
               <p role="status">Everything is deleted from this browser.</p>
             </Callout>
           )}
+          {demoEnded && !restoring && (
+            <Callout tone="accent">
+              <p role="status">
+                The demo ended because the page was reloaded.{' '}
+                <button
+                  className="link-button"
+                  onClick={async () => {
+                    await startDemo()
+                    navigate(childPath(DEMO_CHILD_ID))
+                  }}
+                >
+                  Try the demo again
+                </button>
+              </p>
+            </Callout>
+          )}
           <div className="card">
             {restoring && trails ? (
               <RestoreBackup
@@ -60,6 +81,7 @@ function Auth() {
                 appName="BabyTrails"
                 intro={false}
                 onRestored={() => {
+                  forgetPlace()
                   setRestoring(false)
                   setNotice('restored')
                   void reload()
@@ -149,6 +171,8 @@ function CreateVault() {
 
 function Unlock() {
   const { unlock, notice } = useSession()
+  // Where the lock or a reload interrupted you (X-05); not after a restore, whose records differ.
+  const [place] = useState(savedPlace)
   const [passphrase, setPassphrase] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -158,6 +182,7 @@ function Unlock() {
     setBusy(true)
     setError('')
     try {
+      resumeAfterUnlock(place && notice !== 'restored' ? place : null)
       await unlock(passphrase)
     } catch (err) {
       setError(err instanceof WrongPassphraseError || err instanceof KdfUnavailableError ? err.message : 'The vault could not be opened.')
@@ -171,6 +196,11 @@ function Unlock() {
       {notice === 'restored' && (
         <p className="form-error" role="status">
           {RESTORED_MESSAGE}
+        </p>
+      )}
+      {place && notice !== 'restored' && (
+        <p className="form-error" role="status">
+          You were on {placeName(place)}. Unlock to continue.
         </p>
       )}
       <TextField label="Passphrase" type="password" autoComplete="current-password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} error={error} autoFocus />

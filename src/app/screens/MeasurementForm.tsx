@@ -12,6 +12,7 @@ import { atAge, formatDate } from '../format'
 import { birthMeasurement } from '../newborn'
 import { growthFor, useTables } from '../growthData'
 import { useSession, useStore } from '../sessionContext'
+import { useLeaveWarning } from '../useLeaveWarning'
 import { counted, nowIso, PLACES, today, type Child, type Measurement, type Place } from '../types'
 
 // Plausible ranges for typing mistakes, not for judging a child: values outside are almost
@@ -60,6 +61,9 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
   const [confirmUnlikely, setConfirmUnlikely] = useState(false)
   const [confirmSameDay, setConfirmSameDay] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [initial] = useState(() => [kg, lb, oz, statureText, headText, note].join('|'))
+  const [saving, setSaving] = useState(false)
+  useLeaveWarning(!saving && [kg, lb, oz, statureText, headText, note].join('|') !== initial)
 
   // What the form currently holds, in metric. Fields left empty are undefined.
   const parsed = (() => {
@@ -155,6 +159,7 @@ function Form({ child, existing, birth, others }: { child: Child; existing?: Mea
     setErrors(next)
     if (Object.keys(next).length) return
     const now = nowIso()
+    setSaving(true)
     const m: Measurement = {
       id: existing?.id ?? crypto.randomUUID(),
       childId: child.id,

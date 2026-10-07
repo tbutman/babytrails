@@ -32,7 +32,8 @@ test('changing the passphrase asks for the new one twice', async ({ page }) => {
   await page.getByRole('button', { name: 'Lock' }).click()
   await page.getByLabel('Passphrase').fill(NEW_PASS)
   await page.getByRole('button', { name: 'Unlock' }).click()
-  await expect(page.getByRole('heading', { name: 'Welcome' })).toBeVisible()
+  // Back where the lock was (X-05).
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
 })
 
 test('a restore checks the passphrase before anything changes, then asks to unlock', async ({ page }, info) => {

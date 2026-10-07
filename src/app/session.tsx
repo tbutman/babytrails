@@ -13,6 +13,7 @@ import {
   type CoreSettings,
 } from '../core/settings/settings'
 import { APP_COLLECTIONS, APP_ID, DEFAULT_APP_SETTINGS, type AppSettings } from './types'
+import { markDemo } from './place'
 import { SessionContext, type Mode, type Notice, type Session } from './sessionContext'
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -109,8 +110,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setDemo(await (await import('./demo')).loadDemo())
         setApp(DEFAULT_APP_SETTINGS)
         setMode('demo')
+        markDemo(true)
       },
       exitDemo: () => {
+        markDemo(false)
         setDemo(null)
         void reload()
       },

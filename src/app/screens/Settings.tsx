@@ -10,6 +10,7 @@ import { APP } from '../brand'
 import { InstallHint } from '../InstallHint'
 import { Shell } from '../Layout'
 import { useSession } from '../sessionContext'
+import { forgetPlace } from '../place'
 import { APP_ID } from '../types'
 
 const TWO_WEEKS = 14 * 86_400_000
@@ -137,6 +138,7 @@ export function Settings() {
                 appId={APP_ID}
                 appName="BabyTrails"
                 onRestored={() => {
+                  forgetPlace()
                   setNotice('restored')
                   void reload()
                 }}

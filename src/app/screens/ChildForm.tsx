@@ -7,6 +7,7 @@ import { deleteChild, useChild, useMeasurements } from '../data'
 import { birthMeasurement } from '../newborn'
 import { Shell } from '../Layout'
 import { useSession, useStore } from '../sessionContext'
+import { useLeaveWarning } from '../useLeaveWarning'
 import { today, type Child } from '../types'
 
 export function ChildForm() {
@@ -33,6 +34,9 @@ function ChildFormInner({ existing }: { existing?: Child }) {
   const [weeks, setWeeks] = useState(existing?.gestationalAge ? String(existing.gestationalAge.weeks) : '')
   const [days, setDays] = useState(existing?.gestationalAge ? String(existing.gestationalAge.days) : '')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [initial] = useState(() => [name, nickname, dateOfBirth, sex, weeks, days].join('|'))
+  const [saving, setSaving] = useState(false)
+  useLeaveWarning(!saving && [name, nickname, dateOfBirth, sex, weeks, days].join('|') !== initial)
   const [addBirth, setAddBirth] = useState(true)
   const measurements = useMeasurements(existing?.id)
   const birth = existing && measurements ? birthMeasurement(existing, measurements) : undefined
@@ -55,6 +59,7 @@ function ChildFormInner({ existing }: { existing?: Child }) {
     if (gestation.length) next.gestation = gestation.join(' ')
     setErrors(next)
     if (Object.keys(next).length) return
+    setSaving(true)
     const child: Child = {
       id: existing?.id ?? crypto.randomUUID(),
       name: name.trim(),
