@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (October 8, 2026)
 
-Changes from the product review of October 7, 2026 (branch `review-fixes`), not live yet.
+Changes from the product review of October 7, 2026. Tagged `v0.2.0`.
 
 - **Safety.** For a baby born before 37 weeks, a note on the overview, the charts and the report card
   says the percentiles use age from birth (corrected age is the next feature), and the second looks
@@ -30,7 +30,7 @@ Changes from the product review of October 7, 2026 (branch `review-fixes`), not 
 
 ## 0.1.0 (live since October 6, 2026)
 
-The first version, live at babytrails.app. Not tagged yet: Thomas tags it `v0.1.0`.
+The first version, live at babytrails.app. Tagged `v0.1.0` (`599fb03`).
 
 - A passphrase-protected, encrypted vault in the browser, with auto-lock, persistent-storage
   request, and encrypted backup export and import.
