@@ -178,6 +178,16 @@ export function DocumentSummary() {
       </>
     )
   }
+  // Only doctor's notes are summarized; an ultrasound or a growth report can't be sent from a typed
+  // address (BABY-20).
+  if (doc.kind !== 'doctor-note') {
+    return (
+      <>
+        <PageHeader title={doc.title} back={{ to: back, label: 'Document' }} />
+        <p>Only doctor's notes can be summarized. Growth reports and booklet pages are read into measurements instead, and ultrasound images are never sent.</p>
+      </>
+    )
+  }
   if (mode === 'demo' || !core.ai.apiKey) {
     return (
       <>

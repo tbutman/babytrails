@@ -10,7 +10,7 @@ import { Callout, Chip, EmptyState, MetricCard, PageHeader, Sparkline } from '..
 import { childPath } from '../brand'
 import { Disclaimer } from '../components'
 import { useChild, useCountedMeasurements } from '../data'
-import { formatAge, formatDate } from '../format'
+import { atAge, formatAge, formatDate } from '../format'
 import { allIntervals } from '../gains'
 import { FirstWeeks } from '../FirstWeeks'
 import { firstWeeksNote } from '../newborn'
@@ -139,7 +139,7 @@ function OverviewInner({ child, measurements }: { child: Child; measurements: Me
                       <Chip tone="accent">{formatPercentile(z)} percentile</Chip>
                     ))
                   }
-                  foot={`${formatDate(latest.date)} · at ${formatAge(child.dateOfBirth, latest.date)}`}
+                  foot={`${formatDate(latest.date)} · ${atAge(child.dateOfBirth, latest.date)}`}
                 >
                   {series.length > 1 && <Sparkline points={series.slice(-8).map((m) => ({ value: toDisplay(metric.pick(m)!) }))} label={`${metric.label}, last ${Math.min(series.length, 8)} measurements`} />}
                 </MetricCard>

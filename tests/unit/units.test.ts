@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cmToIn, formatLength, formatWeeklyGain, formatWeight, inToCm, kgToLbOz, lbOzToKg, parseDecimal } from '../../src/growth/units'
+import { CM_FIELD, cmToIn, formatLength, formatWeeklyGain, formatWeight, IN_FIELD, inToCm, KG_FIELD, kgToLbOz, lbOzToKg, parseAmount, parseDecimal } from '../../src/growth/units'
 
 describe('units', () => {
   it('converts weight both ways', () => {
@@ -52,5 +52,23 @@ describe('ages', () => {
     expect(formatAge('2026-01-31', '2026-03-01')).toBe('1 month, 1 day')
     expect(formatAge('2024-03-15', '2026-05-15')).toBe('2 years, 2 months')
     expect(formatAge('2026-04-01', '2026-03-01')).toBe('before birth')
+  })
+})
+
+describe('numbers typed with a unit (BABY-04)', () => {
+  it('accepts the field’s units and converts grams', () => {
+    expect(parseAmount('6.1 kg', KG_FIELD)).toBe(6.1)
+    expect(parseAmount('6,1kg', KG_FIELD)).toBe(6.1)
+    expect(parseAmount('6100 g', KG_FIELD)).toBeCloseTo(6.1)
+    expect(parseAmount('6.1', KG_FIELD)).toBe(6.1)
+    expect(parseAmount('61 cm', CM_FIELD)).toBe(61)
+    expect(parseAmount('24 in', CM_FIELD)).toBeCloseTo(60.96)
+    expect(parseAmount('24"', IN_FIELD)).toBe(24)
+  })
+
+  it('gives undefined for anything else, so the form can say so', () => {
+    expect(parseAmount('6.1 lb', KG_FIELD)).toBeUndefined()
+    expect(parseAmount('six', KG_FIELD)).toBeUndefined()
+    expect(parseAmount('-1 kg', KG_FIELD)).toBeUndefined()
   })
 })

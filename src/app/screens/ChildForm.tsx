@@ -1,6 +1,6 @@
 import { Baby, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Checkbox, PageHeader, Segmented, TextField } from '../../core/ui/components'
 import { APP, childPath } from '../brand'
 import { deleteChild, useChild, useMeasurements } from '../data'
@@ -11,7 +11,10 @@ import { today, type Child } from '../types'
 
 export function ChildForm() {
   const { id } = useParams()
+  const { store } = useSession()
   const existing = useChild(id)
+  // Locked, or opened in a fresh browser: there's nowhere to save, so go to the start (BABY-05).
+  if (!store) return <Navigate to={APP} replace />
   if (id && existing === undefined) return null
   if (id && existing === null) return <p>This child isn't in your records.</p>
   const form = <ChildFormInner key={id ?? 'new'} existing={existing ?? undefined} />
@@ -43,8 +46,13 @@ function ChildFormInner({ existing }: { existing?: Child }) {
     if (!sex) next.sex = 'Choose one. The WHO charts are different for girls and boys.'
     const w = weeks ? Number(weeks) : undefined
     const d = days ? Number(days) : 0
-    if (weeks && (!Number.isInteger(w) || w! < 22 || w! > 44)) next.gestation = 'Weeks should be between 22 and 44.'
-    if (days && (!Number.isInteger(d) || d < 0 || d > 6)) next.gestation = 'Days should be between 0 and 6.'
+    // Both problems at once, if both are there (BABY-20).
+    const gestation = [
+      weeks && (!Number.isInteger(w) || w! < 22 || w! > 44) ? 'Weeks should be between 22 and 44.' : '',
+      days && (!Number.isInteger(d) || d < 0 || d > 6) ? 'Days should be between 0 and 6.' : '',
+      days && !weeks ? 'Enter the weeks too.' : '',
+    ].filter(Boolean)
+    if (gestation.length) next.gestation = gestation.join(' ')
     setErrors(next)
     if (Object.keys(next).length) return
     const child: Child = {

@@ -35,6 +35,7 @@ export function Charts() {
           <p>{pretermNotice(child, today())}</p>
         </Callout>
       )}
+      <div className="no-print">
       <Segmented
         legend="Chart"
         name="chart"
@@ -48,6 +49,7 @@ export function Charts() {
           { value: 'bfa', label: 'BMI' },
         ]}
       />
+      </div>
       {measurements.length === 0 ? (
         <EmptyState icon={LineChart} title="Nothing to chart yet">
           Add a measurement and it appears here against the WHO percentile bands.

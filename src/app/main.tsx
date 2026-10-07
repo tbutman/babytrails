@@ -56,6 +56,8 @@ const router = createBrowserRouter([
       { path: '/child/:id/*', element: <LegacyChild /> },
       { path: '/settings', element: <Navigate to="/app/settings" replace /> },
       { path: '/about', element: <Navigate to="/app/about" replace /> },
+      // An unknown address inside the app goes to the app's start, not the landing page (BABY-20).
+      { path: '/app/*', element: <Navigate to="/app" replace /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

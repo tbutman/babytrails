@@ -17,10 +17,11 @@ const TWO_WEEKS = 14 * 86_400_000
 // Reminds people to back up: browser storage can be cleared, and a backup is the only copy that
 // survives that.
 export function BackupNudge() {
-  const { core, mode, saveCore } = useSession()
+  const { core, mode, saveCore, vaultCreatedAt } = useSession()
   const [now] = useState(() => Date.now())
   if (mode !== 'unlocked') return null
-  const last = core.lastBackupAt ? Date.parse(core.lastBackupAt) : 0
+  // Never backed up: count from when the vault was set up, not from 1970 (BABY-14).
+  const last = Date.parse(core.lastBackupAt ?? vaultCreatedAt ?? '') || now
   const dismissed = core.backupNudgeDismissedAt ? Date.parse(core.backupNudgeDismissedAt) : 0
   const due = core.changesSinceBackup >= 5 || (core.changesSinceBackup > 0 && now - last > TWO_WEEKS)
   if (!due || now - dismissed < 86_400_000) return null

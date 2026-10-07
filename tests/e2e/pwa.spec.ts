@@ -9,7 +9,7 @@ test('installable, and opens offline once visited', async ({ page, context }) =>
     const href = document.querySelector('link[rel="manifest"]')?.getAttribute('href')
     return href ? (await fetch(href)).json() : null
   })
-  expect(manifest).toMatchObject({ name: 'BabyTrails', display: 'standalone', start_url: '/' })
+  expect(manifest).toMatchObject({ name: 'BabyTrails', display: 'standalone', start_url: '/app' })
   expect(manifest.icons.some((i: { purpose?: string }) => i.purpose === 'maskable')).toBe(true)
 
   await page.evaluate(() => navigator.serviceWorker.ready)

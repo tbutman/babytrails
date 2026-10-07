@@ -57,7 +57,8 @@ export default defineConfig({
         name: 'BabyTrails',
         short_name: 'BabyTrails',
         description: "Your baby's growth records, private and in one place.",
-        start_url: '/',
+        // The installed app opens the app, not the landing page (BABY-15).
+        start_url: '/app',
         scope: '/',
         display: 'standalone',
         background_color: '#FAF9F6',

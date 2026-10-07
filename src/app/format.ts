@@ -22,6 +22,11 @@ export function formatAge(dateOfBirth: string, on: string): string {
   return rest ? `${plural(years, 'year')}, ${plural(rest, 'month')}` : plural(years, 'year')
 }
 
+/** "at birth" on the day of birth, else "at 3 months, 2 days" (BABY-20). */
+export function atAge(dateOfBirth: string, on: string): string {
+  return on === dateOfBirth ? 'at birth' : `at ${formatAge(dateOfBirth, on)}`
+}
+
 // US short dates, "Sep 19, 2026" and "Sep 19" (Thomas, October 7, 2026): the core's formatter, so
 // both apps write dates the same way.
 export { formatDate, formatShortDate } from '../core/format'

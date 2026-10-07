@@ -84,6 +84,7 @@ export function babyAdapter(deps: {
   return {
     appName: 'BabyTrails',
     settingsPath: `${APP}/settings#ai`,
+    datesFromContents: true,
     documentKind: 'growth-report',
     noun: { one: 'document', many: 'documents' },
     columns: measurementColumns(child, (c) => (deps.tables ? measurementChecks(deps.tables, child, known, c) : [])),
@@ -99,7 +100,7 @@ export function babyAdapter(deps: {
     estimate: ({ pdfs, images }) => ({ inputTokens: pdfs * 6000 + images * 3000, outputTokens: (pdfs + images) * 600 }),
 
     async read(doc: StoredDoc, bytes) {
-      if (!readable(doc.kind)) throw new Error("Only growth reports and booklet pages are read. Doctor's notes are summarised from their own page.")
+      if (!readable(doc.kind)) throw new Error("Only growth reports and booklet pages are read. Doctor's notes are summarized from their own page.")
       if (deps.demo) {
         if (doc.title !== SAMPLE_IMPORT_TITLE && doc.title !== DEMO_DOCUMENT_TITLE) throw new Error('In the demo, only the sample growth report can be read.')
         return { rows: DEMO_PROPOSALS, meta: {}, dropped: 0 }
@@ -109,7 +110,7 @@ export function babyAdapter(deps: {
 
     // Photos of one booklet spread or report, read together so a table across pages is one answer.
     async readPages(pages) {
-      if (!readable(pages[0].doc.kind)) throw new Error("Only growth reports and booklet pages are read. Doctor's notes are summarised from their own page.")
+      if (!readable(pages[0].doc.kind)) throw new Error("Only growth reports and booklet pages are read. Doctor's notes are summarized from their own page.")
       if (deps.demo) throw new Error('In the demo, only the sample growth report can be read.')
       const blocks: ContentBlock[] = []
       for (const p of pages) blocks.push(await block(p.doc, p.bytes))
@@ -154,7 +155,7 @@ export function babyAdapter(deps: {
       dates.sort()
       // The document's date becomes the latest date it records, instead of the day it was imported.
       const latest = (await store.get<StoredDoc>('documents', doc.id)) ?? doc
-      if (dates.length) await store.put('documents', { ...latest, date: dates.at(-1)! })
+      if (dates.length && !latest.meta?.datedByUser) await store.put('documents', { ...latest, date: dates.at(-1)! })
       await deps.onSaved(rows.length)
       const span = dates.length === 0 ? '' : dates[0] === dates.at(-1) ? ` on ${formatDate(dates[0])}` : `, ${formatDate(dates[0])} to ${formatDate(dates.at(-1)!)}`
       return `${plural(rows.length, 'measurement')}${span}`

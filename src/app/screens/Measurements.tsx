@@ -28,8 +28,11 @@ export function Measurements() {
   const nb = newborn(child, counted(measurements))
   const birth = birthMeasurement(child, measurements)
   const fromBirth = new Map(nb?.weighings.map((w) => [w.measurement.id, `${formatPercentChange(w.percentFromBirth)} from birth weight`]) ?? [])
+  // Too close together for a rate to mean anything (BABY-13): say how far apart, not "+700 g a week".
   const gainText = (i: Interval) =>
-    `${i.measure === 'weight' ? 'weight' : i.measure} ${i.change >= 0 ? '+' : ''}${i.measure === 'weight' ? formatWeeklyGain(i.rate, units) : formatMonthlyGain(i.rate, units)} since ${formatShortDate(i.from.date)}`
+    i.short
+      ? `${i.days} day${i.days === 1 ? '' : 's'} since the last ${i.measure === 'weight' ? 'weighing' : `${i.measure} measurement`}`
+      : `${i.measure === 'weight' ? 'weight' : i.measure} ${i.change >= 0 ? '+' : ''}${i.measure === 'weight' ? formatWeeklyGain(i.rate, units) : formatMonthlyGain(i.rate, units)} since ${formatShortDate(i.from.date)}`
   const add = (
     <Link className="button primary" to={childPath(child.id, 'measurements/new')}>
       <Plus size={16} aria-hidden /> Add a measurement

@@ -14,7 +14,7 @@ import { buildCard, CARD_SIZE, type CardLayout } from '../report/buildCard'
 import { buildCardData } from '../report/cardData'
 import { useLatestSummary } from '../summaries'
 import { useChild, useCountedMeasurements } from '../data'
-import { formatAge, formatDate } from '../format'
+import { atAge, formatAge, formatDate } from '../format'
 import { chartPoints, growthFor, useTables, weeklyGain, type ChartChoice } from '../growthData'
 import { buildReport, serialiseChart, type ReportStat } from '../report/buildReport'
 import { download, reportPdf, reportPng, shareFile, type PageSize } from '../report/render'
@@ -98,7 +98,7 @@ export function Report() {
       trend: gain ? `+${formatWeeklyGain(gain.kgPerWeek, units)} lately`.replace('+−', '−') : undefined,
       highlights: [
         `${measurements.length} measurement${measurements.length === 1 ? '' : 's'} recorded`,
-        last ? `Latest: ${formatDate(last.date)}, at ${formatAge(child.dateOfBirth, last.date)}` : 'No measurements yet',
+        last ? `Latest: ${formatDate(last.date)}, ${atAge(child.dateOfBirth, last.date)}` : 'No measurements yet',
         gain ? `Weight change since ${formatDate(gain.from.date)}: ${formatWeeklyGain(gain.kgPerWeek, units)}` : '',
       ].filter(Boolean),
       chartTitle: 'Weight for age',
@@ -135,7 +135,7 @@ export function Report() {
   return (
     <>
       <PageHeader title="Share a report" subtitle="A picture of the latest growth, made on this device. You choose what's on it, and you share the file yourself." />
-      <div className="card">
+      <div className="card no-print">
         <Segmented
           legend="Layout"
           name="layout"
@@ -185,7 +185,7 @@ export function Report() {
         {svg ? <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt="Preview of the report" /> : <div className="skeleton loading-card" />}
       </div>
 
-      <div className="row">
+      <div className="row no-print">
         <button type="button" className="button primary" onClick={() => void act('share')} disabled={!svg}>
           <Share2 size={16} aria-hidden /> Share
         </button>

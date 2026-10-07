@@ -1,6 +1,6 @@
 // The app's start (/app): set up a vault, unlock it, or pick a child. The landing page is at /.
 
-import { ArchiveRestore, Baby, ChevronRight, KeyRound, Plus, ShieldCheck } from 'lucide-react'
+import { ArchiveRestore, Baby, ChevronRight, HardDrive, KeyRound, Plus, ShieldCheck } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { checkPassphrase, KdfUnavailableError, takeErasedNotice, WeakPassphraseError, WrongPassphraseError } from '../../core'
@@ -183,6 +183,7 @@ function Unlock() {
 
 function Children() {
   const children = useChildren()
+  const { notice } = useSession()
   if (children === null) return <Shell narrow>{<div className="skeleton loading-card" />}</Shell>
   // One child (the usual case): go straight to their overview.
   if (children.length === 1) return <Navigate to={childPath(children[0].id)} replace />
@@ -200,6 +201,11 @@ function Children() {
         }
       />
       <BackupNudge />
+      {notice === 'created' && (
+        <Callout icon={HardDrive} tone="accent">
+          <p>Your records live only in this browser. Download a backup now and then, and keep it somewhere else.</p>
+        </Callout>
+      )}
       {children.length === 0 ? (
         <>
           <EmptyState

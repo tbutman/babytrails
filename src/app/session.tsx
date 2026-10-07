@@ -23,6 +23,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [app, setApp] = useState<AppSettings>(DEFAULT_APP_SETTINGS)
   const [version, setVersion] = useState(0)
   const [notice, setNotice] = useState<Notice>(null)
+  const [vaultCreatedAt, setVaultCreatedAt] = useState<string>()
 
   const reload = useCallback(async () => {
     if (!trails) return
@@ -76,6 +77,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const loadSettings = useCallback(async (t: Trails) => {
     setCore(await loadCoreSettings(t.store))
     setApp(await loadAppSettings(t.store, DEFAULT_APP_SETTINGS))
+    setVaultCreatedAt((await t.vault.header())?.createdAt)
   }, [])
 
   const value = useMemo<Session>(() => {
@@ -86,12 +88,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       store,
       core,
       app,
+      vaultCreatedAt,
       version,
       changed: () => setVersion((v) => v + 1),
       createVault: async (passphrase) => {
         if (!trails) return
         await trails.vault.create(passphrase)
         await loadSettings(trails)
+        setNotice('created')
         void navigator.storage?.persist?.()
       },
       unlock: async (passphrase) => {
@@ -122,7 +126,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       notice,
       setNotice,
     }
-  }, [mode, trails, demo, core, app, version, notice, loadSettings, reload])
+  }, [mode, trails, demo, core, app, vaultCreatedAt, version, notice, loadSettings, reload])
 
   useEffect(() => {
     document.documentElement.dataset.theme = core.theme === 'system' ? '' : core.theme
