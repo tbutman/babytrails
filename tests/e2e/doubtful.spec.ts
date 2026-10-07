@@ -30,7 +30,7 @@ test('doubtful measurements: where measured, second looks, and leaving one out',
   // Leave it out: it stays in the list, marked, and stops counting on the charts.
   await tab(page, 'Measurements').click()
   await expect(page.getByText('at home')).toBeVisible()
-  await page.getByRole('link', { name: /15 Jun 2026/ }).click()
+  await page.getByRole('link', { name: /Jun 15, 2026/ }).click()
   await page.getByLabel(/Leave this out of charts/).check()
   await page.getByLabel('Why (optional)').fill('typing slip')
   await page.getByRole('button', { name: 'Save' }).click()

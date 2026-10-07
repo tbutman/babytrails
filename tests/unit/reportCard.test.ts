@@ -26,16 +26,16 @@ describe('report card data', () => {
       ['Length', '60.5 cm', `${formatPercentile(latest.lhfa!.z)} percentile`],
       ['Head', '39.8 cm', `${formatPercentile(latest.hcfa!.z)} percentile`],
     ])
-    expect(card.tiles[0].change).toBe('+700 g since 1 Mar')
-    expect(card.tiles[1].change).toBe('+3.0 cm since 1 Mar')
+    expect(card.tiles[0].change).toBe('+700 g since Mar 1')
+    expect(card.tiles[1].change).toBe('+3.0 cm since Mar 1')
   })
 
   it('has the four charts, gain over time and the history, newest first', () => {
     expect(card.charts.map((c) => c.title)).toEqual(['Weight for age', 'Length for age', 'Head circumference for age', 'Weight for length'])
     const last = allIntervals(tables, child, data).weight.at(-1)!
-    expect(card.gain?.headline).toBe(`${Math.round(last.rate * 1000)} g a week since 1 Mar`)
+    expect(card.gain?.headline).toBe(`${Math.round(last.rate * 1000)} g a week since Mar 1`)
     expect(card.gain?.bars).toHaveLength(3)
-    expect(card.history?.map((r) => r.date)).toEqual(['1 Apr 2026', '1 Mar 2026', '1 Feb 2026', '1 Jan 2026'])
+    expect(card.history?.map((r) => r.date)).toEqual(['Apr 1, 2026', 'Mar 1, 2026', 'Feb 1, 2026', 'Jan 1, 2026'])
     expect(card.history?.[0]).toMatchObject({ age: '3 mo', weight: '5.90 kg', length: '60.5 cm', head: '39.8 cm' })
   })
 
@@ -57,7 +57,7 @@ describe('report card data', () => {
 
   it('labels an included AI summary, and a demo one as prepared in advance', () => {
     const ai = buildCardData(tables, child, data, 'metric', '2026-04-10', { ...opts, ai: { text: '**Weight** went up.\n\nSecond paragraph.', date: '2026-04-02' } })
-    expect(ai.ai).toEqual({ label: 'In plain words · written by AI on 2 Apr 2026', text: 'Weight went up.' })
+    expect(ai.ai).toEqual({ label: 'In plain words · written by AI on Apr 2, 2026', text: 'Weight went up.' })
     const demo = buildCardData(tables, child, data, 'metric', '2026-04-10', { ...opts, ai: { text: 'x', date: '2026-04-02', prepared: true } })
     expect(demo.ai?.label).toBe('In plain words · prepared in advance for the demo')
   })
