@@ -9,7 +9,7 @@ import { PageChange, SkipLink } from '../core/ui/navigation'
 import { UpdatePrompt } from '../core/ui/UpdatePrompt'
 import { APP, BRAND, childPath } from './brand'
 import { useChild } from './data'
-import { forgetPlace, rememberPlace } from './place'
+import { forgetPlace, rememberPlace, resumeArrived } from './place'
 import { useSession } from './sessionContext'
 
 /** The router's root: the update banner on every page, and scroll positions kept on back. */
@@ -19,6 +19,7 @@ export function Root() {
   // Remember where you are, or where a link or reload tried to take you while locked (X-05).
   useEffect(() => {
     const path = location.pathname + location.search
+    resumeArrived(location.pathname, mode === 'unlocked')
     if (mode === 'demo' || (mode === 'unlocked' && !path.startsWith('/app/'))) forgetPlace()
     else if (mode === 'unlocked' || mode === 'locked' || mode === 'loading') rememberPlace(path)
   }, [mode, location])

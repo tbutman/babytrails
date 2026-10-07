@@ -55,17 +55,22 @@ export function placeName(path: string): string {
   return SCREENS.find(([re]) => re.test(path))?.[1] ?? 'a screen of the app'
 }
 
-// Set by the Unlock form just before unlocking; read once by the start screen, which then goes there
-// instead of to the child's overview.
+// Set by the Unlock form just before unlocking. The start screen goes there instead of to the
+// child's overview, on every render until the app has arrived (resumeArrived), not just the first:
+// the router's navigation is a transition, and the start screen can render again before it lands
+// (when the settings finish loading). Clearing it sooner let the overview's redirect win on a slow
+// machine (CI, October 8, 2026).
 let resumeTo: string | null = null
 export const resumeAfterUnlock = (path: string | null) => {
   resumeTo = path
 }
-export function takeResume(): string | null {
-  const path = resumeTo
-  // Cleared after this render, so a double render (React's StrictMode) reads the same answer.
-  if (path) setTimeout(() => (resumeTo = null), 0)
-  return path
+export const pendingResume = () => resumeTo
+/**
+ * Called with each address the app shows. Once the vault is open and the app has left the start
+ * screen, the resume is done: at the address asked for, or wherever that address redirected.
+ */
+export function resumeArrived(path: string, unlocked: boolean) {
+  if (unlocked && path !== '/app') resumeTo = null
 }
 
 /** The demo is running in this tab, so a reload can say it ended. */

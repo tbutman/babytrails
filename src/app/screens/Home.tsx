@@ -16,7 +16,7 @@ import { InstallHint } from '../InstallHint'
 import { Shell } from '../Layout'
 import { useSession } from '../sessionContext'
 import { APP_ID, today } from '../types'
-import { demoEndedByReload, forgetPlace, placeName, resumeAfterUnlock, savedPlace, takeResume } from '../place'
+import { demoEndedByReload, forgetPlace, placeName, pendingResume, resumeAfterUnlock, savedPlace } from '../place'
 import { BackupNudge } from './Settings'
 
 export function Home() {
@@ -24,7 +24,7 @@ export function Home() {
   if (mode === 'loading') return <Shell narrow>{<div className="skeleton loading-card" />}</Shell>
   if (mode === 'demo') return <Navigate to={childPath(DEMO_CHILD_ID)} replace />
   if (mode === 'unlocked') {
-    const resume = takeResume()
+    const resume = pendingResume()
     return resume ? <Navigate to={resume} replace /> : <Children />
   }
   return <Auth />
@@ -185,6 +185,7 @@ function Unlock() {
       resumeAfterUnlock(place && notice !== 'restored' ? place : null)
       await unlock(passphrase)
     } catch (err) {
+      resumeAfterUnlock(null)
       setError(err instanceof WrongPassphraseError || err instanceof KdfUnavailableError ? err.message : 'The vault could not be opened.')
     } finally {
       setBusy(false)
