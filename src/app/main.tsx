@@ -7,6 +7,8 @@ import { StrictMode, type ComponentType } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, Navigate, RouterProvider, type LazyRouteFunction, type RouteObject } from 'react-router'
 import { ChildLayout, LegacyChild, ReadLegacy, Root } from './Layout'
+import { RouteError } from '../core/ui/RouteError'
+import { APP } from './brand'
 import { SessionProvider } from './session'
 import { Landing } from './screens/Landing'
 
@@ -19,6 +21,8 @@ const screen =
 const router = createBrowserRouter([
   {
     element: <Root />,
+    // A screen that fails shows a calm message instead of React Router's developer page (BABY-05).
+    errorElement: <RouteError home={APP} />,
     children: [
       { path: '/', element: <Landing /> },
       { path: '/app', lazy: screen(() => import('./screens/Home'), 'Home') },

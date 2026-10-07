@@ -17,6 +17,7 @@ import { measurementChecks } from '../checks'
 import type { Tables } from '../../growth/tables'
 import { measurementColumns } from './columns'
 import { alreadySavedRows } from './duplicates'
+import { APP } from '../brand'
 
 /** Nothing about the whole document to keep beyond the measurements themselves. */
 export type BabyMeta = Record<string, never>
@@ -82,6 +83,7 @@ export function babyAdapter(deps: {
 
   return {
     appName: 'BabyTrails',
+    settingsPath: `${APP}/settings#ai`,
     documentKind: 'growth-report',
     noun: { one: 'document', many: 'documents' },
     columns: measurementColumns(child, (c) => (deps.tables ? measurementChecks(deps.tables, child, known, c) : [])),

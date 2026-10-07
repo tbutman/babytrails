@@ -7,6 +7,9 @@ import type { AppSettings } from './types'
 
 export type Mode = 'loading' | 'welcome' | 'locked' | 'unlocked' | 'demo'
 
+/** A one-off message for the start screen: after a restore, the Unlock form says so. */
+export type Notice = 'restored' | null
+
 export type Session = {
   mode: Mode
   trails: Trails | null
@@ -24,6 +27,8 @@ export type Session = {
   saveCore: (next: CoreSettings) => Promise<void>
   saveApp: (next: AppSettings) => Promise<void>
   reload: () => Promise<void>
+  notice: Notice
+  setNotice: (notice: Notice) => void
 }
 
 export const SessionContext = createContext<Session | null>(null)

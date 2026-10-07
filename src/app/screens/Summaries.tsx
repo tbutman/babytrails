@@ -5,7 +5,9 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { documentBytes } from '../../core'
-import { AiError, askText, imageBlock, pdfBlock, shrinkImage } from '../../core/ai/client'
+import { AiError, askText, imageBlock, pdfBlock, PHOTO_NOTE, shrinkImage } from '../../core/ai/client'
+import { bannedPhrase, summaryWordingError, UNCHECKED_NUMBERS_NOTE } from '../../core/ask/wording'
+import { demoNote } from '../../core/ui/copy'
 import { Markdown } from '../../core/ai/Markdown'
 import { redactNames } from '../../core/ai/redact'
 import { AiOutput, SendSheet } from '../../core/ai/SendSheet'
@@ -25,11 +27,9 @@ export function SummaryCard({ child, kind }: { child: Child; kind: 'after-data' 
   const { summary, stale } = useLatestSummary(child, kind)
   if (!summary) return null
   return (
-    <AiOutput
-      label={SUMMARY_LABELS[kind]}
-      note={summary.model === 'prepared in advance' ? 'Demo: written in advance for this made-up baby, in the style of the AI summaries. No AI was called.' : undefined}
-    >
+    <AiOutput label={SUMMARY_LABELS[kind]} note={summary.model === 'prepared in advance' ? demoNote('baby') : undefined}>
       <Markdown text={summary.text} />
+      <p className="hint">{UNCHECKED_NUMBERS_NOTE}</p>
       <p className="hint">
         {formatDate(summary.createdAt.slice(0, 10))}
         {stale && ' · Written before your latest changes.'}
@@ -116,6 +116,8 @@ export function GrowthSummary() {
         content: [{ type: 'text', text }],
         maxTokens: 800,
       })
+      // The same wording rules as Ask (CORE-04): a summary that judges or reassures isn't saved.
+      if (bannedPhrase(answer)) return setError(summaryWordingError('BabyTrails'))
       await save(answer, core.ai.model, facts!)
     } catch (err) {
       setError(err instanceof AiError ? err.message : 'Something went wrong.')
@@ -171,6 +173,7 @@ export function DocumentSummary() {
         <PageHeader title={doc.title} back={{ to: back, label: 'Document' }} />
         <AiOutput label={SUMMARY_LABELS.document}>
           <Markdown text={existing.text} />
+          <p className="hint">Numbers in this summary weren't checked by the app; check them against the document.</p>
         </AiOutput>
       </>
     )
@@ -202,6 +205,8 @@ export function DocumentSummary() {
         content: [block, { type: 'text', text: 'Summarise this document, following the rules.' }],
         maxTokens: 1000,
       })
+      // A document's own words may be quoted ("normal development"); the summary's own voice may not judge.
+      if (bannedPhrase(text, [], { allowQuoted: true })) return setError(summaryWordingError('BabyTrails'))
       const summary: Summary = { id: crypto.randomUUID(), childId: child!.id, kind: 'document', documentId: d.id, model: core.ai.model, createdAt: nowIso(), text, inputsDigest: d.id }
       await store.put('summaries', summary)
       changed()
@@ -225,7 +230,10 @@ export function DocumentSummary() {
         appName="BabyTrails"
         sending={[`This document: "${doc.title}" (${doc.mimeType === 'application/pdf' ? 'PDF' : 'photo'}, ${kb} kB)`]}
         notSending={["Your baby's other records"]}
-        notes={["The document itself may show your baby's name. BabyTrails can't remove text from a PDF or photo."]}
+        notes={[
+          "The document itself may show your baby's name. BabyTrails can't remove text from a PDF or photo.",
+          ...(doc.mimeType === 'application/pdf' ? [] : [PHOTO_NOTE]),
+        ]}
         model={core.ai.model}
         estimate={{ inputTokens: 5000, outputTokens: 400 }}
         busy={busy}

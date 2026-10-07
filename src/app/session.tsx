@@ -13,7 +13,7 @@ import {
   type CoreSettings,
 } from '../core/settings/settings'
 import { APP_COLLECTIONS, APP_ID, DEFAULT_APP_SETTINGS, type AppSettings } from './types'
-import { SessionContext, type Mode, type Session } from './sessionContext'
+import { SessionContext, type Mode, type Notice, type Session } from './sessionContext'
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [trails, setTrails] = useState<Trails | null>(null)
@@ -22,6 +22,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [core, setCore] = useState<CoreSettings>(DEFAULT_CORE_SETTINGS)
   const [app, setApp] = useState<AppSettings>(DEFAULT_APP_SETTINGS)
   const [version, setVersion] = useState(0)
+  const [notice, setNotice] = useState<Notice>(null)
 
   const reload = useCallback(async () => {
     if (!trails) return
@@ -61,6 +62,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return startAutoLock(trails.vault, core.autoLockMinutes)
   }, [mode, trails, core.autoLockMinutes])
 
+  // Another tab saved something: reload lists and settings here too (CORE-09).
+  useEffect(() => {
+    if (!trails) return
+    return trails.channel.subscribe((message) => {
+      if (message.type !== 'changed' || !trails.vault.isUnlocked) return
+      setVersion((v) => v + 1)
+      void loadCoreSettings(trails.store).then(setCore)
+      void loadAppSettings(trails.store, DEFAULT_APP_SETTINGS).then(setApp)
+    })
+  }, [trails])
+
   const loadSettings = useCallback(async (t: Trails) => {
     setCore(await loadCoreSettings(t.store))
     setApp(await loadAppSettings(t.store, DEFAULT_APP_SETTINGS))
@@ -86,6 +98,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (!trails) return
         await trails.vault.unlock(passphrase)
         await loadSettings(trails)
+        setNotice(null)
       },
       lock: () => trails?.vault.lock(),
       startDemo: async () => {
@@ -106,8 +119,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setApp(next)
       },
       reload,
+      notice,
+      setNotice,
     }
-  }, [mode, trails, demo, core, app, version, loadSettings, reload])
+  }, [mode, trails, demo, core, app, version, notice, loadSettings, reload])
 
   useEffect(() => {
     document.documentElement.dataset.theme = core.theme === 'system' ? '' : core.theme

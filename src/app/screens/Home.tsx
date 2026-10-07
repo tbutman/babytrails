@@ -3,8 +3,10 @@
 import { ArchiveRestore, Baby, ChevronRight, KeyRound, Plus, ShieldCheck } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
-import { MIN_PASSPHRASE_LENGTH, WeakPassphraseError, WrongPassphraseError } from '../../core'
-import { AppIcon, Checkbox, EmptyState, PageHeader, TextField } from '../../core/ui/components'
+import { checkPassphrase, KdfUnavailableError, takeErasedNotice, WeakPassphraseError, WrongPassphraseError } from '../../core'
+import { RESTORED_MESSAGE, RestoreBackup } from '../../core/backup/BackupForms'
+import { Callout, AppIcon, Checkbox, EmptyState, PageHeader, TextField } from '../../core/ui/components'
+import { ForgotPassphrase, PassphraseStrength } from '../../core/vault/VaultForms'
 import { APP, childPath } from '../brand'
 import { Disclaimer } from '../components'
 import { useChildren } from '../data'
@@ -13,8 +15,7 @@ import { formatAge } from '../format'
 import { InstallHint } from '../InstallHint'
 import { Shell } from '../Layout'
 import { useSession } from '../sessionContext'
-import { today } from '../types'
-import { RestoreBackup } from './Backup'
+import { APP_ID, today } from '../types'
 import { BackupNudge } from './Settings'
 
 export function Home() {
@@ -26,9 +27,10 @@ export function Home() {
 }
 
 function Auth() {
-  const { mode, startDemo } = useSession()
+  const { mode, startDemo, trails, reload, setNotice } = useSession()
   const navigate = useNavigate()
   const [restoring, setRestoring] = useState(false)
+  const [erased] = useState(() => takeErasedNotice(APP_ID))
   return (
     <Shell>
       <div className="auth">
@@ -38,13 +40,40 @@ function Auth() {
             <h1>{restoring ? 'Restore from a backup' : mode === 'locked' ? 'Welcome back' : 'Set up your vault'}</h1>
             <p>
               {restoring
-                ? 'Choose a BabyTrails backup and enter the passphrase it was made with.'
+                ? 'Choose a BabyTrails backup and enter the passphrase it was made with. It replaces anything already in this browser.'
                 : mode === 'locked'
                   ? "Unlock to see your baby's records."
                   : 'Your records are encrypted with a passphrase and stay in this browser.'}
             </p>
           </div>
-          <div className="card">{restoring ? <RestoreBackup /> : mode === 'locked' ? <Unlock /> : <CreateVault />}</div>
+          {erased && !restoring && mode === 'welcome' && (
+            <Callout tone="accent">
+              <p role="status">Everything is deleted from this browser.</p>
+            </Callout>
+          )}
+          <div className="card">
+            {restoring && trails ? (
+              <RestoreBackup
+                db={trails.db}
+                vault={trails.vault}
+                appId={APP_ID}
+                appName="BabyTrails"
+                intro={false}
+                onRestored={() => {
+                  setRestoring(false)
+                  setNotice('restored')
+                  void reload()
+                }}
+              />
+            ) : mode === 'locked' ? (
+              <Unlock />
+            ) : (
+              <CreateVault />
+            )}
+          </div>
+          {mode === 'locked' && !restoring && trails && (
+            <ForgotPassphrase appId={APP_ID} appName="BabyTrails" db={trails.db} vault={trails.vault} channel={trails.channel} home={APP} onRestore={() => setRestoring(true)} />
+          )}
           <div className="auth-links">
             <button className="link-button" onClick={() => setRestoring((r) => !r)}>
               <ArchiveRestore size={14} aria-hidden /> {restoring ? 'Back' : 'Restore from a backup'}
@@ -75,7 +104,8 @@ function CreateVault() {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (passphrase.length < MIN_PASSPHRASE_LENGTH) return setError(`Use at least ${MIN_PASSPHRASE_LENGTH} characters. Four or more random words work well.`)
+    const { problem } = checkPassphrase(passphrase, 'BabyTrails')
+    if (problem) return setError(problem)
     if (passphrase !== again) return setError("The two passphrases don't match.")
     if (!understood) return setError('Please confirm you understand there is no way to reset it.')
     setBusy(true)
@@ -83,7 +113,7 @@ function CreateVault() {
     try {
       await createVault(passphrase)
     } catch (err) {
-      setError(err instanceof WeakPassphraseError ? err.message : 'The vault could not be created.')
+      setError(err instanceof WeakPassphraseError || err instanceof KdfUnavailableError ? err.message : 'The vault could not be created.')
     } finally {
       setBusy(false)
     }
@@ -99,6 +129,7 @@ function CreateVault() {
         onChange={(e) => setPassphrase(e.target.value)}
         hint="At least 12 characters. Four or more random words are easy to type and hard to guess."
       />
+      <PassphraseStrength passphrase={passphrase} appName="BabyTrails" />
       <TextField label="Passphrase again" type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} />
       <Checkbox checked={understood} onChange={setUnderstood}>
         <strong>There's no way to reset it.</strong> If I forget it, my records can't be recovered, by anyone, so I'll keep a backup.
@@ -117,7 +148,7 @@ function CreateVault() {
 }
 
 function Unlock() {
-  const { unlock } = useSession()
+  const { unlock, notice } = useSession()
   const [passphrase, setPassphrase] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -129,7 +160,7 @@ function Unlock() {
     try {
       await unlock(passphrase)
     } catch (err) {
-      setError(err instanceof WrongPassphraseError ? err.message : 'The vault could not be opened.')
+      setError(err instanceof WrongPassphraseError || err instanceof KdfUnavailableError ? err.message : 'The vault could not be opened.')
     } finally {
       setBusy(false)
     }
@@ -137,6 +168,11 @@ function Unlock() {
 
   return (
     <form onSubmit={submit} noValidate>
+      {notice === 'restored' && (
+        <p className="form-error" role="status">
+          {RESTORED_MESSAGE}
+        </p>
+      )}
       <TextField label="Passphrase" type="password" autoComplete="current-password" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} error={error} autoFocus />
       <button className="button primary block large" disabled={busy || !passphrase}>
         <KeyRound size={18} aria-hidden /> {busy ? 'Unlocking…' : 'Unlock'}

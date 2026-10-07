@@ -1,15 +1,16 @@
-import { Archive, Bot, HardDrive, KeyRound, Palette, Ruler, Timer } from 'lucide-react'
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Archive, Bot, HardDrive, KeyRound, Palette, Ruler, Timer, Trash2 } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate } from 'react-router'
-import { MIN_PASSPHRASE_LENGTH, WrongPassphraseError } from '../../core'
 import { ApiKeySettings } from '../../core/ai/ApiKeySettings'
+import { ExportBackup, RestoreBackup } from '../../core/backup/BackupForms'
+import { ChangePassphrase, EraseVault } from '../../core/vault/VaultForms'
 import type { Theme } from '../../core/settings/settings'
-import { Callout, PageHeader, Segmented, SelectField, TextField, type Icon } from '../../core/ui/components'
+import { Callout, PageHeader, Segmented, SelectField, type Icon } from '../../core/ui/components'
 import { APP } from '../brand'
 import { InstallHint } from '../InstallHint'
 import { Shell } from '../Layout'
 import { useSession } from '../sessionContext'
-import { ExportBackup, RestoreBackup } from './Backup'
+import { APP_ID } from '../types'
 
 const TWO_WEEKS = 14 * 86_400_000
 
@@ -69,8 +70,8 @@ function SettingsCard({ id, icon: I, title, children }: { id?: string; icon: Ico
 }
 
 export function Settings() {
-  const { core, app, saveCore, saveApp, mode } = useSession()
-  if (mode !== 'unlocked') return <Navigate to={APP} replace />
+  const { core, app, saveCore, saveApp, mode, trails, reload, setNotice } = useSession()
+  if (mode !== 'unlocked' || !trails) return <Navigate to={APP} replace />
 
   return (
     <Shell narrow>
@@ -114,23 +115,42 @@ export function Settings() {
         </SettingsCard>
 
         <SettingsCard id="ai" icon={Bot} title="AI (optional)">
-          <ApiKeySettings apiKey={core.ai.apiKey} model={core.ai.model} onSave={({ apiKey, model }) => saveCore({ ...core, ai: { ...core.ai, apiKey, model } })} />
+          <ApiKeySettings appName="BabyTrails" apiKey={core.ai.apiKey} model={core.ai.model} onSave={({ apiKey, model }) => saveCore({ ...core, ai: { ...core.ai, apiKey, model } })} />
         </SettingsCard>
 
         <SettingsCard id="backup" icon={HardDrive} title="Backup">
-          <ExportBackup />
+          <ExportBackup
+            db={trails.db}
+            appId={APP_ID}
+            lastBackupAt={core.lastBackupAt}
+            onExported={() => saveCore({ ...core, lastBackupAt: new Date().toISOString(), changesSinceBackup: 0 })}
+          />
           <StorageStatus />
           <InstallHint />
           <details className="disclosure">
             <summary>Restore from a backup</summary>
             <div className="disclosure-body">
-              <RestoreBackup />
+              <RestoreBackup
+                db={trails.db}
+                vault={trails.vault}
+                appId={APP_ID}
+                appName="BabyTrails"
+                onRestored={() => {
+                  setNotice('restored')
+                  void reload()
+                }}
+              />
             </div>
           </details>
         </SettingsCard>
 
         <SettingsCard icon={KeyRound} title="Passphrase">
-          <ChangePassphrase />
+          <ChangePassphrase vault={trails.vault} appName="BabyTrails" />
+        </SettingsCard>
+
+        <SettingsCard id="erase" icon={Trash2} title="Erase this vault">
+          <p className="hint">Deletes everything BabyTrails keeps in this browser, so you can start again. Backups you downloaded aren't affected.</p>
+          <EraseVault appId={APP_ID} appName="BabyTrails" db={trails.db} vault={trails.vault} channel={trails.channel} home={APP} />
         </SettingsCard>
 
         <p className="hint">
@@ -139,40 +159,6 @@ export function Settings() {
         </p>
       </div>
     </Shell>
-  )
-}
-
-function ChangePassphrase() {
-  const { trails } = useSession()
-  const [current, setCurrent] = useState('')
-  const [next, setNext] = useState('')
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
-
-  async function submit(e: FormEvent) {
-    e.preventDefault()
-    setMessage('')
-    setError('')
-    if (next.length < MIN_PASSPHRASE_LENGTH) return setError(`Use at least ${MIN_PASSPHRASE_LENGTH} characters.`)
-    try {
-      await trails?.vault.changePassphrase(current, next)
-      setCurrent('')
-      setNext('')
-      setMessage('Passphrase changed. Older backups still need the old passphrase.')
-    } catch (err) {
-      setError(err instanceof WrongPassphraseError ? "Your current passphrase isn't right." : 'Something went wrong.')
-    }
-  }
-
-  return (
-    <form onSubmit={submit} noValidate>
-      <TextField label="Current passphrase" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
-      <TextField label="New passphrase" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} error={error} />
-      <button className="button" type="submit" disabled={!current || !next}>
-        Change passphrase
-      </button>
-      {message && <p role="status">{message}</p>}
-    </form>
   )
 }
 
