@@ -44,7 +44,7 @@ test.describe('with a mocked Anthropic API', () => {
     expect(await page.title()).not.toMatch(/^[12]$/)
 
     expect(bodies).toHaveLength(1)
-    for (const secret of ['Ines', 'Exemplo', 'Nini', '2026-03-01', 'zebra']) expect(bodies[0]).not.toContain(secret)
+    for (const secret of ['Ines', 'Exemplo', 'Nini', '2026-03-01', '2026-08-01', '2026-09-01', 'zebra']) expect(bodies[0]).not.toContain(secret)
     expect(bodies[0]).toContain('weightGramsPerWeek')
   })
 })

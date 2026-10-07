@@ -239,6 +239,17 @@ function gainFacts(series: Record<Measure, Interval[]>, child: Child): Facts['ga
   return out
 }
 
+/**
+ * The facts as a summary sends them (BABY-06): the same, without the measurement dates, which with
+ * the ages would give away the date of birth. Ages stay in days. Ask leaves dates out the same way
+ * (askFacts.ts).
+ */
+export function sentFacts(facts: Facts) {
+  const { date: _l, ...latest } = facts.latest
+  const previous = facts.previous ? (({ date: _p, ...rest }) => rest)(facts.previous) : undefined
+  return { ...facts, latest, previous }
+}
+
 // A digest of the facts, so the app can tell when a saved summary is out of date.
 export async function factsDigest(facts: unknown): Promise<string> {
   const bytes = new TextEncoder().encode(JSON.stringify(facts))

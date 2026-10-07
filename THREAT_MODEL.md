@@ -42,9 +42,10 @@ who want to check. Plain answers first, details after.
 - **AI output is untrusted.** It's shown as plain text or a small Markdown subset rendered by our
   own code, never as HTML. The AI has no tools that act. Extracted values are checked against a
   schema and must be confirmed one by one by the user before they're saved.
-- **Less data in AI requests.** The child's name is replaced with a placeholder in text prompts,
-  and ages are sent in days instead of the date of birth. Before each request the app shows what
-  will be sent and to whom.
+- **Less data in AI requests.** The child's name is replaced with a placeholder and dates are left
+  out; ages are sent in days. Together with the time of the request, an age in days still reveals
+  the date of birth to the provider. Before each request the app shows what will be sent and to
+  whom.
 
 ## Threats, mitigations and limits
 
@@ -85,7 +86,7 @@ or when the user clears site data.
 ### The AI provider sees what's sent
 
 - **Mitigation:** nothing is sent without the user's go-ahead on a sheet that lists what's sent;
-  text prompts use a placeholder instead of the name and ages instead of the date of birth; the
+  text prompts use a placeholder instead of the name, leave dates out and send ages in days; the
   app recommends a dedicated API key with a spending limit.
 - **Limit:** Anthropic receives the documents and numbers the user approves, under the user's own
   account and Anthropic's terms. As of 6 October 2026, Anthropic's

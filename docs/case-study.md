@@ -49,7 +49,7 @@ The trade-offs, stated in the app as plainly as here:
   adjustment beyond ±3 SD, tested against WHO's published values. Gains, references and the "worth
   mentioning to your paediatrician" notes are all computed before the AI sees anything.
 - **The AI explains.** Summaries and answers are written from a facts object the code builds, with no
-  name, no date of birth and, for questions, no dates at all.
+  name, no date of birth and no dates at all: ages are in days.
 - **The parent confirms.** Reading a document, the AI only copies values as printed into a strict
   schema, with the text it read and a confidence level. Every value is shown next to the page, and
   nothing is saved until the parent ticks it. Units are converted by code, not the model.

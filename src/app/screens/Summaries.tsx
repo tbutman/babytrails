@@ -15,7 +15,7 @@ import { PageHeader } from '../../core/ui/components'
 import { APP, childPath } from '../brand'
 import { useChild, useDocuments, useCountedMeasurements } from '../data'
 import { SUMMARY_LABELS, useLatestSummary, useSummaries } from '../summaries'
-import { buildFacts, factsDigest, type Facts } from '../facts'
+import { buildFacts, factsDigest, sentFacts, type Facts } from '../facts'
 import { formatDate } from '../format'
 import { useTables } from '../growthData'
 import { AFTER_DATA_SYSTEM, DOCUMENT_SUMMARY_SYSTEM, QUESTIONS_SYSTEM, factsMessage } from '../prompts/summaries'
@@ -108,7 +108,7 @@ export function GrowthSummary() {
     setBusy(true)
     setError('')
     try {
-      const text = redactNames(factsMessage(facts), [child!.name, child!.nickname], 'your baby')
+      const text = redactNames(factsMessage(sentFacts(facts!)), [child!.name, child!.nickname], 'your baby')
       const { text: answer } = await askText({
         apiKey: core.ai.apiKey!,
         model: core.ai.model,
@@ -140,7 +140,7 @@ export function GrowthSummary() {
           `Your baby's sex and age in days`,
           `The latest${facts.previous ? ' two measurements' : ' measurement'}, with the percentiles and changes BabyTrails calculated`,
         ]}
-        notSending={["Your baby's name and date of birth", 'Your documents, notes and older measurements']}
+        notSending={["Your baby's name and date of birth", 'The dates of the measurements', 'Your documents, notes and older measurements']}
         model={core.ai.model}
         estimate={{ inputTokens: 2000, outputTokens: 400 }}
         busy={busy}
