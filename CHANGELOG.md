@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The landing page's "Who made it?" links Thomas Butman to the Trails story at
+  [tbutman.com/work/trails](https://tbutman.com/work/trails), and the case study links it too.
+
 ## 0.2.0 (October 8, 2026)
 
 Changes from the product review of October 7, 2026. Tagged `v0.2.0`.

@@ -2,8 +2,9 @@
 
 *Case study, October 2026, by [Thomas Butman](https://tbutman.com). BabyTrails is live at
 [babytrails.app](https://babytrails.app) and in active development. Free and open source (MIT).
-Code: [github.com/tbutman/babytrails](https://github.com/tbutman/babytrails). Screenshots show the
-demo; every name, value and document in them is made up.*
+Code: [github.com/tbutman/babytrails](https://github.com/tbutman/babytrails). The combined story is
+at [tbutman.com/work/trails](https://tbutman.com/work/trails). Screenshots show the demo; every name,
+value and document in them is made up.*
 
 <p>
   <img src="screenshots/landing.png" width="720" alt="The BabyTrails landing page: every check-up, on the growth charts">

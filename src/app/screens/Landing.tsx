@@ -208,7 +208,7 @@ export function Landing() {
               { q: 'What does it cost?', a: 'BabyTrails is free. The AI features use your own Anthropic account: about 1 US cent for a summary and about 2 cents to read a two-page growth report, at current prices. Everything else works without a key.' },
               { q: 'Can both parents use it?', a: "Each phone has its own vault for now. You can export a backup on one phone and import it on another, but changes don't sync between them yet." },
               { q: 'Does it work on my phone?', a: 'Yes. It installs like an app and works offline. On iPhone, add it to your Home Screen so Safari keeps its data.' },
-              { q: 'Who made it?', a: <>Thomas Butman, as an open-source project alongside its sister app, <a href={BRAND.sister.url}>{BRAND.sister.name}</a>. The code is on <a href={BRAND.repo}>GitHub</a>. Live and in active development; corrected age (BabyTrails) and more markers (LabTrails) are next.</> },
+              { q: 'Who made it?', a: <><a href="https://tbutman.com/work/trails">Thomas Butman</a>, as an open-source project alongside its sister app, <a href={BRAND.sister.url}>{BRAND.sister.name}</a>. The code is on <a href={BRAND.repo}>GitHub</a>. Live and in active development; corrected age (BabyTrails) and more markers (LabTrails) are next.</> },
             ]}
           />
         </Section>
