@@ -153,8 +153,7 @@ reads the records after the user unlocks them.
 - **Mitigation:** HTTPS only (`.app` domains are HTTPS-only in browsers), HSTS, and no health data
   ever goes to BabyTrails' server. `Referrer-Policy: no-referrer`.
 - **Limit:** Cloudflare terminates TLS for the app's files, as it does for most websites. It sees
-  which pages are requested, not the records. The CDN may receive reports of failed page loads,
-  without any health data.
+  which pages are requested, not the records.
 
 ### The home server
 
