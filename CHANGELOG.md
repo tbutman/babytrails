@@ -4,6 +4,8 @@
 
 - The landing page's "Who made it?" links Thomas Butman to the Trails story at
   [tbutman.com/work/trails](https://tbutman.com/work/trails), and the case study links it too.
+- The CDN no longer asks browsers to report failed page loads (Network Error Logging is off), so the
+  threat model drops its note about those reports.
 
 ## 0.2.0 (October 8, 2026)
 
